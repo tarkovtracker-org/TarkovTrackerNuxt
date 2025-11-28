@@ -8,6 +8,37 @@
         {{ $t("page.team.card.myteam.no_team") }}
       </div>
       <div v-else class="space-y-4 p-4">
+        <!-- Display Name Input -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">
+            {{ $t("page.team.card.myteam.display_name_label") }}
+          </label>
+          <div class="flex items-center gap-2">
+            <UInput
+              v-model="displayName"
+              :maxlength="15"
+              :placeholder="$t('page.team.card.myteam.display_name_placeholder')"
+              class="flex-1"
+              @blur="saveDisplayName"
+              @keyup.enter="saveDisplayName"
+            />
+            <UButton
+              icon="i-mdi-check"
+              color="primary"
+              variant="ghost"
+              size="xs"
+              :disabled="!displayNameChanged"
+              @click="saveDisplayName"
+            >
+              {{ $t("page.team.card.myteam.save") }}
+            </UButton>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            {{ $t("page.team.card.myteam.display_name_hint") }}
+          </p>
+        </div>
+
+        <!-- Team Invite URL -->
         <div class="flex items-center justify-between">
           <label class="text-sm font-medium">
             {{ $t("page.team.card.myteam.team_invite_url_label") }}
@@ -100,6 +131,35 @@
   const { createTeam, leaveTeam } = useEdgeFunctions();
   const isLoggedIn = computed(() => $supabase.user.loggedIn);
   const linkVisible = ref(false);
+
+  // Display name management
+  const displayName = ref(tarkovStore.getDisplayName() || "");
+  const initialDisplayName = ref(tarkovStore.getDisplayName() || "");
+
+  const displayNameChanged = computed(() => {
+    return displayName.value !== initialDisplayName.value && displayName.value.trim() !== "";
+  });
+
+  const saveDisplayName = () => {
+    if (displayName.value.trim() === "") return;
+
+    const trimmedName = displayName.value.trim().substring(0, 15);
+    tarkovStore.setDisplayName(trimmedName);
+    initialDisplayName.value = trimmedName;
+    displayName.value = trimmedName;
+    showNotification(t("page.team.card.myteam.display_name_saved"));
+  };
+
+  // Watch for changes to the store's display name (e.g., from sync)
+  watch(
+    () => tarkovStore.getDisplayName(),
+    (newName) => {
+      if (newName && newName !== displayName.value) {
+        displayName.value = newName;
+        initialDisplayName.value = newName;
+      }
+    }
+  );
   const generateRandomName = (length = 6) =>
     Array.from({ length }, () =>
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(
