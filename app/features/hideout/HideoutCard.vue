@@ -243,11 +243,11 @@
   </GenericCard>
 </template>
 <script setup>
-  import { computed, defineAsyncComponent } from 'vue';
-  import { useI18n } from 'vue-i18n';
-  import { useProgressStore } from '@/stores/useProgress';
-  import { useTarkovStore } from '@/stores/useTarkov';
-  import { SPECIAL_STATIONS } from '@/utils/constants';
+import { computed, defineAsyncComponent } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useProgressStore } from '@/stores/useProgress';
+import { useTarkovStore } from '@/stores/useTarkov';
+import { SPECIAL_STATIONS } from '@/utils/constants';
   const GenericCard = defineAsyncComponent(() => import('@/components/ui/GenericCard.vue'));
   const HideoutRequirement = defineAsyncComponent(() => import('./HideoutRequirement.vue'));
   const props = defineProps({
@@ -310,7 +310,7 @@
   const isTraderReqMet = (requirement) => {
     // Check user's current trader loyalty level against requirement
     if (!requirement?.trader?.id || typeof requirement?.value !== 'number') return true;
-    const currentLevel = progressStore.getTraderLevel(requirement.trader.id);
+    const currentLevel = tarkovStore.getTraderLevel(requirement.trader.id);
     return currentLevel >= requirement.value;
   };
   const prerequisitesMet = computed(() => {
