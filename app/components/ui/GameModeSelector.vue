@@ -51,6 +51,3 @@
     );
   });
 </script>
-<style scoped>
-  /* No additional styles needed for settings page version */
-</style>

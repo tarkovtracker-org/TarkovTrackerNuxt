@@ -1,17 +1,21 @@
 <template>
-  <footer class="footer">
-    <div class="footer-container">
+  <footer
+    class="relative w-full border-t border-white/10 bg-gradient-to-t from-black/60 via-black/30 to-black/20 px-6 py-5"
+  >
+    <div class="mx-auto w-full max-w-6xl">
       <!-- Top Row: Community & Support -->
-      <div class="footer-main">
+      <div class="grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
         <!-- Community Links -->
-        <div class="footer-section">
-          <div class="section-label">{{ t('footer.community_label') }}</div>
-          <div class="link-group">
+        <div class="flex flex-col gap-2 text-center lg:items-start lg:text-left">
+          <div class="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-white/55">
+            {{ t('footer.community_label') }}
+          </div>
+          <div class="flex items-center justify-center gap-2.5 lg:justify-start">
             <a
               href="https://discord.gg/zeAP4Ng"
               target="_blank"
               rel="noopener noreferrer"
-              class="icon-link icon-link--discord"
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5865f2]/15 text-[#5865f2] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#4752c4] hover:text-white hover:shadow-[0_4px_12px_rgba(88,101,242,0.4)]"
               :title="t('footer.call_to_action.discord')"
             >
               <svg
@@ -30,7 +34,7 @@
               href="https://github.com/tarkovtracker-org/TarkovTracker"
               target="_blank"
               rel="noopener noreferrer"
-              class="icon-link icon-link--github"
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-[#f0f6fc] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#c9d1d9] hover:text-[#0d1117] hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
               :title="t('footer.call_to_action.github')"
             >
               <UIcon name="i-mdi-github" class="h-5 w-5" />
@@ -38,12 +42,12 @@
           </div>
         </div>
         <!-- Support Button (Center Focus) -->
-        <div class="footer-section support-section">
+        <div class="flex flex-col items-center gap-2 text-center">
           <a
             href="https://ko-fi.com/dysektai"
             target="_blank"
             rel="noopener noreferrer"
-            class="support-button"
+            class="inline-flex items-center gap-2 rounded-lg border border-success-500 bg-success-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-black/40 transition-all duration-150 hover:-translate-y-0.5 hover:border-success-400 hover:bg-success-500 hover:shadow-lg active:translate-y-0 active:shadow-md"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +55,7 @@
               height="16"
               viewBox="0 0 24 24"
               fill="currentColor"
-              class="heart-icon"
+              class="h-4 w-4 text-error-500"
             >
               <path
                 d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
@@ -59,28 +63,38 @@
             </svg>
             <span>{{ t('footer.support_button') }}</span>
           </a>
-          <p class="support-tagline">{{ t('footer.support_tagline') }}</p>
+          <p class="mt-1 text-xs italic text-white/65">{{ t('footer.support_tagline') }}</p>
         </div>
         <!-- Legal Links -->
-        <div class="footer-section">
-          <div class="section-label">{{ t('footer.legal_label') }}</div>
-          <div class="legal-links">
-            <router-link to="/terms-of-service" class="text-link">
+        <div class="flex flex-col gap-2 text-center lg:items-end lg:text-right">
+          <div class="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-white/55">
+            {{ t('footer.legal_label') }}
+          </div>
+          <div class="flex items-center justify-center gap-2 lg:justify-end">
+            <router-link
+              to="/terms-of-service"
+              class="text-sm text-primary-400 underline decoration-primary-400/40 underline-offset-2 transition-colors duration-150 hover:text-primary-300 hover:decoration-primary-300"
+            >
               {{ t('footer.terms_of_service') }}
             </router-link>
-            <span class="divider">·</span>
-            <router-link to="/privacy" class="text-link">
+            <span class="text-sm text-white/40">·</span>
+            <router-link
+              to="/privacy"
+              class="text-sm text-primary-400 underline decoration-primary-400/40 underline-offset-2 transition-colors duration-150 hover:text-primary-300 hover:decoration-primary-300"
+            >
               {{ t('footer.privacy_policy') }}
             </router-link>
           </div>
         </div>
       </div>
       <!-- Divider -->
-      <div class="footer-divider" />
+      <div class="my-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <!-- Bottom Row: Copyright & Attribution -->
-      <div class="footer-bottom">
-        <p class="copyright">TarkovTracker &copy; 2020–{{ new Date().getFullYear() }}</p>
-        <p class="attribution">
+      <div class="flex flex-col items-center gap-1.5 text-center">
+        <p class="m-0 text-sm font-semibold text-[#bfbfbf]">
+          TarkovTracker &copy; 2020–{{ new Date().getFullYear() }}
+        </p>
+        <p class="m-0 text-xs leading-snug text-white/45">
           {{ t('footer.game_attribution') }}
         </p>
       </div>
@@ -91,179 +105,3 @@
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n({ useScope: 'global' });
 </script>
-<style lang="scss" scoped>
-  // Brand colors
-  $discord-color: #5865f2;
-  $discord-hover: #4752c4;
-  $github-color: #f0f6fc;
-  $github-hover: #c9d1d9;
-  .footer {
-    position: relative;
-    width: 100%;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.3));
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 1.25rem 1.5rem;
-  }
-  .footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  .footer-main {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 2rem;
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
-      text-align: center;
-    }
-  }
-  .footer-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    &:first-child {
-      align-items: flex-start;
-      @media (max-width: 640px) {
-        align-items: center;
-      }
-    }
-    &:last-child {
-      align-items: flex-end;
-      @media (max-width: 640px) {
-        align-items: center;
-      }
-    }
-  }
-  .section-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.55);
-  }
-  .link-group {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-  }
-  .icon-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    &--discord {
-      color: $discord-color;
-      background: rgba($discord-color, 0.15);
-      &:hover {
-        color: white;
-        background: $discord-hover;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba($discord-color, 0.4);
-      }
-    }
-    &--github {
-      color: $github-color;
-      background: rgba(255, 255, 255, 0.1);
-      &:hover {
-        color: #0d1117;
-        background: $github-hover;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-      }
-    }
-  }
-  .support-section {
-    align-items: center;
-  }
-  .support-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #ffffff;
-    background: var(--color-success-600);
-    border: 1px solid var(--color-success-500);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    transition: all 0.15s ease;
-    text-decoration: none;
-    .heart-icon {
-      color: #ef4444;
-    }
-    &:hover {
-      background: var(--color-success-500);
-      border-color: var(--color-success-400);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    }
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    }
-  }
-  .support-tagline {
-    font-size: 0.8125rem;
-    color: rgba(255, 255, 255, 0.65);
-    font-style: italic;
-    margin: 0.375rem 0 0 0;
-  }
-  .legal-links {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .text-link {
-    font-size: 0.8125rem;
-    color: rgb(var(--color-primary-400));
-    text-decoration: underline;
-    text-decoration-color: rgba(var(--color-primary-400), 0.4);
-    text-underline-offset: 2px;
-    transition: all 0.2s ease;
-    &:hover {
-      color: rgb(var(--color-primary-300));
-      text-decoration-color: rgb(var(--color-primary-300));
-    }
-  }
-  .divider {
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.875rem;
-  }
-  .footer-divider {
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(255, 255, 255, 0.1) 20%,
-      rgba(255, 255, 255, 0.1) 80%,
-      transparent
-    );
-    margin: 1rem 0;
-  }
-  .footer-bottom {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-  .copyright {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #bfbfbf;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  .attribution {
-    font-size: 0.6875rem;
-    color: rgba(255, 255, 255, 0.45);
-    margin: 0;
-    line-height: 1.5;
-  }
-</style>

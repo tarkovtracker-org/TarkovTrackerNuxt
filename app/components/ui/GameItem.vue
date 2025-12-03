@@ -8,19 +8,20 @@
     @contextmenu="handleContextMenu"
   >
     <!-- Simple image display mode (for ItemImage compatibility) -->
-    <div v-if="simpleMode" :class="imageContainerClasses" class="relative overflow-hidden">
+    <div v-if="simpleMode" :class="['relative overflow-hidden', imageContainerClasses]">
       <img
         v-if="isVisible && computedImageSrc"
         :src="computedImageSrc"
-        :class="[imageClasses, { 'h-full w-full object-contain': true }]"
+        :class="['h-full w-full object-contain', imageClasses]"
         loading="lazy"
-        class="rounded"
         @error="handleImgError"
       />
       <div
         v-else
-        :class="[imageClasses, 'image-placeholder']"
-        class="flex h-full w-full items-center justify-center rounded bg-gray-800"
+        :class="[
+          'flex h-full w-full items-center justify-center rounded bg-surface-800',
+          imageClasses,
+        ]"
       >
         <UIcon name="i-mdi-loading" class="h-6 w-6 animate-spin text-gray-400" />
       </div>
@@ -141,9 +142,9 @@
 </template>
 <script setup lang="ts">
   import { computed, defineAsyncComponent, ref } from 'vue';
-import { logger } from '@/utils/logger';
-import ContextMenu from './ContextMenu.vue';
-import ContextMenuItem from './ContextMenuItem.vue';
+  import { logger } from '@/utils/logger';
+  import ContextMenu from './ContextMenu.vue';
+  import ContextMenuItem from './ContextMenuItem.vue';
   const ItemCountControls = defineAsyncComponent(
     () => import('@/features/neededitems/ItemCountControls.vue')
   );
@@ -211,6 +212,18 @@ import ContextMenuItem from './ContextMenuItem.vue';
     decrease: [];
     toggle: [];
   }>();
+  const backgroundClassMap = {
+    violet: 'bg-brand-900',
+    grey: 'bg-surface-900',
+    yellow: 'bg-warning-900',
+    orange: 'bg-warning-950',
+    green: 'bg-success-950',
+    red: 'bg-error-900',
+    black: 'bg-surface-950',
+    blue: 'bg-secondary-900',
+    default: 'bg-transparent',
+  } as const;
+  type BackgroundKey = keyof typeof backgroundClassMap;
   const linkHover = ref(false);
   const contextMenu = ref<InstanceType<typeof ContextMenu>>();
   // Compute image source based on available props
@@ -228,38 +241,39 @@ import ContextMenuItem from './ContextMenuItem.vue';
   const imageSize = computed(() => {
     switch (props.size) {
       case 'small':
-        return 24;
-      case 'large':
         return 64;
+      case 'large':
+        return 104;
       case 'medium':
       default:
-        return 32;
+        return 84;
     }
   });
   const containerClasses = computed(() => {
     if (props.simpleMode) {
-      return 'd-block';
+      return 'block';
     }
     return '';
   });
   const imageContainerClasses = computed(() => {
-    const classes = ['d-block', 'relative', 'overflow-hidden'];
+    const classes = ['block', 'shrink-0', 'relative', 'overflow-hidden'];
     if (props.size === 'small') {
-      classes.push('item-row-image');
+      classes.push('h-16', 'w-16'); // 64px
     } else if (props.size === 'large') {
-      classes.push('item-dialog-image');
+      classes.push('h-28', 'w-28'); // 112px
+    } else {
+      classes.push('h-24', 'w-24'); // 96px
     }
     return classes;
   });
   const imageClasses = computed(() => {
-    const classes: Record<string, boolean> = {};
-    // Background color styling
-    const bgColor = props.backgroundColor || props.imageItem?.backgroundColor || 'default';
-    classes[`item-bg-${bgColor}`] = true;
-    // Size-specific styling
-    classes['p-1'] = props.simpleMode;
-    // Base styling
-    classes['rounded'] = true;
+    const classes: string[] = ['rounded'];
+    const bgColor = (
+      props.backgroundColor || props.imageItem?.backgroundColor || 'default'
+    ).toLowerCase() as BackgroundKey;
+    const backgroundClass: string =
+      backgroundClassMap[bgColor] ?? backgroundClassMap.default;
+    classes.push(backgroundClass);
     return classes;
   });
   // Image error handling
@@ -300,19 +314,3 @@ import ContextMenuItem from './ContextMenuItem.vue';
     }
   };
 </script>
-<style scoped>
-  .item-bg-default {
-    background-color: transparent;
-  }
-  .item-row-image {
-    width: 24px;
-    height: 24px;
-  }
-  .item-dialog-image {
-    width: 64px;
-    height: 64px;
-  }
-  .image-placeholder {
-    background-color: var(--color-surface-800);
-  }
-</style>

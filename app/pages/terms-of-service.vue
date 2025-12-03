@@ -83,7 +83,7 @@
         <UCard
           class="prose prose-lg prose-invert prose-headings:text-primary-100 prose-a:text-primary-400 prose-strong:text-primary-200 dark:prose-invert max-w-none"
         >
-          <div class="terms-content space-y-12">
+          <div class="terms-content space-y-12 [&>section]:scroll-mt-28">
             <div
               id="top"
               class="mb-8 flex items-center justify-between border-b border-gray-700/50 pb-4"
@@ -849,8 +849,3 @@
     </ClientOnly>
   </div>
 </template>
-<style scoped>
-  .terms-content section {
-    scroll-margin-top: 7rem;
-  }
-</style>

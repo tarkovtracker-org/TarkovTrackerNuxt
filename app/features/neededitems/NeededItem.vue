@@ -315,39 +315,3 @@
     imageItem,
   });
 </script>
-<style lang="scss">
-  .item-panel {
-    aspect-ratio: 16/9;
-    min-height: 100px;
-  }
-  .item-image {
-    min-height: 90px;
-  }
-  .item-bg-violet {
-    background-color: var(--color-brand-900);
-  }
-  .item-bg-grey {
-    background-color: var(--color-surface-900);
-  }
-  .item-bg-yellow {
-    background-color: var(--color-warning-900);
-  }
-  .item-bg-orange {
-    background-color: var(--color-warning-950);
-  }
-  .item-bg-green {
-    background-color: var(--color-success-950);
-  }
-  .item-bg-red {
-    background-color: var(--color-error-900);
-  }
-  .item-bg-default {
-    background-color: var(--color-surface-800);
-  }
-  .item-bg-black {
-    background-color: var(--color-surface-950);
-  }
-  .item-bg-blue {
-    background-color: var(--color-secondary-900);
-  }
-</style>

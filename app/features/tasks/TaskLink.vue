@@ -56,6 +56,3 @@
     return props.task?.trader?.imageLink;
   });
 </script>
-<style scoped>
-  /* Scoped styles removed - using Tailwind classes */
-</style>

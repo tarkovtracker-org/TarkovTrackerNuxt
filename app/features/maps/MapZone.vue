@@ -181,8 +181,3 @@
     };
   });
 </script>
-<style scoped>
-  .objective-gps-tooltip {
-    width: 100%;
-  }
-</style>
