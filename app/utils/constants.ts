@@ -209,3 +209,18 @@ export const TRADER_ORDER = [
   'voevoda', // Arena trader
   'radio-station', // Radio operator
 ] as const;
+// Sort traders by in-game order using normalizedName
+// Traders not in TRADER_ORDER are placed at the end, sorted alphabetically
+export function sortTradersByGameOrder<T extends { name: string; normalizedName?: string }>(
+  traders: T[]
+): T[] {
+  return [...traders].sort((a, b) => {
+    const aIndex = TRADER_ORDER.indexOf(a.normalizedName as (typeof TRADER_ORDER)[number]);
+    const bIndex = TRADER_ORDER.indexOf(b.normalizedName as (typeof TRADER_ORDER)[number]);
+    // Traders not in the order list go to the end, sorted alphabetically
+    if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+}

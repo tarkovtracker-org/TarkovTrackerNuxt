@@ -29,7 +29,7 @@ import {
   GAME_MODES,
   LOCALE_TO_API_MAPPING,
   MAP_NAME_MAPPING,
-  TRADER_ORDER,
+  sortTradersByGameOrder,
 } from '@/utils/constants';
 import { createGraph } from '@/utils/graphHelpers';
 import { logger } from '@/utils/logger';
@@ -143,17 +143,7 @@ export const useMetadataStore = defineStore('metadata', {
       return [...mergedMaps].sort((a, b) => a.name.localeCompare(b.name));
     },
     // Computed properties for traders (sorted by in-game order)
-    sortedTraders: (state): Trader[] => {
-      return [...state.traders].sort((a, b) => {
-        const aIndex = TRADER_ORDER.indexOf(a.normalizedName as (typeof TRADER_ORDER)[number]);
-        const bIndex = TRADER_ORDER.indexOf(b.normalizedName as (typeof TRADER_ORDER)[number]);
-        // Traders not in the order list go to the end, sorted alphabetically
-        if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
-      });
-    },
+    sortedTraders: (state): Trader[] => sortTradersByGameOrder(state.traders),
     // Computed properties for hideout
     stationsByName: (state): { [name: string]: HideoutStation } => {
       const stationMap: { [name: string]: HideoutStation } = {};

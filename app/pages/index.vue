@@ -101,7 +101,8 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <!-- Tasks Progress -->
         <div
-          class="bg-surface-900 border-surface-700/30 hover:border-primary-700/50 rounded-xl border p-6 shadow-lg transition-colors"
+          class="bg-surface-900 border-surface-700/30 hover:border-primary-700/50 cursor-pointer rounded-xl border p-6 shadow-lg transition-colors"
+          @click="router.push('/tasks')"
         >
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center">
@@ -133,7 +134,8 @@
         </div>
         <!-- Objectives Progress -->
         <div
-          class="bg-surface-900 border-surface-700/30 hover:border-info-700/50 rounded-xl border p-6 shadow-lg transition-colors"
+          class="bg-surface-900 border-surface-700/30 hover:border-info-700/50 cursor-pointer rounded-xl border p-6 shadow-lg transition-colors"
+          @click="router.push('/tasks')"
         >
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center">
@@ -162,7 +164,8 @@
         </div>
         <!-- Task Items Progress -->
         <div
-          class="bg-surface-900 border-surface-700/30 hover:border-success-700/50 rounded-xl border p-6 shadow-lg transition-colors"
+          class="bg-surface-900 border-surface-700/30 hover:border-success-700/50 cursor-pointer rounded-xl border p-6 shadow-lg transition-colors"
+          @click="router.push('/neededitems')"
         >
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center">
@@ -191,7 +194,8 @@
         </div>
         <!-- Kappa Progress -->
         <div
-          class="bg-surface-900 border-surface-700/30 hover:border-warning-700/50 rounded-xl border p-6 shadow-lg transition-colors"
+          class="bg-surface-900 border-surface-700/30 hover:border-warning-700/50 cursor-pointer rounded-xl border p-6 shadow-lg transition-colors"
+          @click="router.push('/tasks')"
         >
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center">
@@ -220,7 +224,8 @@
         </div>
         <!-- Lightkeeper Progress -->
         <div
-          class="bg-surface-900 border-surface-700/30 rounded-xl border p-6 shadow-lg transition-colors hover:border-purple-700/50"
+          class="bg-surface-900 border-surface-700/30 cursor-pointer rounded-xl border p-6 shadow-lg transition-colors hover:border-purple-700/50"
+          @click="router.push('/tasks')"
         >
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center">
@@ -263,7 +268,9 @@
         <div
           v-for="trader in traderStats"
           :key="trader.id"
-          class="bg-surface-900 border-surface-700/30 hover:border-primary-700/30 rounded-lg border p-3 shadow-sm transition-all hover:shadow-md"
+          class="bg-surface-900 border-surface-700/30 hover:border-primary-700/30 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md"
+          :title="`View ${trader.name}'s tasks`"
+          @click="navigateToTraderTasks(trader.id)"
         >
           <div class="mb-2 flex items-center gap-3">
             <img
@@ -449,11 +456,21 @@
 </template>
 <script setup lang="ts">
   import { computed } from 'vue';
+  import { useRouter } from 'vue-router';
   import { useDashboardStats } from '@/composables/useDashboardStats';
+  import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
   // Dashboard statistics composable
   const dashboardStats = useDashboardStats();
   const tarkovStore = useTarkovStore();
+  const router = useRouter();
+  const preferencesStore = usePreferencesStore();
+  // Navigate to tasks page filtered by trader
+  const navigateToTraderTasks = (traderId: string) => {
+    preferencesStore.setTaskPrimaryView('traders');
+    preferencesStore.setTaskTraderView(traderId);
+    router.push('/tasks');
+  };
   // Get current level
   const currentLevel = computed(() => {
     const currentMode = tarkovStore.currentGameMode;

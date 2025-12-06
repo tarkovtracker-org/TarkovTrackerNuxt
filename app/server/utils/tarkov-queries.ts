@@ -381,6 +381,7 @@ export const TARKOV_DATA_QUERY = `
     traders {
       id
       name
+      normalizedName
       resetTime
       imageLink
       levels {

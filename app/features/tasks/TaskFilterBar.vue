@@ -210,7 +210,7 @@
     </div>
     <!-- Trader selector (shown when TRADERS is selected) - Horizontal scrollable -->
     <div v-if="primaryView === 'traders' && traders.length > 0" class="w-full overflow-x-auto">
-      <div class="flex justify-center gap-3 rounded-lg bg-[hsl(240,5%,5%)] px-2 py-2">
+      <div class="flex w-max min-w-full gap-3 rounded-lg bg-[hsl(240,5%,5%)] px-2 py-2">
         <button
           v-for="trader in traders"
           :key="trader.id"
@@ -224,14 +224,16 @@
           ]"
           @click="onTraderSelect({ label: trader.name, value: trader.id })"
         >
-          <div class="relative">
-            <img
-              v-if="trader.imageLink"
-              :src="trader.imageLink"
-              :alt="trader.name"
-              class="h-12 w-12 rounded-full bg-gray-800 object-cover"
-            />
-            <UIcon v-else name="i-mdi-account-circle" class="h-12 w-12 text-gray-400" />
+          <div class="relative h-12 w-12">
+            <div class="h-12 w-12 overflow-hidden rounded-full bg-gray-800">
+              <img
+                v-if="trader.imageLink"
+                :src="trader.imageLink"
+                :alt="trader.name"
+                class="h-full w-full object-cover"
+              />
+              <UIcon v-else name="i-mdi-account-circle" class="h-full w-full text-gray-400" />
+            </div>
             <span
               :class="[
                 'absolute -top-1 -right-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[hsl(240,5%,5%)] px-1 text-sm font-bold text-white',

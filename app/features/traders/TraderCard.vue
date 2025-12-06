@@ -1,11 +1,23 @@
 <template>
-  <GenericCard
-    :title="trader.name"
-    :avatar="trader.imageLink"
-    :avatar-height="64"
-    highlight-color="secondary"
-    class="h-full"
-  >
+  <GenericCard highlight-color="secondary" class="h-full">
+    <template #header>
+      <div
+        class="flex cursor-pointer items-center gap-3 pb-2 text-xl transition-opacity hover:opacity-80"
+        :title="`View ${trader.name}'s tasks`"
+        @click="navigateToTraderTasks"
+      >
+        <span class="bg-gradient-to-br from-brand-700 via-brand-300 to-brand-500 inline-block rounded-br-lg px-3 py-1 shadow-lg">
+          <img
+            :src="trader.imageLink"
+            :alt="trader.name"
+            class="block h-14 w-auto object-contain"
+          />
+        </span>
+        <span class="inline-block px-2 text-left leading-6">
+          {{ trader.name }}
+        </span>
+      </div>
+    </template>
     <template #content>
       <div class="space-y-6 p-4">
         <!-- Loyalty Level Selector -->
@@ -45,9 +57,11 @@
   </GenericCard>
 </template>
 <script setup lang="ts">
+  import { useRouter } from 'vue-router';
   import GenericCard from '@/components/ui/GenericCard.vue';
+  import { usePreferencesStore } from '@/stores/usePreferences';
   import type { Trader } from '@/types/tarkov';
-  defineProps<{
+  const props = defineProps<{
     trader: Trader;
     level: number;
     reputation: number;
@@ -55,4 +69,11 @@
   defineEmits<{
     (e: 'update:level' | 'update:reputation', value: number): void;
   }>();
+  const router = useRouter();
+  const preferencesStore = usePreferencesStore();
+  const navigateToTraderTasks = () => {
+    preferencesStore.setTaskPrimaryView('traders');
+    preferencesStore.setTaskTraderView(props.trader.id);
+    router.push('/tasks');
+  };
 </script>
