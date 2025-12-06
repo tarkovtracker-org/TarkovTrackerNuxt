@@ -53,6 +53,8 @@
               left: `${node.x}px`,
               top: `${node.y}px`,
             }"
+            @finish="emit('finish', $event)"
+            @cancel="emit('cancel', $event)"
           />
         </div>
       </div>
@@ -66,10 +68,10 @@
   import type { TaskTreeNode } from '@/composables/useQuestTree';
   import type { Task } from '@/types/tarkov';
 
-  const NODE_WIDTH = 220;
-  const NODE_HEIGHT = 110;
-  const H_SPACING = 80;
-  const V_SPACING = 40;
+  const NODE_WIDTH = 200;
+  const NODE_HEIGHT = 120;
+  const H_SPACING = 160;
+  const V_SPACING = 70;
   const CANVAS_PADDING = 80;
 
   interface PositionedNode {
@@ -83,6 +85,8 @@
     key: string;
     path: string;
   }
+
+  const emit = defineEmits(['finish', 'cancel']);
 
   const props = defineProps<{
     nodes: TaskTreeNode[];
@@ -192,3 +196,26 @@
     return `M ${startX} ${startY} C ${startX + offset} ${startY}, ${endX - offset} ${endY}, ${endX} ${endY}`;
   }
 </script>
+<style scoped>
+.quest-tree-header {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.quest-tree-canvas {
+  border-color: rgba(255, 255, 255, 0.08);
+  min-height: 520px;
+}
+.quest-tree-scroll {
+  max-height: 70vh;
+  padding: 0.5rem;
+}
+.quest-tree-stage {
+  min-width: 100%;
+  min-height: 100%;
+  padding-bottom: 2rem;
+}
+.status-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.15rem 0.75rem;
+}
+</style>
