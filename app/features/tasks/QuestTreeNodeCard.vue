@@ -1,8 +1,12 @@
 <template>
-  <div class="quest-node absolute rounded-xl border p-3 shadow-lg transition hover:-translate-y-0.5" :class="[statusClass, { 'quest-node-expanded': expanded }]">
-    <div class="flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
+  <div
+    class="quest-node absolute rounded-xl border p-4 shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+    :class="[statusClass, { 'quest-node-expanded': expanded }]"
+    :style="nodeStyle"
+  >
+    <div class="flex items-center justify-between gap-2 text-2xs font-semibold uppercase tracking-wide text-white/70">
       <span>{{ statusLabel }}</span>
-      <span class="text-white/50">#{{ task.tarkovDataId || '—' }}</span>
+      <span class="text-white/40">#{{ task.tarkovDataId || '—' }}</span>
     </div>
     <p class="mt-2 line-clamp-2 text-sm font-bold text-white">
       {{ task.name || t('page.tasks.questtree.unknown_name') }}
@@ -48,6 +52,7 @@
         variant="soft"
         color="primary"
         class="w-full font-semibold"
+        :aria-pressed="expanded"
         @click="toggleObjectives"
       >
         {{ expanded ? t('page.tasks.questtree.collapse') : t('page.tasks.questtree.expand') }}
@@ -64,19 +69,18 @@
           </p>
           <ul class="mt-2 space-y-1 text-xs text-white/80">
             <li
-              v-for="objective in task.objectives || []"
+              v-for="objective in objectiveSummaries"
               :key="objective.id"
-              class="rounded border border-white/5 px-2 py-1"
+              class="rounded border border-white/5 px-2 py-1 leading-snug"
             >
               <span class="font-semibold text-white">
-                {{ objective.description || t('page.tasks.questtree.objective_unknown') }}
+                {{ objective.title }}
               </span>
-              <span v-if="objective.count" class="text-white/60">
-                · {{ objective.count }}x
+              <span v-if="objective.meta" class="text-white/50">
+                · {{ objective.meta }}
               </span>
-              <span v-if="objective.type" class="text-white/50">({{ objective.type }})</span>
             </li>
-            <li v-if="!task.objectives || task.objectives.length === 0" class="text-white/50">
+            <li v-if="objectiveSummaries.length === 0" class="text-white/50">
               {{ t('page.tasks.questtree.no_objectives') }}
             </li>
           </ul>
@@ -87,11 +91,12 @@
           </p>
           <ul class="mt-2 space-y-1 text-xs text-white/80">
             <li
-              v-for="(reward, index) in rewardSummaries"
-              :key="`${task.id}-reward-${index}`"
-              class="rounded border border-white/5 px-2 py-1"
+              v-for="reward in rewardSummaries"
+              :key="reward.id"
+              class="rounded border border-white/5 px-2 py-1 leading-snug"
             >
-              {{ reward }}
+              <span class="font-semibold text-white">{{ reward.title }}</span>
+              <span v-if="reward.meta" class="text-white/50"> · {{ reward.meta }}</span>
             </li>
             <li v-if="rewardSummaries.length === 0" class="text-white/50">
               {{ t('page.tasks.questtree.no_rewards') }}
@@ -103,6 +108,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { CSSProperties } from 'vue';
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import type { Task } from '@/types/tarkov';
@@ -110,6 +116,7 @@
   const props = defineProps<{
     task: Task;
     status: 'available' | 'locked' | 'completed';
+    nodeStyle?: CSSProperties;
   }>();
 
   defineEmits(['finish', 'cancel']);
@@ -138,26 +145,64 @@
     expanded.value = !expanded.value;
   };
 
+  const objectiveSummaries = computed(() => {
+    const objectives = props.task.objectives || [];
+    if (!objectives.length) return [];
+    return objectives.map((objective, index) => {
+      const baseTitle =
+        objective.description?.trim() ||
+        objective.location?.name ||
+        objective.type ||
+        t('page.tasks.questtree.objective_unknown');
+      const metaParts: string[] = [];
+      if (objective.count) metaParts.push(`${objective.count}x`);
+      if (objective.location?.name) metaParts.push(objective.location.name);
+      if (objective.maps?.length) {
+        metaParts.push(
+          objective.maps
+            ?.map((map) => map?.name)
+            .filter((name): name is string => Boolean(name))
+            .join(', ') || ''
+        );
+      }
+      return {
+        id: objective.id || `${props.task.id}-objective-${index}`,
+        title: baseTitle,
+        meta: metaParts.filter(Boolean).join(' • '),
+      };
+    });
+  });
+
   const rewardSummaries = computed(() => {
-    return (props.task.finishRewards || [])
-      .map((reward) => {
+    const rewards = props.task.finishRewards || [];
+    if (!rewards.length) return [];
+    return rewards
+      .map((reward, index) => {
         if (!reward) return null;
-        const type = reward.__typename || t('page.tasks.questtree.reward_unknown');
-        const status = reward.status ? ` (${reward.status})` : '';
-        const quest = reward.quest?.id ? ` → ${reward.quest.id}` : '';
-        return `${type}${status}${quest}`.trim();
+        const title = reward.__typename || reward.status || t('page.tasks.questtree.reward_unknown');
+        const metaParts: string[] = [];
+        if (reward.status) metaParts.push(reward.status);
+        if (reward.quest?.id) metaParts.push(`#${reward.quest.id}`);
+        return {
+          id: `${props.task.id}-reward-${index}`,
+          title,
+          meta: metaParts.filter(Boolean).join(' • '),
+        };
       })
-      .filter((reward): reward is string => Boolean(reward));
+      .filter((reward): reward is { id: string; title: string; meta: string } => Boolean(reward));
   });
 </script>
 <style scoped>
 .quest-node {
-  min-height: 150px;
-  width: 200px;
+  min-height: 160px;
+  width: 210px;
   backdrop-filter: blur(10px);
+  overflow: visible;
+  left: 0;
+  top: 0;
 }
 .quest-node-expanded {
-  width: 260px;
+  width: 320px;
 }
 .quest-node-available {
   border-color: rgba(148, 163, 184, 0.4);

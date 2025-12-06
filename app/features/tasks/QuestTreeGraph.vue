@@ -48,11 +48,7 @@
             :key="node.key"
             :task="node.task"
             :status="taskStatus(node.task.id)"
-            :style="{
-              width: `${NODE_WIDTH}px`,
-              left: `${node.x}px`,
-              top: `${node.y}px`,
-            }"
+            :node-style="node.style"
             @finish="emit('finish', $event)"
             @cancel="emit('cancel', $event)"
           />
@@ -71,7 +67,7 @@
   const NODE_WIDTH = 200;
   const NODE_HEIGHT = 120;
   const H_SPACING = 160;
-  const V_SPACING = 70;
+  const V_SPACING = 120;
   const CANVAS_PADDING = 80;
 
   interface PositionedNode {
@@ -79,6 +75,7 @@
     task: Task;
     x: number;
     y: number;
+    style: Record<string, string>;
   }
 
   interface EdgePath {
@@ -164,6 +161,9 @@
         task: node.task,
         x: coords.x,
         y: coords.y,
+        style: {
+          transform: `translate3d(${coords.x}px, ${coords.y}px, 0)`,
+        },
       });
       node.children.forEach((child, index) => {
         const childCoords = toCoords(child);
@@ -212,6 +212,10 @@
   min-width: 100%;
   min-height: 100%;
   padding-bottom: 2rem;
+}
+.quest-tree-stage ::v-deep(.quest-node) {
+  will-change: transform;
+  transition: transform 0.2s ease;
 }
 .status-pill {
   border-radius: 999px;
