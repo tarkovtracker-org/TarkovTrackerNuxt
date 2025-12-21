@@ -13,6 +13,7 @@ import { computed } from 'vue';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { useTarkovStore } from '@/stores/useTarkov';
 import type { Skill, SkillRequirement, TaskObjective } from '@/types/tarkov';
+import { logger } from '@/utils/logger';
 /**
  * Extended TaskObjective with GraphQL __typename discriminator
  */
@@ -92,6 +93,20 @@ export function useSkillCalculation() {
   };
   // Action: Set skill offset
   const setSkillOffset = (skillName: string, offset: number) => {
+    tarkovStore.setSkillOffset(skillName, offset);
+  };
+  // Action: Set total skill level (calculates and stores offset)
+  // This mirrors the XP pattern - user enters their actual game value
+  const setTotalSkillLevel = (skillName: string, totalLevel: number) => {
+    // Validation: Ensure totalLevel is a finite number and >= 0
+    if (typeof totalLevel !== 'number' || !Number.isFinite(totalLevel) || totalLevel < 0) {
+      logger.warn(`[useSkillCalculation] Invalid totalLevel "${totalLevel}" for skill "${skillName}"`);
+      return;
+    }
+    // Coerce to integer as skill levels in Tarkov are whole numbers (0-51)
+    const validatedLevel = Math.floor(totalLevel);
+    const questLevel = calculatedQuestSkills.value[skillName] || 0;
+    const offset = validatedLevel - questLevel;
     tarkovStore.setSkillOffset(skillName, offset);
   };
   // Action: Reset skill offset to 0
@@ -193,6 +208,7 @@ export function useSkillCalculation() {
     getSkillMetadata,
     // Actions
     setSkillOffset,
+    setTotalSkillLevel,
     resetSkillOffset,
   };
 }

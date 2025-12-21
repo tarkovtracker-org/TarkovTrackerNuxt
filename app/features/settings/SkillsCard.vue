@@ -105,16 +105,16 @@
                 <span class="text-surface-200 font-medium">{{ getSkillOffset(skill.name) }}</span>
               </div>
             </div>
-            <!-- Offset Input -->
+            <!-- Skill Level Input -->
             <div class="flex items-center gap-2">
               <UInput
-                :model-value="getSkillOffset(skill.name)"
+                :model-value="getSkillLevel(skill.name)"
                 type="number"
                 :min="0"
                 placeholder="0"
                 size="sm"
                 class="flex-1"
-                @update:model-value="(value) => updateSkillOffset(skill.name, value)"
+                @update:model-value="(value) => updateSkillLevel(skill.name, value)"
               />
               <UButton
                 icon="i-mdi-refresh"
@@ -203,11 +203,11 @@
   const getSkillLevel = (skillName: string) => skillCalculation.getSkillLevel(skillName);
   const getQuestSkillLevel = (skillName: string) => skillCalculation.getQuestSkillLevel(skillName);
   const getSkillOffset = (skillName: string) => skillCalculation.getSkillOffset(skillName);
-  // Update skill offset
-  const updateSkillOffset = (skillName: string, value: string | number) => {
+  // Update skill level (calculates offset automatically)
+  const updateSkillLevel = (skillName: string, value: string | number) => {
     const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
     if (!isNaN(numValue) && numValue >= 0) {
-      skillCalculation.setSkillOffset(skillName, numValue);
+      skillCalculation.setTotalSkillLevel(skillName, numValue);
     }
   };
   // Reset skill offset to 0
