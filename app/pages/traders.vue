@@ -31,6 +31,12 @@
   import TraderCard from '@/features/traders/TraderCard.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { useTarkovStore } from '@/stores/useTarkov';
+  // Page metadata
+  useSeoMeta({
+    title: 'Traders',
+    description:
+      'Track trader levels and unlock requirements. View available items and services from each trader.',
+  });
   const tarkovStore = useTarkovStore();
   const metadataStore = useMetadataStore();
   const { sortedTraders, loading } = storeToRefs(metadataStore);

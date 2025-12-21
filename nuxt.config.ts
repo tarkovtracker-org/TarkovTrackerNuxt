@@ -14,6 +14,22 @@ export default defineNuxtConfig({
     supabaseServiceKey:
       process.env.SB_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     supabaseAnonKey: process.env.SB_ANON_KEY || process.env.SUPABASE_ANON_KEY || '',
+    // API protection configuration (server-only)
+    apiProtection: {
+      // Comma-separated list of allowed hosts (e.g., "tarkovtracker.org,www.tarkovtracker.org")
+      allowedHosts: process.env.API_ALLOWED_HOSTS || '',
+      // Comma-separated list of internal/trusted IP ranges (CIDR notation or single IPs)
+      // e.g., "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1"
+      trustedIpRanges: process.env.API_TRUSTED_IP_RANGES || '',
+      // Whether to require authentication for protected API routes
+      requireAuth: process.env.API_REQUIRE_AUTH !== 'false', // defaults to true
+      // Routes that are exempt from auth requirement (comma-separated, supports wildcards)
+      // e.g., "/api/tarkov/*" for public data endpoints
+      publicRoutes: process.env.API_PUBLIC_ROUTES || '/api/tarkov/*',
+      // Whether to trust proxy headers (X-Forwarded-For, etc.)
+      // ONLY enable this if the server is behind a trusted proxy like Cloudflare
+      trustProxy: process.env.API_TRUST_PROXY === 'true',
+    },
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       teamGatewayUrl: process.env.NUXT_PUBLIC_TEAM_GATEWAY_URL || '',
@@ -53,6 +69,45 @@ export default defineNuxtConfig({
     baseURL: '/',
     buildAssetsDir: '/_nuxt/',
     head: {
+      titleTemplate: '%s | TarkovTracker',
+      title: 'TarkovTracker',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'description',
+          content:
+            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+        },
+        { name: 'theme-color', content: '#c8a882' },
+
+        // OpenGraph tags
+        { property: 'og:site_name', content: 'TarkovTracker' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: 'TarkovTracker - Escape from Tarkov Progress Tracker' },
+        {
+          property: 'og:description',
+          content:
+            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+        },
+        {
+          property: 'og:image',
+          content: 'https://tarkovtracker.org/img/logos/tarkovtrackerlogo-light.webp',
+        },
+        { property: 'og:url', content: 'https://tarkovtracker.org' },
+        // Twitter Card tags
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'TarkovTracker - Escape from Tarkov Progress Tracker' },
+        {
+          name: 'twitter:description',
+          content:
+            'Complete Escape from Tarkov progress tracker for patch 1.0+. Track quests, storyline, hideout, and needed items. Team collaboration features and API integration with TarkovMonitor and RatScanner.',
+        },
+        {
+          name: 'twitter:image',
+          content: 'https://tarkovtracker.org/img/logos/tarkovtrackerlogo-light.webp',
+        },
+      ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         {

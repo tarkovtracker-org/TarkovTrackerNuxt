@@ -747,3 +747,10 @@
     </div>
   </UContainer>
 </template>
+<script setup lang="ts">
+  // Page metadata
+  useSeoMeta({
+    title: 'Privacy Policy',
+    description: 'TarkovTracker privacy policy and data handling practices.',
+  });
+</script>

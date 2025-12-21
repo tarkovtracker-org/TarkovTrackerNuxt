@@ -31,7 +31,7 @@
               </svg>
             </a>
             <a
-              href="https://github.com/tarkovtracker-org/TarkovTracker"
+              href="https://github.com/tarkovtracker-org/TarkovTrackerNuxt"
               target="_blank"
               rel="noopener noreferrer"
               class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-[#f0f6fc] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#c9d1d9] hover:text-[#0d1117] hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"

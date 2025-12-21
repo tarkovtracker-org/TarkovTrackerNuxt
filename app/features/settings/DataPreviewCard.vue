@@ -75,7 +75,8 @@
 </template>
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { getEditionName } from '@/utils/constants';
+  import { useMetadataStore } from '@/stores/useMetadata';
+  const metadataStore = useMetadataStore();
   const props = defineProps({
     data: {
       type: Object,
@@ -103,5 +104,12 @@
     },
   });
   defineEmits(['show-objectives-details', 'show-failed-tasks-details']);
-  const editionName = computed(() => getEditionName(props.data?.gameEdition));
+  const editionName = computed(() => {
+    const editionValue = props.data?.gameEdition;
+    if (!editionValue) return 'N/A';
+    const editions = metadataStore.editions;
+    if (!Array.isArray(editions)) return `Edition ${editionValue}`;
+    const edition = editions.find((item) => item.value === editionValue);
+    return edition?.title ?? `Edition ${editionValue}`;
+  });
 </script>

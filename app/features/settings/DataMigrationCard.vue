@@ -18,7 +18,7 @@
           >
             <template #trailing>
               <UButton
-                color="gray"
+                color="neutral"
                 variant="link"
                 icon="i-mdi-eye"
                 :padded="false"

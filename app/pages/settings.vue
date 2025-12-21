@@ -407,17 +407,20 @@
   import DisplayNameCard from '@/features/settings/DisplayNameCard.vue';
   import ExperienceCard from '@/features/settings/ExperienceCard.vue';
   import SkillsCard from '@/features/settings/SkillsCard.vue';
+  import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
-  import { GAME_EDITIONS } from '@/utils/constants';
   import { logger } from '@/utils/logger';
-  // Page meta
-  definePageMeta({
-    title: 'Settings',
+  // Page metadata
+  useSeoMeta({
+    title: 'Settings | TarkovTracker',
+    description:
+      'Customize your TarkovTracker experience. Manage preferences, game mode, and account settings.',
   });
   // Composables
   const { $supabase } = useNuxtApp();
   const toast = useToast();
+  const metadataStore = useMetadataStore();
   const preferencesStore = usePreferencesStore();
   const tarkovStore = useTarkovStore();
   const selectUi = {};
@@ -461,7 +464,7 @@
   });
   // Game edition
   const gameEditionOptions = computed(() =>
-    GAME_EDITIONS.map((edition) => ({
+    metadataStore.editions.map((edition) => ({
       label: edition.title,
       value: edition.value,
     }))

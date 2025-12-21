@@ -7,6 +7,7 @@ import { useTarkovStore } from '@/stores/useTarkov';
 import type {
   HideoutModule,
   HideoutStation,
+  GameEdition,
   NeededItemHideoutModule,
   NeededItemTaskObjective,
   ObjectiveGPSInfo,
@@ -49,17 +50,22 @@ export type CraftSource = { stationId: string; stationName: string; stationLevel
 let initPromise: Promise<void> | null = null;
 const isInitializing = ref(false);
 interface MetadataState {
-  // Loading states
+  // Initialization and loading states
+  initialized: boolean;
+  initializationFailed: boolean;
   loading: boolean;
   hideoutLoading: boolean;
   itemsLoading: boolean;
   prestigeLoading: boolean;
+  editionsLoading: boolean;
   error: Error | null;
   hideoutError: Error | null;
   itemsError: Error | null;
   prestigeError: Error | null;
+  editionsError: Error | null;
   // Raw data from API
   tasks: Task[];
+  editions: GameEdition[];
   hideoutStations: HideoutStation[];
   maps: TarkovMap[];
   traders: Trader[];
@@ -85,15 +91,20 @@ interface MetadataState {
 }
 export const useMetadataStore = defineStore('metadata', {
   state: (): MetadataState => ({
+    initialized: false,
+    initializationFailed: false,
     loading: false,
     hideoutLoading: false,
     itemsLoading: false,
     prestigeLoading: false,
+    editionsLoading: false,
     error: null,
     hideoutError: null,
     itemsError: null,
     prestigeError: null,
+    editionsError: null,
     tasks: [],
+    editions: [],
     hideoutStations: [],
     maps: [],
     traders: [],
@@ -131,6 +142,14 @@ export const useMetadataStore = defineStore('metadata', {
     enabledTasks: (state): Task[] => {
       return state.tasks.filter((task) => !EXCLUDED_SCAV_KARMA_TASKS.includes(task.id));
     },
+    // Get edition name by value
+    getEditionName:
+      (state) =>
+      (edition: number | undefined): string => {
+        if (edition == null) return 'N/A';
+        const found = state.editions.find((e) => e.value === edition);
+        return found ? found.title : `Edition ${edition}`;
+      },
     // Computed properties for maps with merged static data
     mapsWithSvg: (state): TarkovMap[] => {
       if (!state.maps.length || !state.staticMapData) {
@@ -202,6 +221,7 @@ export const useMetadataStore = defineStore('metadata', {
         state.hideoutStations.length > 0
       );
     },
+    hasInitialized: (state): boolean => state.initialized,
     // Items getters
     itemsById: (state): Map<string, TarkovItem> => {
       const map = new Map<string, TarkovItem>();
@@ -240,6 +260,13 @@ export const useMetadataStore = defineStore('metadata', {
           this.updateLanguageAndGameMode();
           await this.loadStaticMapData();
           await this.fetchAllData();
+          this.initialized = true;
+          this.initializationFailed = false;
+        } catch (err) {
+          logger.error('[MetadataStore] Failed to initialize metadata:', err);
+          this.initializationFailed = true;
+          // Rethrow to allow caller (e.g. metadata plugin) to handle retries or critical failure
+          throw err;
         } finally {
           isInitializing.value = false;
           initPromise = null;
@@ -288,6 +315,7 @@ export const useMetadataStore = defineStore('metadata', {
         this.fetchTasksData(forceRefresh),
         this.fetchHideoutData(forceRefresh),
         this.fetchPrestigeData(forceRefresh),
+        this.fetchEditionsData(forceRefresh),
       ]);
     },
     /**
@@ -535,6 +563,66 @@ export const useMetadataStore = defineStore('metadata', {
         this.prestigeLevels = [];
       } finally {
         this.prestigeLoading = false;
+      }
+    },
+    /**
+     * Fetch game editions data directly from GitHub overlay
+     * Editions are universal (not language or game-mode specific)
+     * Uses IndexedDB cache for client-side persistence
+     */
+    async fetchEditionsData(forceRefresh = false) {
+      this.editionsLoading = true;
+      this.editionsError = null;
+      try {
+        // Step 1: Check IndexedDB cache (unless forcing refresh)
+        if (!forceRefresh && typeof window !== 'undefined') {
+          const cached = await getCachedData<{ editions: GameEdition[] }>(
+            'editions' as CacheType,
+            'all',
+            'en' // Editions are universal, use 'en' as cache key
+          );
+          if (cached?.editions) {
+            logger.debug('[MetadataStore] Editions loaded from cache');
+            this.editions = cached.editions;
+            this.editionsLoading = false;
+            return;
+          }
+        }
+        // Step 2: Fetch directly from GitHub overlay
+        logger.debug('[MetadataStore] Fetching editions from GitHub overlay');
+        const OVERLAY_URL =
+          'https://raw.githubusercontent.com/tarkovtracker-org/tarkov-data-overlay/main/dist/overlay.json';
+        const overlay = await $fetch<{
+          editions?: Record<string, GameEdition>;
+        }>(OVERLAY_URL, {
+          parseResponse: JSON.parse,
+        });
+        logger.debug('[MetadataStore] Overlay fetch response:', overlay);
+        if (overlay?.editions) {
+          // Convert editions object to array
+          const editionsArray = Object.values(overlay.editions);
+          logger.debug('[MetadataStore] Editions array:', editionsArray);
+          this.editions = editionsArray;
+          // Step 3: Store in IndexedDB for future visits (24 hour TTL)
+          if (typeof window !== 'undefined') {
+            setCachedData(
+              'editions' as CacheType,
+              'all',
+              'en',
+              { editions: editionsArray },
+              CACHE_CONFIG.MAX_TTL
+            ).catch((err) => logger.error('[MetadataStore] Error caching editions data:', err));
+          }
+        } else {
+          logger.warn('[MetadataStore] No editions found in overlay response');
+          this.editions = [];
+        }
+      } catch (err) {
+        logger.error('[MetadataStore] Error fetching editions data:', err);
+        this.editionsError = err as Error;
+        this.editions = [];
+      } finally {
+        this.editionsLoading = false;
       }
     },
     /**

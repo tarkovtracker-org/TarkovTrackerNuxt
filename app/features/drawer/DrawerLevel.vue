@@ -6,7 +6,7 @@
           {{ t('navigation_drawer.level') }}
         </div>
         <h1 class="text-center text-2xl leading-tight font-bold">
-          {{ tarkovStore.playerLevel() }}
+          {{ displayedLevel }}
         </h1>
       </div>
     </template>
@@ -18,18 +18,37 @@
         <div class="flex min-w-0 items-center gap-1">
           <span class="mr-1 shrink-0 leading-none">
             <div class="group relative h-12 w-12 overflow-hidden">
-              <NuxtImg
-                :src="pmcFactionIcon"
-                class="absolute top-0 left-0 z-20 mt-1 max-w-[48px] px-1 opacity-0 invert transition-opacity duration-1000 ease-in-out group-hover:opacity-100"
-                width="48"
-                height="48"
-              />
-              <NuxtImg
-                :src="groupIcon"
-                class="absolute top-0 left-0 z-10 max-w-[48px] opacity-100 transition-opacity duration-1000 ease-in-out group-hover:opacity-0"
-                width="48"
-                height="48"
-              />
+              <template v-if="isDataReady && groupIcon">
+                <NuxtImg
+                  v-if="!factionImageLoadFailed"
+                  :src="pmcFactionIcon"
+                  class="absolute top-0 left-0 z-20 mt-1 max-w-[48px] px-1 opacity-0 invert transition-opacity duration-1000 ease-in-out group-hover:opacity-100"
+                  width="48"
+                  height="48"
+                  @error="handleFactionImageError"
+                />
+                <NuxtImg
+                  v-if="!groupImageLoadFailed"
+                  :src="groupIcon"
+                  class="absolute top-0 left-0 z-10 max-w-[48px] opacity-100 transition-opacity duration-1000 ease-in-out group-hover:opacity-0"
+                  width="48"
+                  height="48"
+                  @error="handleGroupImageError"
+                />
+                <!-- Final fallback if both fail -->
+                <div
+                  v-if="factionImageLoadFailed && groupImageLoadFailed"
+                  class="flex h-12 w-12 items-center justify-center rounded bg-white/5"
+                >
+                  <UIcon name="i-heroicons-photo" class="h-6 w-6 text-gray-600" />
+                </div>
+              </template>
+              <template v-else>
+                <!-- Loading placeholder -->
+                <div class="flex h-12 w-12 items-center justify-center rounded bg-white/5">
+                  <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-gray-500" />
+                </div>
+              </template>
             </div>
           </span>
           <span class="mx-0.5 min-w-0 flex-1">
@@ -38,11 +57,23 @@
             </div>
             <div class="text-center">
               <h1
-                v-if="!editingLevel"
-                class="hover:text-primary mx-auto w-11 cursor-pointer text-[2rem] leading-[0.85] transition-colors"
-                @click="startEditingLevel"
+                v-if="!editingLevel || useAutomaticLevel"
+                :class="
+                  useAutomaticLevel
+                    ? 'mx-auto w-11 text-[2rem] leading-[0.85]'
+                    : 'hover:text-primary mx-auto w-11 cursor-pointer text-[2rem] leading-[0.85] transition-colors'
+                "
+                :title="
+                  useAutomaticLevel
+                    ? t(
+                        'navigation_drawer.auto_level_enabled',
+                        'Automatic level calculation is enabled'
+                      )
+                    : ''
+                "
+                @click="!useAutomaticLevel && startEditingLevel()"
               >
-                {{ tarkovStore.playerLevel() }}
+                {{ displayedLevel }}
               </h1>
               <input
                 v-else
@@ -61,14 +92,31 @@
           <span class="ml-0.5 flex shrink-0 flex-col items-center gap-0.5">
             <button
               class="flex h-6 w-6 cursor-pointer items-center justify-center p-0 text-white/70 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-              :disabled="tarkovStore.playerLevel() >= maxPlayerLevel"
+              :disabled="useAutomaticLevel || displayedLevel >= maxPlayerLevel"
+              :title="
+                useAutomaticLevel
+                  ? t(
+                      'navigation_drawer.manual_disabled',
+                      'Manual level editing is disabled when automatic calculation is enabled'
+                    )
+                  : ''
+              "
               @click="incrementLevel"
             >
               <UIcon name="i-mdi-chevron-up" class="h-5 w-5" />
             </button>
-            <template v-if="tarkovStore.playerLevel() > minPlayerLevel">
+            <template v-if="displayedLevel > minPlayerLevel">
               <button
-                class="flex h-6 w-6 cursor-pointer items-center justify-center p-0 text-white/70 transition-colors hover:text-white"
+                class="flex h-6 w-6 cursor-pointer items-center justify-center p-0 text-white/70 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="useAutomaticLevel"
+                :title="
+                  useAutomaticLevel
+                    ? t(
+                        'navigation_drawer.manual_disabled',
+                        'Manual level editing is disabled when automatic calculation is enabled'
+                      )
+                    : ''
+                "
                 @click="decrementLevel"
               >
                 <UIcon name="i-mdi-chevron-down" class="h-5 w-5" />
@@ -102,11 +150,12 @@
   </div>
 </template>
 <script setup>
-  import { computed, nextTick, ref } from 'vue';
+  import { computed, nextTick, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { useXpCalculation } from '@/composables/useXpCalculation';
   import { useMetadataStore } from '@/stores/useMetadata';
+  import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
   const { t } = useI18n({ useScope: 'global' });
   const router = useRouter();
@@ -118,18 +167,33 @@
   });
   const tarkovStore = useTarkovStore();
   const metadataStore = useMetadataStore();
+  const preferencesStore = usePreferencesStore();
   const xpCalculation = useXpCalculation();
   const minPlayerLevel = computed(() => metadataStore.minPlayerLevel);
   const maxPlayerLevel = computed(() => metadataStore.maxPlayerLevel);
   const playerLevels = computed(() => metadataStore.playerLevels);
+  // Check if automatic level calculation is enabled
+  const useAutomaticLevel = computed(() => preferencesStore.getUseAutomaticLevelCalculation);
+  // Computed level that respects the automatic calculation preference
+  const displayedLevel = computed(() => {
+    return useAutomaticLevel.value ? xpCalculation.derivedLevel.value : tarkovStore.playerLevel();
+  });
+  // Check if data is ready to prevent broken images
+  const isDataReady = computed(() => {
+    return (
+      !metadataStore.loading && metadataStore.playerLevels.length > 0 && tarkovStore.getPMCFaction()
+    );
+  });
   const pmcFactionIcon = computed(() => {
     return `/img/factions/${tarkovStore.getPMCFaction()}.webp`;
   });
   const groupIcon = computed(() => {
-    const level = tarkovStore.playerLevel();
+    const level = displayedLevel.value;
     const entry = playerLevels.value.find((pl) => pl.level === level);
     return entry?.levelBadgeImageLink ?? '';
   });
+  const factionImageLoadFailed = ref(false);
+  const groupImageLoadFailed = ref(false);
   // Manual level editing logic
   const editingLevel = ref(false);
   const levelInputValue = ref(tarkovStore.playerLevel());
@@ -171,6 +235,25 @@
   // Format number with commas
   function formatNumber(num) {
     return num.toLocaleString('en-US');
+  }
+  // Reset failure flags if icons change (retry)
+  watch(pmcFactionIcon, () => {
+    factionImageLoadFailed.value = false;
+  });
+  watch(groupIcon, () => {
+    groupImageLoadFailed.value = false;
+  });
+  /**
+   * Log image load failure and flip a flag to hide the specific failing image.
+   * This is a fallback in case an image file is missing from the server or assets.
+   */
+  function handleFactionImageError(event) {
+    console.warn('Failed to load faction image:', event.target?.src);
+    factionImageLoadFailed.value = true;
+  }
+  function handleGroupImageError(event) {
+    console.warn('Failed to load group image:', event.target?.src);
+    groupImageLoadFailed.value = true;
   }
 </script>
 <style>

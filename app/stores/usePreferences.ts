@@ -1,3 +1,4 @@
+import 'pinia-plugin-persistedstate';
 import { defineStore } from 'pinia';
 import { watch } from 'vue';
 import { useSupabaseSync } from '@/composables/supabase/useSupabaseSync';
@@ -37,6 +38,8 @@ export interface PreferencesState {
   showNextQuests: boolean;
   showPreviousQuests: boolean;
   taskCardDensity: 'comfortable' | 'compact';
+  // XP and Level settings
+  useAutomaticLevelCalculation: boolean;
   saving?: {
     streamerMode: boolean;
     hideGlobalTasks: boolean;
@@ -77,6 +80,8 @@ export const preferencesDefaultState: PreferencesState = {
   showNextQuests: true,
   showPreviousQuests: true,
   taskCardDensity: 'compact',
+  // XP and Level settings
+  useAutomaticLevelCalculation: false,
   saving: {
     streamerMode: false,
     hideGlobalTasks: false,
@@ -204,6 +209,9 @@ export const usePreferencesStore = defineStore('preferences', {
     getTaskCardDensity: (state) => {
       return state.taskCardDensity ?? 'compact';
     },
+    getUseAutomaticLevelCalculation: (state) => {
+      return state.useAutomaticLevelCalculation ?? false;
+    },
   },
   actions: {
     setStreamerMode(mode: boolean) {
@@ -307,6 +315,9 @@ export const usePreferencesStore = defineStore('preferences', {
     setTaskCardDensity(density: 'comfortable' | 'compact') {
       this.taskCardDensity = density;
     },
+    setUseAutomaticLevelCalculation(use: boolean) {
+      this.useAutomaticLevelCalculation = use;
+    },
   },
   // Enable automatic localStorage persistence
   persist: {
@@ -350,6 +361,7 @@ export const usePreferencesStore = defineStore('preferences', {
       'showNextQuests',
       'showPreviousQuests',
       'taskCardDensity',
+      'useAutomaticLevelCalculation',
     ],
   },
 });
@@ -437,6 +449,8 @@ if (import.meta.client) {
                       neededitems_style: preferencesState.neededitemsStyle,
                       hideout_primary_view: preferencesState.hideoutPrimaryView,
                       locale_override: preferencesState.localeOverride,
+                      use_automatic_level_calculation:
+                        preferencesState.useAutomaticLevelCalculation,
                     };
                   },
                 });

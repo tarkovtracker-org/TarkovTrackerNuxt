@@ -1,47 +1,3 @@
-export const GAME_EDITIONS = [
-  {
-    title: 'Standard',
-    value: 1,
-    traderRep: 0.0,
-    defaultStashLevel: 1,
-    defaultCultistCircleLevel: 0,
-  },
-  {
-    title: 'Left Behind',
-    value: 2,
-    traderRep: 0.0,
-    defaultStashLevel: 2,
-    defaultCultistCircleLevel: 0,
-  },
-  {
-    title: 'Prepare for Escape',
-    value: 3,
-    traderRep: 0.2,
-    defaultStashLevel: 3,
-    defaultCultistCircleLevel: 0,
-  },
-  {
-    title: 'Edge of Darkness',
-    value: 4,
-    traderRep: 0.2,
-    defaultStashLevel: 4,
-    defaultCultistCircleLevel: 0,
-  },
-  {
-    title: 'Unheard',
-    value: 5,
-    traderRep: 0.2,
-    defaultStashLevel: 5,
-    defaultCultistCircleLevel: 1,
-  },
-  {
-    title: 'Edge of Darkness + Unheard',
-    value: 6,
-    traderRep: 0.2,
-    defaultStashLevel: 5,
-    defaultCultistCircleLevel: 1,
-  },
-];
 // Special hideout stations with edition-based default levels
 // Uses normalizedName for language-independent, stable identification
 export const SPECIAL_STATIONS = {
@@ -94,11 +50,6 @@ export const GAME_MODE_OPTIONS = [
     description: 'Player vs Environment (Co-op)',
   },
 ];
-export function getEditionName(edition: number | undefined): string {
-  if (!edition) return 'N/A';
-  const found = GAME_EDITIONS.find((e) => e.value === edition);
-  return found ? found.title : `Edition ${edition}`;
-}
 // Scav Karma (Fence Rep) tasks excluded from tracking
 // These "Compensation for Damage" tasks require Scav Karma validation which isn't yet implemented
 // They would always show as incomplete without proper Fence reputation tracking
@@ -116,9 +67,6 @@ export const CURRENCY_ITEM_IDS = [
   '5449016a4bdc2d6f028b456f', // Roubles (RUB)
   '569668774bdc2da2298b4568', // Euros (EUR)
 ] as const;
-export const MANUAL_TASKS_OVERRIDE = [
-  '66058cb22cee99303f1ba067', // "Easy Money - Part 1" "req. lvl 10 but set as 20 - PVP
-];
 // API Language Configuration
 export const API_SUPPORTED_LANGUAGES = [
   'cs', // Czech

@@ -465,11 +465,14 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { computed } from 'vue';
-  import { useRouter } from 'vue-router';
-  import { useDashboardStats } from '@/composables/useDashboardStats';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
+  // Page metadata
+  useSeoMeta({
+    title: 'Dashboard',
+    description:
+      'Your Escape from Tarkov progress dashboard. View overall stats, recent completions, and quick access to tasks, hideout, and needed items.',
+  });
   // Dashboard statistics composable
   const dashboardStats = useDashboardStats();
   const tarkovStore = useTarkovStore();

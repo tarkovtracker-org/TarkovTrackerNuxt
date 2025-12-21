@@ -1,4 +1,9 @@
 <script setup lang="ts">
+  // Page metadata
+  useSeoMeta({
+    title: 'Terms of Service',
+    description: 'TarkovTracker terms of service and usage guidelines.',
+  });
   const lastUpdated = 'November 28, 2025';
   const toc = [
     { id: 'top', title: '1. Acceptance of Terms' },

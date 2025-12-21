@@ -20,6 +20,44 @@
             }}
           </template>
         </UAlert>
+        <!-- Automatic Level Calculation Toggle -->
+        <div class="border-surface-700 bg-surface-800/30 rounded-lg border p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-surface-200 mb-1 text-sm font-semibold">
+                {{ $t('settings.experience.auto_level_title', 'Automatic Level Calculation') }}
+              </div>
+              <p class="text-surface-400 text-xs">
+                {{
+                  $t(
+                    'settings.experience.auto_level_description',
+                    'When enabled, your level will be automatically calculated based on total XP. When disabled, you can manually set your level independently of XP calculations.'
+                  )
+                }}
+              </p>
+            </div>
+            <USwitch
+              :model-value="preferencesStore.getUseAutomaticLevelCalculation"
+              @update:model-value="handleAutoLevelToggle"
+            />
+          </div>
+          <UAlert
+            v-if="!preferencesStore.getUseAutomaticLevelCalculation"
+            icon="i-mdi-alert"
+            color="warning"
+            variant="soft"
+            class="mt-3 text-xs"
+          >
+            <template #description>
+              {{
+                $t(
+                  'settings.experience.manual_level_warning',
+                  'Manual level mode is active. This allows you to set your level independently of your calculated XP, which can be useful if your in-game level differs due to Arena, raids, or other XP sources not tracked here.'
+                )
+              }}
+            </template>
+          </UAlert>
+        </div>
         <!-- Current Level Display -->
         <div class="border-surface-700 bg-surface-800/30 rounded-lg border p-4">
           <div class="mb-3 flex items-center justify-between">
@@ -130,8 +168,10 @@
   import { ref, computed } from 'vue';
   import GenericCard from '@/components/ui/GenericCard.vue';
   import { useXpCalculation } from '@/composables/useXpCalculation';
+  import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
   const tarkovStore = useTarkovStore();
+  const preferencesStore = usePreferencesStore();
   const xpCalculation = useXpCalculation();
   // Manual XP input
   const manualXPInput = ref<number | null>(null);
@@ -155,6 +195,14 @@
   const resetOffset = () => {
     tarkovStore.setXpOffset(0);
     manualXPInput.value = null;
+  };
+  // Handle automatic level calculation toggle
+  const handleAutoLevelToggle = (value: boolean) => {
+    preferencesStore.setUseAutomaticLevelCalculation(value);
+    // If enabling automatic calculation, sync the manual level with derived level
+    if (value) {
+      tarkovStore.setLevel(xpCalculation.derivedLevel.value);
+    }
   };
   // Format number with commas
   const formatNumber = (num: number): string => {

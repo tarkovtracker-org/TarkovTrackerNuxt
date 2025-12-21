@@ -87,7 +87,7 @@
           class="border-primary-800/50 hover:border-primary-600 w-full rounded border px-2 py-1 text-center text-xs font-medium text-white/80 transition-colors hover:text-white"
           @click="navigateToSettings"
         >
-          {{ getEditionName(tarkovStore.gameEdition) }}
+          {{ currentEditionName }}
         </button>
         <div class="border-primary-800/50 flex w-full overflow-hidden rounded-md border">
           <button
@@ -152,12 +152,14 @@
   import { useRouter } from 'vue-router';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
   import { useAppStore } from '@/stores/useApp';
+  import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useTarkovStore } from '@/stores/useTarkov';
-  import { getEditionName, PMC_FACTIONS, type PMCFaction } from '@/utils/constants';
+  import { PMC_FACTIONS, type PMCFaction } from '@/utils/constants';
   // Use shared breakpoints to avoid duplicate listeners
   const { belowMd } = useSharedBreakpoints();
   const appStore = useAppStore();
+  const metadataStore = useMetadataStore();
   // Mobile expanded state from store
   const mobileExpanded = computed(() => appStore.mobileDrawerExpanded);
   // Close mobile expanded when switching to desktop
@@ -203,6 +205,7 @@
       : $supabase.user.photoURL;
   });
   const currentFaction = computed<PMCFaction>(() => tarkovStore.getPMCFaction());
+  const currentEditionName = computed(() => metadataStore.getEditionName(tarkovStore.gameEdition));
   function setFaction(faction: PMCFaction) {
     if (faction !== currentFaction.value) {
       tarkovStore.setPMCFaction(faction);

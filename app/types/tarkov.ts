@@ -10,6 +10,24 @@ import type { ComputedRef, Ref } from 'vue';
  * - Game objectives and quest data
  */
 // Core Tarkov Data Types
+/**
+ * Represents a game edition in Escape from Tarkov.
+ * Each edition provides different starting bonuses and default levels.
+ */
+export interface GameEdition {
+  /** Unique identifier for the game edition */
+  id: string;
+  /** Numeric value representing the edition tier (higher = better edition) */
+  value: number;
+  /** Display name of the edition (e.g., "Standard", "Edge of Darkness") */
+  title: string;
+  /** Default stash level granted by this edition */
+  defaultStashLevel: number;
+  /** Default Cultist Circle hideout level granted by this edition */
+  defaultCultistCircleLevel: number;
+  /** Bonus reputation values per trader granted by this edition */
+  traderRepBonus: Record<Trader['id'], number>;
+}
 export interface ItemCategory {
   id: string;
   name: string;
@@ -178,6 +196,7 @@ export interface Task {
   failedRequirements?: TaskRequirement[];
   traderLevelRequirements?: TaskTraderLevelRequirement[];
   factionName?: string;
+  startRewards?: FinishRewards;
   finishRewards?: FinishRewards;
   traderIcon?: string;
   predecessors?: string[];
@@ -189,6 +208,8 @@ export interface Task {
   wikiLink?: string;
   neededKeys?: NeededKey[];
   alternatives?: string[];
+  /** Flag indicating the task is disabled or removed from standard gameplay */
+  disabled?: boolean;
 }
 export interface TarkovMap {
   id: string;

@@ -550,6 +550,9 @@
     experience: {
       title: 'Experience & Level',
       explanation: 'Quest XP is auto-calculated. Use the offset to add XP from daily quests, kills, and other gameplay.',
+      auto_level_title: 'Automatic Level Calculation',
+      auto_level_description: 'When enabled, your level will be automatically calculated based on total XP. When disabled, you can manually set your level independently of XP calculations.',
+      manual_level_warning: 'Manual level mode is active. This allows you to set your level independently of your automatically calculated level, which can be useful if your in-game level differs due to Arena, raids, or other XP sources not tracked here.',
       current_level: 'Current Level',
       breakdown: 'XP Breakdown',
       set_total_xp: 'Set Total XP',

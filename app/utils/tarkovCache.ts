@@ -20,7 +20,7 @@ export const CACHE_CONFIG = {
   // 24 hours max TTL
   MAX_TTL: 24 * 60 * 60 * 1000,
 } as const;
-export type CacheType = 'data' | 'hideout' | 'items' | 'prestige';
+export type CacheType = 'data' | 'hideout' | 'items' | 'prestige' | 'editions';
 export interface CachedData<T> {
   data: T;
   timestamp: number;

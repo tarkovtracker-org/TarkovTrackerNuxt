@@ -75,6 +75,12 @@
   import { useProgressStore } from '@/stores/useProgress';
   import type { NeededItemHideoutModule, NeededItemTaskObjective } from '@/types/tarkov';
   import { logger } from '@/utils/logger';
+  // Page metadata
+  useSeoMeta({
+    title: 'Needed Items',
+    description:
+      'View all items needed for your active quests and hideout upgrades. Filter by quest, craft, and find-in-raid requirements.',
+  });
   const { t } = useI18n({ useScope: 'global' });
   const metadataStore = useMetadataStore();
   const progressStore = useProgressStore();

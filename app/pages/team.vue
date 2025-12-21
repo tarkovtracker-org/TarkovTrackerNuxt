@@ -21,6 +21,12 @@
   import { useRoute } from 'vue-router';
   import { useSystemStoreWithSupabase } from '@/stores/useSystemStore';
   import { logger } from '@/utils/logger';
+  // Page metadata
+  useSeoMeta({
+    title: 'Team',
+    description:
+      'Collaborate with teammates on Escape from Tarkov progress. Share quest completions, hideout status, and coordinate item gathering.',
+  });
   const TeamMembers = defineAsyncComponent(() => import('@/features/team/TeamMembers.vue'));
   const TeamOptions = defineAsyncComponent(() => import('@/features/team/TeamOptions.vue'));
   const MyTeam = defineAsyncComponent(() => import('@/features/team/MyTeam.vue'));

@@ -64,6 +64,12 @@
   import { useHideoutFiltering } from '@/composables/useHideoutFiltering';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { useProgressStore } from '@/stores/useProgress';
+  // Page metadata
+  useSeoMeta({
+    title: 'Hideout',
+    description:
+      'Track your hideout module upgrades and requirements. See what items you need to complete each station upgrade.',
+  });
   const HideoutCard = defineAsyncComponent(() => import('@/features/hideout/HideoutCard.vue'));
   const RefreshButton = defineAsyncComponent(() => import('@/components/ui/RefreshButton.vue'));
   const route = useRoute();

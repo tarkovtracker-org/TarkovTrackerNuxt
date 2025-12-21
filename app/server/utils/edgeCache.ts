@@ -4,8 +4,11 @@
  * This utility provides a centralized way to handle Cloudflare Cache API logic
  * with fallback for development environments where caches might not be available.
  */
+import { $fetch } from 'ofetch';
+import { createLogger } from './logger';
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
+const logger = createLogger('EdgeCache');
 interface CacheOptions {
   ttl?: number;
   cacheKeyPrefix?: string;
@@ -61,7 +64,7 @@ export async function edgeCache<T>(
         return data;
       }
       // CACHE MISS - Fetch fresh data using the provided fetcher function
-      console.log(`[EDGE] Cache miss for ${fullCacheKey}`);
+      logger.info(`Cache miss for ${fullCacheKey}`);
       const response = await fetcher();
       // Store in edge cache with TTL
       const cacheResponse = new Response(JSON.stringify(response), {
@@ -88,7 +91,7 @@ export async function edgeCache<T>(
       return response;
     } else {
       // DEV MODE - No edge caching, direct fetch using provided fetcher
-      console.log(`[DEV] Fetching data for ${fullCacheKey}`);
+      logger.info(`Fetching data for ${fullCacheKey} (DEV)`);
       const response = await fetcher();
       setResponseHeaders(event, {
         'X-Cache-Status': 'DEV',
@@ -98,7 +101,7 @@ export async function edgeCache<T>(
       return response;
     }
   } catch (error) {
-    console.error(`Error in edgeCache for ${fullCacheKey}:`, error);
+    logger.error(`Error in edgeCache for ${fullCacheKey}:`, error);
     throw createError({
       statusCode: 502,
       statusMessage: `Failed to fetch data for ${fullCacheKey}`,
@@ -108,10 +111,13 @@ export async function edgeCache<T>(
 /**
  * Helper function create a GraphQL fetcher for tarkov.dev API
  */
-export function createTarkovFetcher(query: string, variables: Record<string, unknown> = {}) {
+export function createTarkovFetcher<T = unknown>(
+  query: string,
+  variables: Record<string, unknown> = {}
+): () => Promise<T> {
   return async () => {
-    return await $fetch('https://api.tarkov.dev/graphql', {
-      method: 'POST',
+    return await $fetch<T>('https://api.tarkov.dev/graphql', {
+      method: 'POST' as const,
       headers: {
         'Content-Type': 'application/json',
       },

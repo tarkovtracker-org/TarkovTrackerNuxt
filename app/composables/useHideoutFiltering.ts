@@ -64,6 +64,8 @@ export function useHideoutFiltering() {
   // Comprehensive loading check
   const isStoreLoading = computed(() => {
     try {
+      // Check if store is ready
+      if (!metadataStore.hasInitialized) return true;
       // Check if hideout data is still loading
       if (hideoutLoading.value) return true;
       // Check if we have hideout stations data

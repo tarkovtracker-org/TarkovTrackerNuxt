@@ -79,8 +79,13 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { ref } from 'vue';
   import { logger } from '@/utils/logger';
+  // Page metadata
+  useSeoMeta({
+    title: 'Login',
+    description:
+      'Sign in to TarkovTracker to sync your progress across devices and collaborate with your team.',
+  });
   const { $supabase } = useNuxtApp();
   const loading = ref({
     twitch: false,

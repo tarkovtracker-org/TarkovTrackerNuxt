@@ -44,7 +44,7 @@
             <div v-if="belowMd" class="mr-2 block">
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 class="m-0 p-0 px-1"
                 @click="isSingleItem ? $emit('toggleCount') : (smallDialog = true)"
               >

@@ -80,6 +80,12 @@
   import { useTarkovStore } from '@/stores/useTarkov';
   import type { Task, TaskObjective } from '@/types/tarkov';
   import { logger } from '@/utils/logger';
+  // Page metadata
+  useSeoMeta({
+    title: 'Tasks',
+    description:
+      'Track your Escape from Tarkov quest progress. View quest objectives, rewards, and dependencies for both PVP and PVE game modes.',
+  });
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n({ useScope: 'global' });
@@ -153,7 +159,9 @@
     },
     { immediate: true }
   );
-  const isLoading = computed(() => tasksLoading.value || reloadingTasks.value);
+  const isLoading = computed(
+    () => !metadataStore.hasInitialized || tasksLoading.value || reloadingTasks.value
+  );
   // Search state
   const searchQuery = ref('');
   // Filter tasks by search query

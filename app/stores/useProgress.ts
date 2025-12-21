@@ -5,8 +5,8 @@ import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import { useTarkovStore } from '@/stores/useTarkov';
 import { useTeammateStores, useTeamStore } from '@/stores/useTeamStore';
-import type { Task } from '@/types/tarkov';
-import { GAME_EDITIONS, GAME_MODES, SPECIAL_STATIONS } from '@/utils/constants';
+import type { GameEdition, Task } from '@/types/tarkov';
+import { GAME_MODES, SPECIAL_STATIONS } from '@/utils/constants';
 import { logger } from '@/utils/logger';
 import type { Store } from 'pinia';
 function getGameModeData(store: Store<string, UserState> | undefined): UserProgressData {
@@ -87,7 +87,7 @@ export const useProgressStore = defineStore('progress', () => {
     }
     return completions;
   });
-  const gameEditionData = computed(() => GAME_EDITIONS);
+  const gameEditionData = computed<GameEdition[]>(() => metadataStore.editions);
   const traderLevelsAchieved = computed(() => {
     const levels: TraderLevelsMap = {};
     if (!metadataStore.traders.length || !visibleTeamStores.value) return {};
@@ -234,13 +234,37 @@ export const useProgressStore = defineStore('progress', () => {
   const hideoutLevels = computed(() => {
     const levels: HideoutLevelMap = {};
     if (!metadataStore.hideoutStations.length || !visibleTeamStores.value) return {};
+    const teamIds = Object.keys(visibleTeamStores.value);
+    // Performance optimization: Pre-cache team data and edition info once
+    const teamDataCache = new Map<
+      string,
+      {
+        data: UserProgressData;
+        edition: GameEdition | undefined;
+        gameEditionVersion: number;
+      }
+    >();
+    for (const teamId of teamIds) {
+      const store = visibleTeamStores.value[teamId];
+      const currentData = getGameModeData(store);
+      const gameEditionVersion = store?.$state.gameEdition ?? 0;
+      const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
+      teamDataCache.set(teamId, {
+        data: currentData,
+        edition,
+        gameEditionVersion,
+      });
+    }
+    // Iterate with cached data
     for (const station of metadataStore.hideoutStations) {
       if (!station || !station.id) continue;
       levels[station.id] = {};
-      for (const teamId of Object.keys(visibleTeamStores.value)) {
-        const store = visibleTeamStores.value[teamId];
-        const currentData = getGameModeData(store);
-        const modulesState = currentData?.hideoutModules ?? {};
+      const isStash = station.normalizedName === SPECIAL_STATIONS.STASH;
+      const isCultist = station.normalizedName === SPECIAL_STATIONS.CULTIST_CIRCLE;
+      const maxLevel = station.levels?.length || 0;
+      for (const teamId of teamIds) {
+        const cached = teamDataCache.get(teamId)!;
+        const modulesState = cached.data?.hideoutModules ?? {};
         let maxManuallyCompletedLevel = 0;
         if (station.levels && Array.isArray(station.levels)) {
           for (const lvl of station.levels) {
@@ -250,22 +274,16 @@ export const useProgressStore = defineStore('progress', () => {
           }
         }
         let currentStationDisplayLevel;
-        if (station.normalizedName === SPECIAL_STATIONS.STASH) {
-          const gameEditionVersion = store?.$state.gameEdition ?? 0;
-          const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
-          const defaultStashFromEdition = edition?.defaultStashLevel ?? 0;
-          const maxLevel = station.levels?.length || 0;
+        if (isStash) {
+          const defaultStashFromEdition = cached.edition?.defaultStashLevel ?? 0;
           const effectiveStashLevel = Math.min(defaultStashFromEdition, maxLevel);
           if (effectiveStashLevel === maxLevel) {
             currentStationDisplayLevel = maxLevel;
           } else {
             currentStationDisplayLevel = Math.max(effectiveStashLevel, maxManuallyCompletedLevel);
           }
-        } else if (station.normalizedName === SPECIAL_STATIONS.CULTIST_CIRCLE) {
-          const gameEditionVersion = store?.$state.gameEdition ?? 0;
-          const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
-          const defaultCultistCircleFromEdition = edition?.defaultCultistCircleLevel ?? 0;
-          const maxLevel = station.levels?.length || 0;
+        } else if (isCultist) {
+          const defaultCultistCircleFromEdition = cached.edition?.defaultCultistCircleLevel ?? 0;
           const effectiveCultistCircleLevel = Math.min(defaultCultistCircleFromEdition, maxLevel);
           if (effectiveCultistCircleLevel === maxLevel) {
             currentStationDisplayLevel = maxLevel;
@@ -286,34 +304,47 @@ export const useProgressStore = defineStore('progress', () => {
   const moduleCompletions = computed(() => {
     const completions: CompletionsMap = {};
     if (!metadataStore.hideoutStations.length || !visibleTeamStores.value) return {};
+    const teamIds = Object.keys(visibleTeamStores.value);
+    // Performance optimization: Pre-cache team edition data
+    const teamEditionCache = new Map<
+      string,
+      {
+        data: UserProgressData;
+        edition: GameEdition | undefined;
+      }
+    >();
+    for (const teamId of teamIds) {
+      const store = visibleTeamStores.value[teamId];
+      const currentData = getGameModeData(store);
+      const gameEditionVersion = store?.$state.gameEdition ?? 0;
+      const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
+      teamEditionCache.set(teamId, { data: currentData, edition });
+    }
     for (const station of metadataStore.hideoutStations) {
       if (!station || !station.id || !station.levels) continue;
+      const isStash = station.normalizedName === SPECIAL_STATIONS.STASH;
+      const isCultist = station.normalizedName === SPECIAL_STATIONS.CULTIST_CIRCLE;
       for (const level of station.levels) {
         if (!level || !level.id) continue;
         completions[level.id] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          const currentData = getGameModeData(store);
+        for (const teamId of teamIds) {
+          const cached = teamEditionCache.get(teamId)!;
           // Check if manually completed
-          const isManuallyComplete = currentData?.hideoutModules?.[level.id]?.complete ?? false;
+          const isManuallyComplete = cached.data?.hideoutModules?.[level.id]?.complete ?? false;
           if (isManuallyComplete) {
             completions[level.id]![teamId] = true;
             continue;
           }
           // Check if auto-completed by game edition for special stations
-          if (station.normalizedName === SPECIAL_STATIONS.STASH) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
-            const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
-            const defaultStashLevel = edition?.defaultStashLevel ?? 0;
+          if (isStash) {
+            const defaultStashLevel = cached.edition?.defaultStashLevel ?? 0;
             // Module is complete if its level is <= default stash level from edition
             if (level.level <= defaultStashLevel) {
               completions[level.id]![teamId] = true;
               continue;
             }
-          } else if (station.normalizedName === SPECIAL_STATIONS.CULTIST_CIRCLE) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
-            const edition = gameEditionData.value.find((e) => e.value === gameEditionVersion);
-            const defaultCultistCircleLevel = edition?.defaultCultistCircleLevel ?? 0;
+          } else if (isCultist) {
+            const defaultCultistCircleLevel = cached.edition?.defaultCultistCircleLevel ?? 0;
             // Module is complete if its level is <= default cultist circle level from edition
             if (level.level <= defaultCultistCircleLevel) {
               completions[level.id]![teamId] = true;
@@ -329,16 +360,28 @@ export const useProgressStore = defineStore('progress', () => {
   const modulePartCompletions = computed(() => {
     const completions: CompletionsMap = {};
     if (!metadataStore.hideoutStations.length || !visibleTeamStores.value) return {};
-    // Collect all part/requirement IDs from all station levels
-    const allPartIds = metadataStore.hideoutStations.flatMap(
-      (station) =>
-        station.levels?.flatMap((level) => level.itemRequirements?.map((req) => req.id) || []) || []
-    );
+    const teamIds = Object.keys(visibleTeamStores.value);
+    // Performance optimization: Pre-cache team data once
+    const teamDataCache = new Map<string, UserProgressData>();
+    for (const teamId of teamIds) {
+      const store = visibleTeamStores.value[teamId];
+      teamDataCache.set(teamId, getGameModeData(store));
+    }
+    // Performance optimization: Use Set for deduplication instead of flatMap
+    const allPartIds = new Set<string>();
+    for (const station of metadataStore.hideoutStations) {
+      if (!station.levels) continue;
+      for (const level of station.levels) {
+        if (!level.itemRequirements) continue;
+        for (const req of level.itemRequirements) {
+          if (req.id) allPartIds.add(req.id);
+        }
+      }
+    }
     for (const partId of allPartIds) {
       completions[partId] = {};
-      for (const teamId of Object.keys(visibleTeamStores.value)) {
-        const store = visibleTeamStores.value[teamId];
-        const currentData = getGameModeData(store);
+      for (const teamId of teamIds) {
+        const currentData = teamDataCache.get(teamId)!;
         completions[partId]![teamId] = currentData?.hideoutParts?.[partId]?.complete ?? false;
       }
     }
