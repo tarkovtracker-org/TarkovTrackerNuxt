@@ -59,6 +59,27 @@ function deepMerge<T extends Record<string, unknown>>(
         targetValue as Record<string, unknown>,
         sourceValue as Record<string, unknown>
       );
+    } else if (
+      // Special case: merge ID-keyed object patches into array of objects
+      sourceValue &&
+      typeof sourceValue === 'object' &&
+      !Array.isArray(sourceValue) &&
+      Array.isArray(targetValue) &&
+      targetValue.length > 0 &&
+      typeof targetValue[0] === 'object' &&
+      'id' in targetValue[0]
+    ) {
+      // Map over array and merge each element with its corresponding patch from source
+      result[key] = targetValue.map((item) => {
+        if (item && typeof item === 'object' && 'id' in item) {
+          const itemId = (item as { id: string }).id;
+          const patch = sourceValue[itemId];
+          if (patch && typeof patch === 'object') {
+            return deepMerge(item as Record<string, unknown>, patch as Record<string, unknown>);
+          }
+        }
+        return item;
+      });
     } else {
       // Replace primitive values, arrays, or when target doesn't have the key
       result[key] = sourceValue;
