@@ -682,7 +682,7 @@ export const useMetadataStore = defineStore('metadata', {
         for (const level of station.levels || []) {
           for (const craft of level.crafts || []) {
             for (const reward of craft.rewardItems || []) {
-              const itemId = reward.item?.id;
+              const itemId = reward?.item?.id;
               if (!itemId) continue;
               const sources = map.get(itemId) ?? [];
               const isDuplicate = sources.some(
