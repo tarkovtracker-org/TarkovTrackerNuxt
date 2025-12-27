@@ -4,13 +4,10 @@
       <TaskLoadingState v-if="isLoading" />
       <div v-else>
         <!-- Task Filter Bar -->
-        <div class="flex justify-between">
-          <TaskFilterBar v-model:search-query="searchQuery">
-            <UButton @click="showMap = !showMap">
-              {{ showMap ? 'Hide Map' : 'Show Map' }}
-            </UButton>
-          </TaskFilterBar>
-        </div>
+          <TaskFilterBar 
+            v-model:search-query="searchQuery" 
+            v-model:show-map="showMap"
+          />
         <!-- Task Map Panel -->
         <div v-if="showMap" class="mt-4">
           <ClientOnly>
@@ -118,18 +115,22 @@
   const metadataStore = useMetadataStore();
   const { tasks, maps, loading: tasksLoading } = storeToRefs(metadataStore);
   const progressStore = useProgressStore();
-  const { tasksCompletions, unlockedTasks, taskObjectives } = storeToRefs(progressStore);
+  const { tasksCompletions, unlockedTasks, objectiveCompletions } = storeToRefs(progressStore);
   const { visibleTasks, reloadingTasks, updateVisibleTasks } = useTaskFiltering();
   const tarkovStore = useTarkovStore();
   const showMap = ref(false);
   const taskMapPanel = ref<InstanceType<typeof TaskMapPanel> | null>(null);
   const onObjectiveClicked = (objective: TaskObjective) => {
-    showMap.value = true;
-    nextTick(() => {
-      taskMapPanel.value?.centerOnObjective(objective);
-    });
-  };
-  // Toast / Undo State
+      // Force view to maps if not already
+      if (preferencesStore.getTaskPrimaryView !== 'maps') {
+        preferencesStore.setTaskPrimaryView('maps');
+      }
+      showMap.value = true;
+      nextTick(() => {
+        taskMapPanel.value?.centerOnObjective(objective);
+      });
+    };
+    // Toast / Undo State
   const taskStatusUpdated = ref(false);
   const taskStatus = ref('');
   const undoData = ref<{
@@ -176,7 +177,7 @@
       maps,
       tasksCompletions,
       unlockedTasks,
-      taskObjectives,
+      objectiveCompletions,
     ],
     () => {
       refreshVisibleTasks();

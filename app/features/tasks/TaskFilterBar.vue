@@ -231,7 +231,7 @@
       </div>
     </div>
     <!-- Map selector (shown when MAPS is selected) -->
-    <div v-if="primaryView === 'maps' && maps.length > 0" class="flex justify-center">
+    <div v-if="primaryView === 'maps' && maps.length > 0" class="flex justify-center gap-2">
       <USelectMenu
         :model-value="selectedMapObject"
         :items="mapOptions"
@@ -243,6 +243,9 @@
           <UIcon name="i-mdi-map-marker" class="h-5 w-5" />
         </template>
       </USelectMenu>
+      <UButton @click="$emit('update:showMap', !showMap)">
+        {{ showMap ? 'Hide Map' : 'Show Map' }}
+      </UButton>
     </div>
     <!-- Trader selector (shown when TRADERS is selected) - Horizontal scrollable -->
     <div v-if="primaryView === 'traders' && traders.length > 0" class="w-full overflow-x-auto">
@@ -299,9 +302,11 @@
   import { useTeamStore } from '@/stores/useTeamStore';
   defineProps<{
     searchQuery: string;
+    showMap: boolean;
   }>();
   defineEmits<{
     'update:searchQuery': [value: string];
+    'update:showMap': [value: boolean];
   }>();
   const { t } = useI18n({ useScope: 'global' });
   const preferencesStore = usePreferencesStore();
