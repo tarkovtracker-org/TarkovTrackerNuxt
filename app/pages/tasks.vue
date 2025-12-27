@@ -9,7 +9,7 @@
             v-model:show-map="showMap"
           />
         <!-- Task Map Panel -->
-        <div v-if="showMap" class="mt-4">
+        <div v-if="showMap && getTaskPrimaryView === 'maps'" class="mt-4">
           <ClientOnly>
             <TaskMapPanel ref="taskMapPanel" :tasks="filteredTasks" />
           </ClientOnly>

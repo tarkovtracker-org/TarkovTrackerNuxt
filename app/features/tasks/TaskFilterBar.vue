@@ -243,6 +243,7 @@
           <UIcon name="i-mdi-map-marker" class="h-5 w-5" />
         </template>
       </USelectMenu>
+
       <UButton @click="$emit('update:showMap', !showMap)">
         {{ showMap ? 'Hide Map' : 'Show Map' }}
       </UButton>

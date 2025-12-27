@@ -50,7 +50,10 @@
 </template>
 <script setup lang="ts">
   import { select, xml } from 'd3';
+  import { storeToRefs } from 'pinia';
   import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue';
+  import { usePreferencesStore } from '@/stores/usePreferences';
+  import { useProgressStore } from '@/stores/useProgress';
   import type { TarkovMap, TaskObjective } from '@/types/tarkov';
   import { logger } from '@/utils/logger';
   interface Props {
@@ -67,14 +70,18 @@
     marks: () => [],
     taskObjectives: () => [],
   });
-
+  const progressStore = useProgressStore();
+  const preferencesStore = usePreferencesStore();
+  const { objectiveCompletions } = storeToRefs(progressStore);
 const objectiveMarks = computed(() => {
     if (!props.taskObjectives) return [];
-
+    const userView = preferencesStore.getTaskUserView;
     return props.taskObjectives
-      .filter((objective) => 
-        (objective.possibleLocations?.length ?? 0) > 0 || (objective.zones?.length ?? 0) > 0
-      )
+      .filter((objective) => {
+        const hasLocations = (objective.possibleLocations?.length ?? 0) > 0 || (objective.zones?.length ?? 0) > 0;
+        const isCompleted = objectiveCompletions.value?.[objective.id]?.[userView] ?? false;
+        return hasLocations && !isCompleted;
+      })
       .map((objective) => {
         const cleanZones: MapZoneType[] = (objective.zones || [])
           .filter((z) => z.outline && z.outline.length > 0)
@@ -82,9 +89,7 @@ const objectiveMarks = computed(() => {
             map: z.map,
             outline: z.outline!.map((p) => ({ x: p.x, z: p.z }))
           }));
-
         const cleanLocations = (objective.possibleLocations || []) as unknown as MapMarkLocation[];
-
         return {
           id: objective.id,
           users: ['self'],
@@ -98,12 +103,10 @@ const objectiveMarks = computed(() => {
     if (!isSvgObject(svg) || !svg.floors) {
       return [];
     }
-
     const floors = [...svg.floors];
     return floors.sort((a, b) => {
       const aIsUnderground = a.toLowerCase().includes('underground');
       const bIsUnderground = b.toLowerCase().includes('underground');
-
       if (aIsUnderground && !bIsUnderground) {
         return -1;
       }
@@ -113,11 +116,9 @@ const objectiveMarks = computed(() => {
       return 0;
     });
   });
-
   const allMarks = computed(() => {
     return [...props.marks, ...objectiveMarks.value];
   });
-
   const MapMarker = defineAsyncComponent(() => import('~/features/maps/MapMarker.vue'));
   const MapZone = defineAsyncComponent(() => import('~/features/maps/MapZone.vue'));
   // Type guard to check if svg is an object with floors property
@@ -162,11 +163,8 @@ const objectiveMarks = computed(() => {
   };
 const sortedZones = computed(() => {
     const zones: { zone: MapZoneType; mark: MapMark }[] = [];
-    
-    // On utilise allMarks qui contient maintenant des types compatibles
     for (const mark of allMarks.value) {
       if (!mark.zones) continue;
-
       for (const zone of mark.zones) {
         if (zone.map.id === props.map.id) {
           zones.push({ zone, mark });
@@ -330,7 +328,6 @@ const sortedZones = computed(() => {
       logger.error(`Failed to load map SVG: ${svgUrl}`, error);
       return;
     }
-
     // Reorder floor layers to fix display issue
     const svgElement = select(mapContainer).select('svg');
     const floorElements = [];
@@ -342,7 +339,6 @@ const sortedZones = computed(() => {
         }
     }
     floorElements.forEach(floorNode => svgElement.node().appendChild(floorNode));
-
     // Apply floor visibility logic for standard maps
     const mapSvg = props.map?.svg;
     if (isSvgObject(mapSvg) && selectedFloor.value && sortedFloors.value && sortedFloors.value.length > 0) {

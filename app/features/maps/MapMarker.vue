@@ -4,7 +4,7 @@
     :class="markerColor"
     @mouseenter="showTooltip()"
     @mouseleave="hideTooltip()"
-    @click="forceTooltipToggle()"
+    @click.stop="forceTooltipToggle()"
   >
     <UIcon
       :name="tooltipVisible == true ? 'i-mdi-map-marker-radius' : 'i-mdi-map-marker'"
@@ -20,11 +20,11 @@
 </template>
 <script setup lang="ts">
   import { computed, ref } from 'vue';
-  import TaskLink from '@/features/tasks/TaskLink.vue';
-  import TaskObjective from '@/features/tasks/TaskObjective.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { logger } from '@/utils/logger';
   import type { CSSProperties } from 'vue';
+  const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink.vue'));
+  const TaskObjective = defineAsyncComponent(() => import('@/features/tasks/TaskObjective.vue'));
   const metadataStore = useMetadataStore();
   const objectives = computed(() => metadataStore.objectives);
   const tasks = computed(() => metadataStore.tasks);
@@ -137,13 +137,14 @@
       opacity: 1,
     };
   });
-  const tooltipStyle = computed<CSSProperties>(() => {
+const tooltipStyle = computed<CSSProperties>(() => {
     return {
       position: 'absolute',
       top: relativeLocation.value.topPercent + '%',
       left: relativeLocation.value.leftPercent + '%',
       transform: 'translate(-50%, -125%)',
       zIndex: 100,
+      pointerEvents: 'auto', 
     };
   });
 </script>
