@@ -137,7 +137,7 @@
       opacity: 1,
     };
   });
-const tooltipStyle = computed<CSSProperties>(() => {
+  const tooltipStyle = computed<CSSProperties>(() => {
     return {
       position: 'absolute',
       top: relativeLocation.value.topPercent + '%',

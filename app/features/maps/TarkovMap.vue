@@ -79,7 +79,10 @@ const objectiveMarks = computed(() => {
     return props.taskObjectives
       .filter((objective) => {
         const hasLocations = (objective.possibleLocations?.length ?? 0) > 0 || (objective.zones?.length ?? 0) > 0;
-        const isCompleted = objectiveCompletions.value?.[objective.id]?.[userView] ?? false;
+        const completions = objectiveCompletions.value?.[objective.id] || {};
+        const isCompleted = userView === 'all' 
+          ? Object.values(completions).every(Boolean)
+          : completions[userView] ?? false;
         return hasLocations && !isCompleted;
       })
       .map((objective) => {

@@ -245,7 +245,7 @@
       </USelectMenu>
 
       <UButton @click="$emit('update:showMap', !showMap)">
-        {{ showMap ? 'Hide Map' : 'Show Map' }}
+        {{ showMap ? t('page.tasks.filter.hideMap', 'Hide Map') : t('page.tasks.filter.showMap', 'Show Map') }}
       </UButton>
     </div>
     <!-- Trader selector (shown when TRADERS is selected) - Horizontal scrollable -->

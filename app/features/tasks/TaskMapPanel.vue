@@ -24,13 +24,6 @@ const props = defineProps({
     required: true,
   },
 });
-watch(
-  () => props.tasks,
-  (newTasks) => {
-    console.log('Tasks prop changed in TaskMapPanel.vue:', JSON.parse(JSON.stringify(newTasks)));
-  },
-  { deep: true, immediate: true }
-);
 const metadataStore = useMetadataStore();
 const { mapsWithSvg: maps } = storeToRefs(metadataStore);
 const preferencesStore = usePreferencesStore();
