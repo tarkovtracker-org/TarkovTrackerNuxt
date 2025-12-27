@@ -1,79 +1,406 @@
-import { authenticateUser, handleCorsPreflight, validateMethod, createErrorResponse, createSuccessResponse } from "../_shared/auth.ts"
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-serve(async (req) => {
-  const corsResponse = handleCorsPreflight(req)
-  if (corsResponse) return corsResponse
+import {
+  authenticateUser,
+  handleCorsPreflight,
+  validateMethod,
+  createErrorResponse,
+  createSuccessResponse,
+} from '../_shared/auth.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import type { Database } from '../_shared/database.types.ts';
+
+const AUTH_DELETE_MAX_ATTEMPTS = 4;
+const AUTH_DELETE_BASE_DELAY_MS = 300;
+const CLEANUP_MAX_ATTEMPTS = 5;
+const CLEANUP_BASE_DELAY_MS = 5 * 60 * 1000;
+const CLEANUP_MAX_DELAY_MS = 60 * 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_ATTEMPTS = 3; // Max 3 deletion requests per minute
+
+// Interfaces to mock Supabase client typing locally
+interface PostgrestFilterBuilder<T> {
+  eq(column: string, value: unknown): PostgrestFilterBuilder<T>;
+  neq(column: string, value: unknown): PostgrestFilterBuilder<T>;
+  gte(column: string, value: unknown): PostgrestFilterBuilder<T>;
+  order(column: string, options?: unknown): PostgrestFilterBuilder<T>;
+  then<TResult1 = { data: T[] | null; error: unknown }>(
+    onfulfilled?:
+      | ((value: { data: T[] | null; error: unknown }) => TResult1 | PromiseLike<TResult1>)
+      | null
+  ): PromiseLike<TResult1>;
+}
+
+interface PostgrestTransformBuilder {
+  eq(column: string, value: unknown): Promise<{ error: unknown }>;
+  or(filter: string): Promise<{ error: unknown }>;
+  gte(column: string, value: unknown): this;
+  order(column: string, options?: { ascending?: boolean }): this;
+}
+
+interface TypedSupabaseClient {
+  from<T extends keyof Database['public']['Tables']>(
+    table: T
+  ): {
+    select(columns?: string): PostgrestFilterBuilder<Database['public']['Tables'][T]['Row']>;
+    update(values: unknown): PostgrestTransformBuilder;
+    delete(): PostgrestTransformBuilder;
+    insert(values: Database['public']['Tables'][T]['Insert']): Promise<{ error: unknown }>;
+    upsert(
+      values: Database['public']['Tables'][T]['Insert'],
+      options?: { onConflict?: string }
+    ): Promise<{ error: unknown }>;
+  };
+  auth: {
+    admin: {
+      deleteUser(id: string): Promise<{ error: unknown }>;
+    };
+  };
+  rpc(fn: string, args?: Record<string, unknown>): Promise<{ data: unknown; error: unknown }>;
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getErrorMessage = (error: unknown) => {
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message?: unknown }).message);
+  }
   try {
-    const methodError = validateMethod(req, ["POST"]) // invoked via POST
-    if (methodError) return methodError
-    const authResult = await authenticateUser(req)
-    if ("error" in authResult) {
-      return createErrorResponse(authResult.error, authResult.status, req)
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
+const serializeError = (error: unknown) => {
+  if (error instanceof Error) {
+    return { name: error.name, message: error.message, stack: error.stack };
+  }
+  if (error && typeof error === 'object') return error;
+  return { message: String(error) };
+};
+
+const isNotFoundError = (error: unknown) => {
+  // Check for HTTP 404 status
+  if (error && typeof error === 'object') {
+    if ('status' in error) {
+      const status = (error as { status?: number }).status;
+      if (status === 404) return true;
     }
-    const { user, supabase } = authResult
+    // Check for specific error codes from Supabase Auth
+    if ('code' in error) {
+      const code = (error as { code?: string }).code;
+      if (code === 'user_not_found' || code === '404') return true;
+    }
+  }
+  // Fallback to message matching with specific patterns
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    (message === 'user not found') ||
+    (message.includes('user with id') && message.includes('not found')) ||
+    (message.startsWith('no user found'))
+  );
+};
+
+const computeBackoffMs = (attempt: number, baseMs: number, maxMs: number) => {
+  const jitter = Math.floor(Math.random() * 250);
+  const delay = baseMs * Math.pow(2, Math.max(0, attempt - 1)) + jitter;
+  return Math.min(delay, maxMs);
+};
+
+const deleteUserWithRetry = async (
+  supabase: TypedSupabaseClient,
+  userId: string
+): Promise<{ ok: boolean; attempts: number; lastError: unknown | null }> => {
+  let lastError: unknown | null = null;
+  for (let attempt = 1; attempt <= AUTH_DELETE_MAX_ATTEMPTS; attempt += 1) {
+    const { error } = await supabase.auth.admin.deleteUser(userId);
+    if (!error || isNotFoundError(error)) {
+      return { ok: true, attempts: attempt, lastError: null };
+    }
+    lastError = error;
+    const delay = computeBackoffMs(attempt, AUTH_DELETE_BASE_DELAY_MS, 5000);
+    await sleep(delay);
+  }
+  return { ok: false, attempts: AUTH_DELETE_MAX_ATTEMPTS, lastError };
+};
+
+const cleanupUserData = async (supabase: TypedSupabaseClient, userId: string) => {
+  const cleanupErrors: Record<string, string> = {};
+
+  const { error: membershipDeleteError } = await supabase
+    .from('team_memberships')
+    .delete()
+    .eq('user_id', userId);
+  if (membershipDeleteError) {
+    cleanupErrors.team_memberships = getErrorMessage(membershipDeleteError);
+  }
+
+  const { error: apiTokensError } = await supabase
+    .from('api_tokens')
+    .delete()
+    .eq('user_id', userId);
+  if (apiTokensError) cleanupErrors.api_tokens = getErrorMessage(apiTokensError);
+
+  const { error: progressError } = await supabase
+    .from('user_progress')
+    .delete()
+    .eq('user_id', userId);
+  if (progressError) cleanupErrors.user_progress = getErrorMessage(progressError);
+
+  const { error: preferencesError } = await supabase
+    .from('user_preferences')
+    .delete()
+    .eq('user_id', userId);
+  if (preferencesError) cleanupErrors.user_preferences = getErrorMessage(preferencesError);
+
+  const { error: userSystemError } = await supabase
+    .from('user_system')
+    .delete()
+    .eq('user_id', userId);
+  if (userSystemError) cleanupErrors.user_system = getErrorMessage(userSystemError);
+
+  const { error: teamEventsError } = await supabase
+    .from('team_events')
+    .delete()
+    .or(`initiated_by.eq.${userId},target_user.eq.${userId}`);
+  if (teamEventsError) cleanupErrors.team_events = getErrorMessage(teamEventsError);
+
+  return cleanupErrors;
+};
+
+const getDeletionJobState = async (supabase: TypedSupabaseClient, userId: string) => {
+  const { data, error } = await supabase
+    .from('account_deletion_jobs')
+    .select('attempts,max_attempts,status')
+    .eq('user_id', userId);
+  if (error) {
+    console.error('[account-delete] Failed to fetch deletion job state:', error);
+  }
+  const job = data?.[0];
+  return {
+    attempts: job?.attempts ?? 0,
+    maxAttempts: job?.max_attempts ?? CLEANUP_MAX_ATTEMPTS,
+    status: job?.status ?? null,
+  };
+};
+
+const recordDeletionFailure = async (
+  supabase: TypedSupabaseClient,
+  userId: string,
+  reason: string,
+  details: Record<string, unknown>
+) => {
+  const now = new Date().toISOString();
+  const { attempts, maxAttempts } = await getDeletionJobState(supabase, userId);
+  const nextAttempts = attempts + 1;
+  const deadLetter = nextAttempts >= maxAttempts;
+  const nextRunAt = deadLetter
+    ? null
+    : new Date(
+        Date.now() + computeBackoffMs(nextAttempts, CLEANUP_BASE_DELAY_MS, CLEANUP_MAX_DELAY_MS)
+      ).toISOString();
+  const { error } = await supabase
+    .from('account_deletion_jobs')
+    .update({
+      status: deadLetter ? 'dead_lettered' : 'failed',
+      attempts: nextAttempts,
+      last_error: reason,
+      last_error_details: details,
+      last_error_at: now,
+      next_run_at: nextRunAt,
+      updated_at: now,
+      completed_at: null,
+      dead_lettered_at: deadLetter ? now : null,
+    })
+    .eq('user_id', userId);
+  if (error) {
+    console.error('[account-delete] Failed to update deletion job:', error);
+  }
+  if (deadLetter) {
+    console.error('[account-delete] Deletion job dead-lettered:', { userId, reason, details });
+  }
+};
+
+const markDeletionCompleted = async (supabase: TypedSupabaseClient, userId: string) => {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('account_deletion_jobs')
+    .update({
+      status: 'completed',
+      updated_at: now,
+      completed_at: now,
+      last_error: null,
+      last_error_details: null,
+      last_error_at: null,
+      next_run_at: null,
+      dead_lettered_at: null,
+    })
+    .eq('user_id', userId);
+  if (error) {
+    console.error('[account-delete] Failed to mark deletion job completed:', error);
+  }
+};
+
+serve(async (req) => {
+  const corsResponse = handleCorsPreflight(req);
+  if (corsResponse) return corsResponse;
+  try {
+    const methodError = validateMethod(req, ['POST']); // invoked via POST
+    if (methodError) return methodError;
+    const authResult = await authenticateUser(req);
+    if ('error' in authResult) {
+      return createErrorResponse(authResult.error, authResult.status, req);
+    }
+    const { user, supabase: sbClient } = authResult;
+    const supabase = sbClient as unknown as TypedSupabaseClient;
+    const now = new Date().toISOString();
+
+    // Rate limiting: Check for recent deletion attempts (user-initiated only)
+    // Use created_at to exclude scheduled retries from rate limit
+    const rateLimitTimestamp = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { data: recentAttempts, error: rateLimitError } = await supabase
+      .from('account_deletion_jobs')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', rateLimitTimestamp)
+      .order('created_at', { ascending: false });
+
+    if (!rateLimitError && recentAttempts && recentAttempts.length >= RATE_LIMIT_MAX_ATTEMPTS) {
+      const oldestAttempt = recentAttempts[recentAttempts.length - 1];
+      const createdAt = oldestAttempt.created_at;
+      const timeRemaining = createdAt
+        ? Math.ceil((new Date(createdAt).getTime() + RATE_LIMIT_WINDOW_MS - Date.now()) / 1000)
+        : 60;
+      console.warn('[account-delete] Rate limit exceeded for user:', user.id);
+      return createErrorResponse(
+        `Too many deletion requests. Please wait ${timeRemaining} seconds before trying again.`,
+        429,
+        req
+      );
+    }
+
+    // Initialize job tracking - this MUST succeed before proceeding
+    const { error: jobUpsertError } = await supabase.from('account_deletion_jobs').upsert(
+      {
+        user_id: user.id,
+        status: 'in_progress',
+        last_error: null,
+        last_error_details: null,
+        last_error_at: null,
+        next_run_at: null,
+        updated_at: now,
+        completed_at: null,
+        dead_lettered_at: null,
+      },
+      { onConflict: 'user_id' }
+    );
+    if (jobUpsertError) {
+      console.error('[account-delete] FATAL: Failed to initialize deletion job tracking:', {
+        error: serializeError(jobUpsertError),
+        userId: user.id,
+      });
+      return createErrorResponse(
+        'Failed to initialize account deletion. Please try again later.',
+        500,
+        req
+      );
+    }
+
     const { data: ownedTeams, error: teamQueryError } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("owner_id", user.id)
+      .from('teams')
+      .select('id')
+      .eq('owner_id', user.id);
     if (teamQueryError) {
-      console.error("[account-delete] Failed to fetch owned teams:", teamQueryError)
-      return createErrorResponse("Failed to fetch owned teams", 500, req)
+      console.error('[account-delete] Failed to fetch owned teams:', teamQueryError);
+      await recordDeletionFailure(supabase, user.id, 'team_query_failed', {
+        stage: 'team_transfer',
+        error: serializeError(teamQueryError),
+      });
+      return createErrorResponse('Failed to fetch owned teams', 500, req);
     }
     if (ownedTeams && ownedTeams.length > 0) {
       for (const team of ownedTeams) {
         const { data: members, error: membersError } = await supabase
-          .from("team_memberships")
-          .select("user_id, joined_at")
-          .eq("team_id", team.id)
-          .neq("user_id", user.id)
-          .order("joined_at", { ascending: true })
+          .from('team_memberships')
+          .select('user_id, joined_at')
+          .eq('team_id', team.id)
+          .neq('user_id', user.id)
+          .order('joined_at', { ascending: true });
         if (membersError) {
-          console.error("[account-delete] Failed to fetch team members:", membersError)
-          return createErrorResponse("Failed to process team memberships", 500, req)
+          console.error('[account-delete] Failed to fetch team members:', membersError);
+          await recordDeletionFailure(supabase, user.id, 'team_members_query_failed', {
+            stage: 'team_transfer',
+            error: serializeError(membersError),
+          });
+          return createErrorResponse('Failed to process team memberships', 500, req);
         }
         if (members && members.length > 0) {
-          const newOwner = members[0].user_id
-          const { error: transferError } = await supabase
-            .from("teams")
-            .update({ owner_id: newOwner })
-            .eq("id", team.id)
+          const newOwner = members[0].user_id;
+          const { error: transferError } = await supabase.rpc('transfer_team_ownership', {
+            p_team_id: team.id,
+            p_old_owner_id: user.id,
+            p_new_owner_id: newOwner,
+          });
           if (transferError) {
-            console.error("[account-delete] Failed to transfer ownership:", transferError)
-            return createErrorResponse("Failed to transfer team ownership", 500, req)
+            console.error('[account-delete] Failed to transfer ownership:', transferError);
+            await recordDeletionFailure(supabase, user.id, 'team_transfer_failed', {
+              stage: 'team_transfer',
+              error: serializeError(transferError),
+            });
+            return createErrorResponse('Failed to transfer team ownership', 500, req);
           }
         } else {
           const { error: deleteTeamError } = await supabase
-            .from("teams")
+            .from('teams')
             .delete()
-            .eq("id", team.id)
+            .eq('id', team.id);
           if (deleteTeamError) {
-            console.error("[account-delete] Failed to delete empty team:", deleteTeamError)
-            return createErrorResponse("Failed to delete empty team", 500, req)
+            console.error('[account-delete] Failed to delete empty team:', deleteTeamError);
+            await recordDeletionFailure(supabase, user.id, 'team_delete_failed', {
+              stage: 'team_transfer',
+              error: serializeError(deleteTeamError),
+            });
+            return createErrorResponse('Failed to delete empty team', 500, req);
           }
         }
       }
     }
-    const { error: membershipDeleteError } = await supabase
-      .from("team_memberships")
-      .delete()
-      .eq("user_id", user.id)
-    if (membershipDeleteError) {
-      console.error("[account-delete] Failed to delete team memberships:", membershipDeleteError)
-      return createErrorResponse("Failed to delete team memberships", 500, req)
+
+    const authDeleteResult = await deleteUserWithRetry(supabase, user.id);
+    if (!authDeleteResult.ok) {
+      console.error('[account-delete] Failed to delete auth user:', authDeleteResult.lastError);
+      await recordDeletionFailure(supabase, user.id, 'auth_delete_failed', {
+        stage: 'auth_delete',
+        attempts: authDeleteResult.attempts,
+        error: serializeError(authDeleteResult.lastError),
+      });
+      return createErrorResponse('Failed to delete account', 500, req);
     }
-    await supabase.from("api_tokens").delete().eq("user_id", user.id)
-    await supabase.from("user_progress").delete().eq("user_id", user.id)
-    await supabase.from("user_preferences").delete().eq("user_id", user.id)
-    await supabase.from("user_system").delete().eq("user_id", user.id)
-    await supabase.from("team_events").delete().or(`initiated_by.eq.${user.id},target_user.eq.${user.id}`)
-    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
-    if (authDeleteError) {
-      console.error("[account-delete] Failed to delete auth user:", authDeleteError)
-      return createErrorResponse("Failed to delete account", 500, req)
+
+    const cleanupErrors = await cleanupUserData(supabase, user.id);
+    if (Object.keys(cleanupErrors).length > 0) {
+      console.error('[account-delete] Cleanup errors after auth delete:', cleanupErrors);
+      await recordDeletionFailure(supabase, user.id, 'cleanup_failed', {
+        stage: 'cleanup',
+        errors: cleanupErrors,
+      });
+      // Return 202 Accepted to indicate auth deletion succeeded but cleanup is async
+      return createSuccessResponse(
+        {
+          success: true,
+          cleanupScheduled: true,
+          message: 'Account deleted. Data cleanup will complete shortly.',
+        },
+        202,
+        req
+      );
     }
-    return createSuccessResponse({ success: true }, 200, req)
+
+    await markDeletionCompleted(supabase, user.id);
+    return createSuccessResponse({ success: true }, 200, req);
   } catch (error) {
-    console.error("[account-delete] Unexpected error:", error)
-    return createErrorResponse("Internal server error", 500, req)
+    console.error('[account-delete] Unexpected error:', error);
+    return createErrorResponse('Internal server error', 500, req);
   }
-})
+});

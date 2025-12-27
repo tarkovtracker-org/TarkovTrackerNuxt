@@ -1,186 +1,127 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "npm:@supabase/supabase-js@2"
-import { corsHeadersFor } from "../_shared/cors.ts"
-
-const supabaseUrl =
-  Deno.env.get("SB_URL") ||
-  Deno.env.get("SUPABASE_URL") ||
-  (() => {
-    throw new Error("Missing SB_URL/SUPABASE_URL env")
-  })()
-const supabaseServiceKey =
-  Deno.env.get("SB_SERVICE_ROLE_KEY") ||
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
-  (() => {
-    throw new Error("Missing SB_SERVICE_ROLE_KEY/SUPABASE_SERVICE_ROLE_KEY env")
-  })()
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import {
+  authenticateUser,
+  handleCorsPreflight,
+  validateMethod,
+  validateRequiredFields,
+  validateUUIDs,
+  createErrorResponse,
+  createSuccessResponse,
+  type AuthSuccess,
+} from '../_shared/auth.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeadersFor(req) })
-  }
+  const corsResponse = handleCorsPreflight(req);
+  if (corsResponse) return corsResponse;
 
   try {
-    // Only allow POST method
-    if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { 
-          status: 405, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
-    }
+    // Validate HTTP method
+    const methodError = validateMethod(req, ['POST']);
+    if (methodError) return methodError;
 
-    // Get authorization header to verify user identity
-    const authHeader = req.headers.get("Authorization")
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Missing or invalid authorization header" }),
-        { 
-          status: 401, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+    // Authenticate user
+    const authResult = await authenticateUser(req);
+    if ('error' in authResult) {
+      return createErrorResponse(authResult.error, authResult.status, req);
     }
+    const { user, supabase } = authResult as AuthSuccess;
 
-    // Get team and member data from request body
-    const { teamId, memberId } = await req.json()
-    if (!teamId || !memberId) {
-      return new Response(
-        JSON.stringify({ error: "Team ID and member ID are required" }),
-        { 
-          status: 400, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
-    }
+    // Parse and validate request body
+    const body = await req.json();
+    const fieldsError = validateRequiredFields(req, body, ['teamId', 'memberId']);
+    if (fieldsError) return fieldsError;
 
-    // Create Supabase client with service role key for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const uuidError = validateUUIDs(req, body, ['teamId', 'memberId']);
+    if (uuidError) return uuidError;
 
-    // Verify user JWT token
-    const token = authHeader.replace("Bearer ", "")
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication token" }),
-        { 
-          status: 401, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
-    }
+    const { teamId, memberId } = body;
 
     // Check if user is the team owner
     const { data: membership, error: membershipError } = await supabase
-      .from("team_memberships")
-      .select("role")
-      .eq("team_id", teamId)
-      .eq("user_id", user.id)
-      .single()
+      .from('team_memberships')
+      .select('role')
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
+      .single();
 
     if (membershipError || !membership) {
-      return new Response(
-        JSON.stringify({ error: "Team not found or user not a member" }),
-        { 
-          status: 404, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+      return createErrorResponse('Team not found or user not a member', 404, req);
     }
 
-    if (membership.role !== "owner") {
-      return new Response(
-        JSON.stringify({ error: "Only team owners can kick members" }),
-        { 
-          status: 403, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+    if (membership.role !== 'owner') {
+      return createErrorResponse('Only team owners can kick members', 403, req);
     }
 
     // Cannot kick the owner
     if (memberId === user.id) {
-      return new Response(
-        JSON.stringify({ error: "Cannot kick yourself from the team" }),
-        { 
-          status: 400, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+      return createErrorResponse('Cannot kick yourself from the team', 400, req);
     }
 
     // Check cooldown period (5 minutes between kicks)
     const { data: recentKicks, error: cooldownError } = await supabase
-      .from("team_events")
-      .select("created_at")
-      .eq("team_id", teamId)
-      .eq("event_type", "member_kicked")
-      .eq("initiated_by", user.id)
-      .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
-      .limit(1)
+      .from('team_events')
+      .select('created_at')
+      .eq('team_id', teamId)
+      .eq('event_type', 'member_kicked')
+      .eq('initiated_by', user.id)
+      .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .limit(1);
 
     if (!cooldownError && recentKicks && recentKicks.length > 0) {
-      return new Response(
-        JSON.stringify({ error: "Must wait 5 minutes between kicks" }),
-        { 
-          status: 429, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+      return createErrorResponse('Must wait 5 minutes between kicks', 429, req);
     }
 
-    // Remove the member from the team
-    const { error: kickError } = await supabase
-      .from("team_memberships")
-      .delete()
-      .eq("team_id", teamId)
-      .eq("user_id", memberId)
+    // Remove the member from the team and verify deletion
+    const { error: kickError, count: deletedCount } = await supabase
+      .from('team_memberships')
+      .delete({ count: 'exact' })
+      .eq('team_id', teamId)
+      .eq('user_id', memberId);
 
     if (kickError) {
-      console.error("Team kick failed:", kickError)
-      return new Response(
-        JSON.stringify({ error: "Failed to kick team member" }),
-        { 
-          status: 500, 
-          headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-        }
-      )
+      console.error('Team kick failed:', kickError);
+      return createErrorResponse('Failed to kick team member', 500, req);
     }
 
-    // Log the kick event
-    await supabase
-      .from("team_events")
-      .insert({
-        team_id: teamId,
-        event_type: "member_kicked",
-        target_user: memberId,
-        initiated_by: user.id,
-        created_at: new Date().toISOString()
-      })
+    if (!deletedCount || deletedCount === 0) {
+      console.error('Team kick failed: Member not found in team', { teamId, memberId });
+      return createErrorResponse('Member not found in team or already removed', 404, req);
+    }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Team member kicked successfully" 
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-      }
-    )
+    // Log the kick event with error handling
+    const { error: eventError } = await supabase.from('team_events').insert({
+      team_id: teamId,
+      event_type: 'member_kicked',
+      target_user: memberId,
+      initiated_by: user.id,
+      created_at: new Date().toISOString(),
+    });
 
+    if (eventError) {
+      console.error('Failed to log kick event:', eventError, { teamId, memberId, userId: user.id });
+      // Kick succeeded but audit log failed - return success with warning
+      return createSuccessResponse(
+        {
+          success: true,
+          message: 'Team member kicked successfully',
+          warning: 'Audit log may not have been recorded',
+        },
+        200,
+        req
+      );
+    }
+
+    return createSuccessResponse(
+      {
+        success: true,
+        message: 'Team member kicked successfully',
+      },
+      200,
+      req
+    );
   } catch (error) {
-    console.error("Team kick error:", error)
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { 
-        status: 500, 
-        headers: { ...corsHeadersFor(req), "Content-Type": "application/json" }
-      }
-    )
+    console.error('Team kick error:', error);
+    return createErrorResponse('Internal server error', 500, req);
   }
-})
+});

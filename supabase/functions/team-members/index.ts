@@ -6,6 +6,7 @@ import {
   validateRequiredFields,
   createErrorResponse,
   createSuccessResponse,
+  type AuthSuccess,
 } from "../_shared/auth.ts";
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
       return createErrorResponse(auth.error, auth.status, req);
     }
 
-    const { supabase, user } = auth;
+    const { supabase, user } = auth as AuthSuccess;
     const body = await req.json();
     const fieldsError = validateRequiredFields(req, body, ["teamId"]);
     if (fieldsError) return fieldsError;

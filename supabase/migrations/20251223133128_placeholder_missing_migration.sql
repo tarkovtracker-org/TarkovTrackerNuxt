@@ -1,0 +1,3 @@
+-- Placeholder migration to keep history aligned with production.
+-- Original migration not present in this repository.
+-- No-op.

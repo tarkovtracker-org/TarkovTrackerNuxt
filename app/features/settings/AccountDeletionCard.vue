@@ -143,7 +143,7 @@
                 <UIcon name="i-mdi-identifier" class="mr-2 h-4.5 w-4.5 text-gray-400" />
                 <span class="mr-2 text-sm text-gray-400">Account ID:</span>
                 <code class="rounded bg-gray-700 px-2 py-1 text-xs">{{ $supabase.user.id }}</code>
-                <UTooltip :text="accountIdCopied ? 'Copied!' : 'Copy Account ID'">
+                <AppTooltip :text="accountIdCopied ? 'Copied!' : 'Copy Account ID'">
                   <UButton
                     size="xs"
                     variant="ghost"
@@ -152,7 +152,7 @@
                     class="ml-1"
                     @click="copyAccountId"
                   />
-                </UTooltip>
+                </AppTooltip>
               </div>
             </div>
             <!-- Deletion Warning -->

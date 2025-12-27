@@ -5,7 +5,8 @@ import {
     validateMethod,
     validateRequiredFields,
     createErrorResponse,
-    createSuccessResponse
+    createSuccessResponse,
+    type AuthSuccess
 } from "../_shared/auth.ts"
 
 const MAX_TEAM_MEMBERS = 5
@@ -28,7 +29,7 @@ serve(async (req) => {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
 
-    const { user, supabase } = authResult
+    const { user, supabase } = authResult as AuthSuccess
 
     // Parse and validate request body
     const body = await req.json()

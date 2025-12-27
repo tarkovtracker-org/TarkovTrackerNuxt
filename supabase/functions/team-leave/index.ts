@@ -3,8 +3,10 @@ import {
   handleCorsPreflight,
   validateMethod,
   validateRequiredFields,
+  validateUUIDs,
   createErrorResponse,
-  createSuccessResponse
+  createSuccessResponse,
+  type AuthSuccess
 } from "../_shared/auth.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const LEAVE_COOLDOWN_MINUTES = 5
@@ -23,11 +25,13 @@ serve(async (req) => {
     if ("error" in authResult) {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
-    const { user, supabase } = authResult
+    const { user, supabase } = authResult as AuthSuccess
     // Parse and validate request body
     const body = await req.json()
     const fieldsError = validateRequiredFields(req, body, ["teamId"])
     if (fieldsError) return fieldsError
+    const uuidError = validateUUIDs(req, body, ["teamId"])
+    if (uuidError) return uuidError
     const { teamId } = body
     // Get the team's game_mode first
     const { data: team, error: teamError } = await supabase
@@ -131,18 +135,22 @@ serve(async (req) => {
         req
       )
     }
-    // Remove user from team
-    const { error: leaveError } = await supabase
+    // Remove user from team and verify deletion
+    const { error: leaveError, count: deletedCount } = await supabase
       .from("team_memberships")
-      .delete()
+      .delete({ count: 'exact' })
       .eq("team_id", teamId)
       .eq("user_id", user.id)
     if (leaveError) {
       console.error("Team leave failed:", leaveError)
       return createErrorResponse("Failed to leave team", 500, req)
     }
-    // Log team leave event
-    await supabase
+    if (!deletedCount || deletedCount === 0) {
+      console.error("Team leave failed: User not in team", { teamId, userId: user.id })
+      return createErrorResponse("User not found in team or already left", 404, req)
+    }
+    // Log team leave event with error handling
+    const { error: eventError } = await supabase
       .from("team_events")
       .insert({
         team_id: teamId,
@@ -151,6 +159,10 @@ serve(async (req) => {
         initiated_by: user.id,
         created_at: new Date().toISOString()
       })
+    if (eventError) {
+      console.error("Failed to log leave event:", eventError, { teamId, userId: user.id })
+      // Leave succeeded but audit log failed - continue with warning
+    }
     // Clear user_system team_id for the leaver (using correct game mode column)
     const { error: systemError } = await supabase
       .from("user_system")

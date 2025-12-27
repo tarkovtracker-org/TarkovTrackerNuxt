@@ -5,7 +5,8 @@ import {
     validateMethod,
     validateRequiredFields,
     createErrorResponse,
-    createSuccessResponse
+    createSuccessResponse,
+    type AuthSuccess
 } from "../_shared/auth.ts"
 
 const VALID_GAME_MODES = ["pvp", "pve"] as const
@@ -24,7 +25,7 @@ serve(async (req) => {
     if ("error" in authResult) {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
-    const { user, supabase } = authResult
+    const { user, supabase } = authResult as AuthSuccess
     // Parse and validate request body
     const body = await req.json()
     const joinCode =

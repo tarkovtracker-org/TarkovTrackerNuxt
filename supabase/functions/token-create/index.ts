@@ -5,6 +5,7 @@ import {
   createSuccessResponse,
   handleCorsPreflight,
   validateMethod,
+  type AuthSuccess,
 } from "../_shared/auth.ts"
 
 const generateToken = () => {
@@ -33,7 +34,7 @@ serve(async (req) => {
     if ("error" in authResult) {
       return createErrorResponse(authResult.error, authResult.status, req)
     }
-    const { user, supabase } = authResult
+    const { user, supabase } = authResult as AuthSuccess
 
     let body: Record<string, unknown> = {}
     try {
@@ -63,12 +64,8 @@ serve(async (req) => {
       note,
     }
 
-    const attemptInsert = async () =>
-      supabase
-        .from("api_tokens")
-        .insert(insertBody)
-        .select("token_id")
-        .single()
+    const attemptInsert = () =>
+      supabase.from("api_tokens").insert(insertBody).select("token_id").single()
 
     let { data, error } = await attemptInsert()
     if (error?.code === "42703") {
