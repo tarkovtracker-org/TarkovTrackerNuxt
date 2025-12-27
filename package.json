@@ -11,7 +11,8 @@
     "deps": "npx taze --r --I",
     "lint": "eslint app --max-warnings=0",
     "lint:fix": "eslint app --fix",
-    "format": "prettier --write \"app/**/*.{js,ts,tsx,vue,json,json5,css,scss,md}\" \"docs/**/*.{md,markdown}\" \"nuxt.config.ts\" \"app.config.ts\" \"vitest.config.ts\" \"test-setup.ts\" && eslint app --fix"
+    "format": "prettier --write \"app/**/*.{js,ts,tsx,vue,json,json5,css,scss,md}\" \"docs/**/*.{md,markdown}\" \"nuxt.config.ts\" \"app.config.ts\" \"vitest.config.ts\" \"test-setup.ts\" && eslint app --fix",
+    "supabase:types": "supabase gen types typescript --linked > supabase/functions/_shared/database.types.ts"
   },
   "dependencies": {
     "@iconify-json/mdi": "^1.2.3",
@@ -22,7 +23,7 @@
     "@nuxt/ui": "^4.3.0",
     "@pinia/nuxt": "^0.11.3",
     "@supabase/supabase-js": "^2.89.0",
-    "@unhead/vue": "^2.0.19",
+    "@unhead/vue": "^2.1.1",
     "@vueuse/core": "^14.1.0",
     "d3": "^7.9.0",
     "eslint": "^9.39.2",
@@ -36,13 +37,14 @@
     "sass": "^1.97.1",
     "typescript": "^5.9.3",
     "vue": "^3.5.26",
-    "vue-i18n": "^11.2.2",
+    "vue-i18n": "^11.2.7",
     "vue-router": "^4.6.4"
   },
   "__pinnedNotes": {
     "@vueuse/core": "Previously pinned to 13.9.0 due to Nuxt/@nuxt/ui/reka-ui compatibility; updated to ^14.1.0 after upgrading Nuxt/@nuxt/ui."
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251225.0",
     "@nuxt/test-utils": "^3.21.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/d3": "^7.4.3",
@@ -52,13 +54,18 @@
     "autoprefixer": "^10.4.23",
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "fake-indexeddb": "^5.0.2",
     "happy-dom": "^20.0.11",
-    "jsdom": "^27.3.0",
+    "jsdom": "^27.4.0",
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "supabase": "^2.67.3",
+    "supabase": "^2.70.5",
     "tailwindcss": "^4.1.18",
     "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "@tiptap/core": "3.14.0",
+    "@tiptap/pm": "3.14.0"
   }
 }

@@ -20,6 +20,18 @@
 - [x] Integrate in `app/features/settings/ApiTokens.vue`
 - [x] `token-list` (Implemented via direct Supabase client access)
 
+## Deprecations
+
+### `progress-update` edge function (removed 2025-12-25)
+
+- [x] Confirmed all clients write to `user_progress`; no remaining calls to
+      `progress-update`.
+- [x] Downstream teams/apps notified; migration/release notes updated (this
+      entry).
+- [x] Legacy `{ error: string }` response shape recorded for historical
+      reference.
+- [x] Function removed from `supabase/functions/progress-update/`.
+
 ## Deployment Checklist
 
 - [ ] Configure Cloudflare Pages environment variables

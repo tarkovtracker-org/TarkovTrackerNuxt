@@ -1,5 +1,45 @@
 import { cleanup } from '@vue/test-utils';
-import { beforeAll, afterEach } from 'vitest';
+import 'fake-indexeddb/auto';
+import { beforeAll, afterEach, vi } from 'vitest';
+
+type FetchInput = string | Request | URL;
+
+const getFetchUrl = (input: FetchInput) => {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.toString();
+  return input.url;
+};
+
+const mockFetch = vi.fn(async (input: FetchInput, _init?: RequestInit) => {
+  const url = getFetchUrl(input);
+  if (url.includes('/api/tarkov/data')) {
+    return { data: { tasks: [], maps: [], traders: [], playerLevels: [] } };
+  }
+  if (url.includes('/api/tarkov/hideout')) {
+    return { data: { hideoutStations: [] } };
+  }
+  if (url.includes('/api/tarkov/prestige')) {
+    return { data: { prestige: [] } };
+  }
+  if (url.includes('/api/tarkov/items')) {
+    return { data: { items: [] } };
+  }
+  if (url.includes('tarkov-data-overlay') || url.includes('/overlay.json')) {
+    return { editions: {} };
+  }
+  if (url.includes('/_nuxt/builds/meta/')) {
+    // Mock Nuxt's build manifest requests during test initialization
+    return {
+      matcher: { entries: () => [] },
+      prerendered: [],
+      routes: { entries: () => [] },
+    };
+  }
+  // Fail fast for unmatched URLs to maintain test isolation
+  throw new Error(`Unmocked fetch call to: ${url}. Add a mock for this URL in test-setup.ts`);
+});
+
+vi.stubGlobal('$fetch', mockFetch);
 // Cleanup after each test
 afterEach(() => {
   try {
@@ -16,7 +56,11 @@ beforeAll(() => {
   global.console = {
     ...originalConsole,
     // Uncomment to suppress specific warnings during tests
-    // warn: vi.fn(),
+    warn: (...args: unknown[]) => {
+      const first = args[0];
+      if (typeof first === 'string' && first.startsWith('[Icon]')) return;
+      originalConsole.warn(...args);
+    },
     // error: vi.fn(),
   };
 });

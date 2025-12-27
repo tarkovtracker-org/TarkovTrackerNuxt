@@ -51,6 +51,7 @@
       },
       traders: {
         title: 'Händlerfortschritt',
+        viewTasks: 'Aufgaben von {name} ansehen',
       },
       stats: {
         available: {

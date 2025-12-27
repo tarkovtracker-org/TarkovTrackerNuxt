@@ -52,6 +52,7 @@
       },
       traders: {
         title: 'Progreso de comerciantes',
+        viewTasks: 'Ver las Misiones de {name}',
       },
       stats: {
         available: {
@@ -164,7 +165,7 @@
     },
     neededitems: {
       title: 'Objetos Necesarios',
-      loading: 'Cargando datos de tareas y escondite',
+      loading: 'Cargando datos de misiones y escondite',
       searchplaceholder: 'Buscar objetos...',
       items: 'artículos',
       filters: {
@@ -183,7 +184,7 @@
       },
       neededviews: {
         all: 'Todos',
-        tasks: 'Tareas',
+        tasks: 'Misiones',
         hideout: 'Escondite',
       },
       options: {
@@ -287,14 +288,14 @@
           button: 'Administrar Equipo',
           membercard: {
             this_is_you: '(Eres tú)',
-            taskscomplete: '{completed}/{total} tareas completadas',
+            taskscomplete: '{completed}/{total} misiones completadas',
           },
         },
         teamoptions: {
           title: 'Opciones de Integración del Equipo',
           button: 'Opciones de Equipo',
-          task_hide_all: 'Ocultar tareas de todos los miembros del equipo',
-          task_show_all: 'Mostrar tareas de los miembros del equipo',
+          task_hide_all: 'Ocultar misiones de todos los miembros del equipo',
+          task_show_all: 'Mostrar misiones de los miembros del equipo',
           items_hide_all: 'Ocultar objetos necesarios de los miembros del equipo',
           items_show_all: 'Mostrar objetos necesarios de los miembros del equipo',
           items_show_non_fir: 'Mostrar todos los objetos necesarios de los miembros del equipo (incluyendo los que no son FIR)',

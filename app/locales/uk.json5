@@ -51,6 +51,7 @@
       },
       traders: {
         title: 'Прогрес торговців',
+        viewTasks: 'Переглянути завдання від {name}',
       },
       stats: {
         available: {

@@ -158,6 +158,53 @@ async function handleAction(request: Request, env: Env, action: TeamAction) {
           ...(init?.headers as Record<string, string> | undefined),
         },
       });
+    const fetchTeam = async () => {
+      const teamRes = await api(
+        `teams?id=eq.${teamId}&select=id,game_mode&limit=1`
+      );
+      if (!teamRes.ok) {
+        const txt = await teamRes.text();
+        return jsonResponse(
+          { error: "Failed to load team", details: txt },
+          teamRes.status,
+          origin,
+          reqOrigin
+        );
+      }
+      const teamData = (await teamRes.json()) as Array<{ game_mode?: string | null }>;
+      const team = teamData[0];
+      if (!team) {
+        return jsonResponse({ error: "Team not found" }, 404, origin, reqOrigin);
+      }
+      if (!team.game_mode) {
+        return jsonResponse({ error: "Team missing game_mode" }, 400, origin, reqOrigin);
+      }
+      return team;
+    };
+    const clearUserSystem = async (gameMode: "pvp" | "pve"): Promise<Response | null> => {
+      const body =
+        gameMode === "pve"
+          ? { user_id: userId, pve_team_id: null, updated_at: new Date().toISOString() }
+          : { user_id: userId, pvp_team_id: null, updated_at: new Date().toISOString() };
+      const res = await api(`user_system`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { Prefer: "resolution=merge-duplicates" },
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        return jsonResponse(
+          { error: "Failed to clear user system", details: txt },
+          res.status,
+          origin,
+          reqOrigin
+        );
+      }
+      return null;
+    };
+    const teamInfo = await fetchTeam();
+    if (teamInfo instanceof Response) return teamInfo;
+    const gameMode = teamInfo.game_mode === "pve" ? "pve" : "pvp";
     // Fetch membership
     const membershipRes = await api(
       `team_memberships?team_id=eq.${teamId}&user_id=eq.${userId}&select=role,user_id&limit=1`
@@ -166,7 +213,8 @@ async function handleAction(request: Request, env: Env, action: TeamAction) {
       const txt = await membershipRes.text();
       return jsonResponse({ error: "Failed to load membership", details: txt }, 500, origin, reqOrigin);
     }
-    const membership = (await membershipRes.json())?.[0] as { role?: string } | undefined;
+    const membershipData = (await membershipRes.json()) as Array<{ role?: string }>;
+    const membership = membershipData[0];
     if (!membership) {
       return jsonResponse({ error: "You are not a member of this team" }, 404, origin, reqOrigin);
     }
@@ -189,15 +237,8 @@ async function handleAction(request: Request, env: Env, action: TeamAction) {
         );
       }
       // 1. Clear user_system first (to avoid FK constraint)
-      await api(`user_system`, {
-        method: "POST",
-        body: JSON.stringify({
-          user_id: userId,
-          team_id: null,
-          updated_at: new Date().toISOString(),
-        }),
-        headers: { Prefer: "resolution=merge-duplicates" },
-      });
+      const clearError = await clearUserSystem(gameMode);
+      if (clearError) return clearError;
       // 2. Delete all memberships (including owner's)
       const delMemberships = await api(`team_memberships?team_id=eq.${teamId}`, { method: "DELETE" });
       if (!delMemberships.ok) {
@@ -221,15 +262,8 @@ async function handleAction(request: Request, env: Env, action: TeamAction) {
         return jsonResponse({ error: "Failed to leave team", details: txt }, delMem.status, origin, reqOrigin);
       }
       // Update user_system
-      await api(`user_system`, {
-        method: "POST",
-        body: JSON.stringify({
-          user_id: userId,
-          team_id: null,
-          updated_at: new Date().toISOString(),
-        }),
-        headers: { Prefer: "resolution=merge-duplicates" },
-      });
+      const clearError = await clearUserSystem(gameMode);
+      if (clearError) return clearError;
     }
     // Log event (best-effort)
     await api(`team_events`, {

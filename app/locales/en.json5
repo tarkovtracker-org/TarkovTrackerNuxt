@@ -68,6 +68,7 @@
       },
       traders: {
         title: 'Trader Progress',
+        viewTasks: 'View tasks from {name}',
       },
       stats: {
         available: {
@@ -161,6 +162,7 @@
         impact: 'Impact',
         next: 'Next',
         more: 'More',
+        andMore: ', +{count} more',
         copyTaskId: 'Copy task ID',
         copyTaskLink: 'Copy task link',
         showChainDetails: 'Show chain details',
@@ -406,6 +408,9 @@
           join_success: 'Successfully joined the team.',
         },
       },
+    },
+    admin: {
+      title: 'Admin Panel',
     },
     credits: {
       title: 'Credits',

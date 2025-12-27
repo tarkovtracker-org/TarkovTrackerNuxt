@@ -34,6 +34,8 @@ export default defineNuxtConfig({
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       teamGatewayUrl: process.env.NUXT_PUBLIC_TEAM_GATEWAY_URL || '',
       tokenGatewayUrl: process.env.NUXT_PUBLIC_TOKEN_GATEWAY_URL || '',
+      // Admin middleware watch timeout (milliseconds)
+      adminWatchTimeoutMs: Number(process.env.ADMIN_WATCH_TIMEOUT_MS || '5000') || 5000,
     },
   },
   devtools: {

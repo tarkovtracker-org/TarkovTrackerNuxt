@@ -51,6 +51,7 @@
       },
       traders: {
         title: 'Progression des marchands',
+        viewTasks: 'Voir les quêtes de {name}',
       },
       stats: {
         available: {

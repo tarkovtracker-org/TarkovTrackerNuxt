@@ -417,16 +417,15 @@ export default defineEventHandler(async (event) => {
 
 ### Supabase Edge Functions (`supabase/functions/`)
 
-| Function          | Method | Purpose                      | Auth                 |
-| ----------------- | ------ | ---------------------------- | -------------------- |
-| `team-create`     | POST   | Create team with invite code | Bearer token         |
-| `team-join`       | POST   | Join team via invite         | Bearer token         |
-| `team-leave`      | POST   | Leave or delete team         | Bearer token         |
-| `team-kick`       | POST   | Remove team member           | Bearer token + Owner |
-| `token-create`    | POST   | Generate API token           | Bearer token         |
-| `token-revoke`    | POST   | Revoke API token             | Bearer token         |
-| `account-delete`  | POST   | Cascade delete user data     | Bearer token         |
-| `progress-update` | POST   | Sync progress to DB          | Bearer token         |
+| Function         | Method | Purpose                      | Auth                 |
+| ---------------- | ------ | ---------------------------- | -------------------- |
+| `team-create`    | POST   | Create team with invite code | Bearer token         |
+| `team-join`      | POST   | Join team via invite         | Bearer token         |
+| `team-leave`     | POST   | Leave or delete team         | Bearer token         |
+| `team-kick`      | POST   | Remove team member           | Bearer token + Owner |
+| `token-create`   | POST   | Generate API token           | Bearer token         |
+| `token-revoke`   | POST   | Revoke API token             | Bearer token         |
+| `account-delete` | POST   | Cascade delete user data     | Bearer token         |
 
 **Edge Function Pattern:**
 
