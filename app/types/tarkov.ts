@@ -122,6 +122,25 @@ export interface HideoutModule extends HideoutLevel {
   parents: string[];
   children: string[];
 }
+// --- New Interfaces for Objective Locations ---
+export interface MapPosition {
+  x: number;
+  y: number;
+  z: number;
+}
+export interface TaskObjectiveLocation {
+  map: { id: string; name?: string };
+  positions: MapPosition[];
+}
+export interface TaskObjectiveZone {
+  id: string;
+  map: { id: string; name?: string };
+  position?: MapPosition;
+  outline?: MapPosition[];
+  top?: number;
+  bottom?: number;
+}
+// ----------------------------------------------
 export interface TaskObjective {
   id: string;
   description?: string;
@@ -136,8 +155,9 @@ export interface TaskObjective {
   count?: number;
   type?: string;
   foundInRaid?: boolean;
-  x?: number;
-  y?: number;
+  // Replaced flat x/y with proper nested structures
+  possibleLocations?: TaskObjectiveLocation[];
+  zones?: TaskObjectiveZone[];
   optional?: boolean;
   taskId?: string;
 }

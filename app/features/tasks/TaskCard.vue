@@ -234,6 +234,7 @@
           :objectives="relevantViewObjectives"
           :irrelevant-count="irrelevantObjectives.length"
           :uncompleted-irrelevant="uncompletedIrrelevantObjectives.length"
+          @center-map="emit('objective-clicked', $event)"
         />
       </div>
       <!-- 4) Chain info -->
@@ -619,6 +620,7 @@
   }>();
   const emit = defineEmits<{
     'on-task-action': [payload: TaskActionPayload];
+    'objective-clicked': [payload: TaskObjective];
   }>();
   const { t } = useI18n({ useScope: 'global' });
   const router = useRouter();

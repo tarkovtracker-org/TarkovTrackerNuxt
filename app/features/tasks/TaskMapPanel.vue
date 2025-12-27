@@ -1,60 +1,64 @@
 <template>
-  <div v-if="show" class="my-1 w-full">
-    <UAccordion :items="[{ label: 'Objective Locations', slot: 'content' }]" class="w-full">
-      <template #default="{ item, open }">
-        <UButton
-          color="neutral"
-          variant="ghost"
-          class="flex w-full items-center justify-between rounded-none py-2 sm:p-3"
-        >
-          <span class="text-base font-medium text-gray-200">
-            {{ item.label }}
-            <span
-              v-show="activeMapView !== '55f2d3fd4bdc2d5f408b4567'"
-              class="font-normal text-gray-400"
-            >
-              &nbsp;-&nbsp;{{ tarkovTime }}
-            </span>
-          </span>
-          <UIcon
-            name="i-mdi-chevron-down"
-            class="h-5 w-5 transition-transform duration-200"
-            :class="[open && 'rotate-180 transform']"
-          />
-        </UButton>
-      </template>
-      <template #content>
-        <div class="bg-gray-900/50 p-4">
-          <TarkovMapComponent v-if="selectedMap" :map="selectedMap" :marks="visibleMarks" />
-          <UAlert
-            v-else
-            icon="i-mdi-alert-circle"
-            color="error"
-            variant="soft"
-            title="No map data available for this selection."
-          />
-        </div>
-      </template>
-    </UAccordion>
+  <div class="flex flex-col gap-4">
+    <!-- Map Display -->
+    <div v-if="selectedMap" style="position: relative;">
+      <TarkovMap
+        :key="selectedMapId"
+        :map="selectedMap"
+        :marks="[]"
+        :task-objectives="objectivesForSelectedMap"
+      />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, defineAsyncComponent } from 'vue';
-  import { useTarkovTime } from '@/composables/useTarkovTime';
-  import type { TarkovMap } from '@/types/tarkov';
-  const TarkovMapComponent = defineAsyncComponent(() => import('@/features/maps/TarkovMap.vue'));
-  // Use structural types compatible with TarkovMap's expectations
-  interface Props {
-    show: boolean;
-    selectedMap?: TarkovMap;
-    visibleMarkers: Array<{
-      zones: Array<{ map: { id: string }; outline: { x: number; z: number }[] }>;
-      possibleLocations?: Array<{ map: { id: string }; [key: string]: unknown }>;
-    }>;
-    activeMapView: string;
+import { storeToRefs } from 'pinia';
+import { ref, computed, watch, type PropType } from 'vue';
+import TarkovMap from '@/features/maps/TarkovMap.vue';
+import { useMetadataStore } from '@/stores/useMetadata';
+import { usePreferencesStore } from '@/stores/usePreferences';
+import type { Task, TaskObjective } from '@/types/tarkov';
+const props = defineProps({
+  tasks: {
+    type: Array as PropType<Task[]>,
+    required: true,
+  },
+});
+watch(
+  () => props.tasks,
+  (newTasks) => {
+    console.log('Tasks prop changed in TaskMapPanel.vue:', JSON.parse(JSON.stringify(newTasks)));
+  },
+  { deep: true, immediate: true }
+);
+const metadataStore = useMetadataStore();
+const { mapsWithSvg: maps } = storeToRefs(metadataStore);
+const preferencesStore = usePreferencesStore();
+const { getTaskMapView } = storeToRefs(preferencesStore);
+const allObjectives = computed(() => {
+  return props.tasks.flatMap(task => task.objectives || []);
+});
+const selectedMapId = ref(getTaskMapView.value);
+watch(getTaskMapView, (newVal) => {
+    selectedMapId.value = newVal;
+});
+const selectedMap = computed(() => {
+    return maps.value.find(m => m.id === selectedMapId.value)
+});
+const objectivesForSelectedMap = computed(() => {
+    if (!selectedMap.value) return [];
+    return allObjectives.value.filter(obj => {
+        return obj.maps?.some(m => m.id === selectedMap.value?.id)
+    });
+})
+// Method to be called from parent page
+const centerOnObjective = (objective: TaskObjective) => {
+  if (objective.maps && objective.maps.length > 0) {
+    selectedMapId.value = objective.maps[0].id;
+    // TODO: Highlight the marker
   }
-  const props = defineProps<Props>();
-  const { tarkovTime } = useTarkovTime();
-  // Alias for better readability in template
-  const visibleMarks = computed(() => props.visibleMarkers);
+};
+defineExpose({
+  centerOnObjective,
+});
 </script>

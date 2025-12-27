@@ -16,6 +16,12 @@
       <div class="min-w-0">
         <div class="text-sm leading-5 text-gray-100">
           {{ props.objective?.description }}
+          <UIcon
+            v-if="props.objective.maps && props.objective.x && props.objective.y"
+            name="i-mdi-map-marker-radius"
+            class="ml-1 inline-block h-4 w-4 cursor-pointer text-blue-400 hover:text-blue-300"
+            @click.stop="emit('center-map', props.objective)"
+          />
         </div>
         <div
           v-if="userHasTeam && activeUserView === 'all' && userNeeds.length > 0"
@@ -74,6 +80,7 @@
   import { useTarkovStore } from '@/stores/useTarkov';
   import type { TaskObjective } from '@/types/tarkov';
   const { t } = useI18n({ useScope: 'global' });
+  const emit = defineEmits(['center-map']);
   const { systemStore } = useSystemStoreWithSupabase();
   // Define the props for the component
   const props = defineProps<{
