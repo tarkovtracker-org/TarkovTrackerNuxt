@@ -2,15 +2,15 @@
   <div class="container mx-auto">
     <div class="flex flex-col gap-4">
       <div class="w-full">
-        <template v-if="isSvgObject(props.map?.svg) && props.map.svg.floors?.length > 0">
-          <template
-            v-for="(floor, floorIndex) in isSvgObject(props.map?.svg) ? props.map.svg.floors : []"
-            :key="floorIndex"
-          >
+        <template v-if="isSvgObject(props.map?.svg) && sortedFloors.length > 0">
+          <template v-for="(floor, floorIndex) in sortedFloors" :key="floorIndex">
             <UButton
-              variant="solid"
-              :color="floor == selectedFloor ? 'success' : 'neutral'"
+              :variant="'solid'"
+              :color="floor === selectedFloor ? 'success' : 'white'"
               class="mx-2"
+              :class="{
+                'text-green-500 hover:bg-gray-200': floor !== selectedFloor,
+              }"
               @click="setFloor(floor)"
             >
               {{ floor.replace('_', ' ') }}
@@ -28,7 +28,7 @@
             :selected-floor="selectedFloor"
             :map="props.map"
           />
-          <template v-for="(mark, markIndex) in props.marks" :key="markIndex">
+          <template v-for="(mark, markIndex) in allMarks" :key="markIndex">
             <template
               v-for="(markLocation, markLocationIndex) in mark.possibleLocations"
               :key="markLocationIndex"
@@ -50,20 +50,77 @@
 </template>
 <script setup lang="ts">
   import { select, xml } from 'd3';
+  import { storeToRefs } from 'pinia';
   import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue';
-  import type { TarkovMap } from '@/types/tarkov';
+  import { usePreferencesStore } from '@/stores/usePreferences';
+  import { useProgressStore } from '@/stores/useProgress';
+  import type { TarkovMap, TaskObjective } from '@/types/tarkov';
   import { logger } from '@/utils/logger';
   interface Props {
     map: TarkovMap;
     marks?: MapMark[];
+    taskObjectives?: TaskObjective[];
   }
   type MapZoneOutline = { x: number; z: number }[];
-  type MapZone = { map: { id: string }; outline: MapZoneOutline };
+  type MapZoneType = { map: { id: string }; outline: MapZoneOutline };
   type MapMarkLocation = { map: { id: string }; [key: string]: unknown };
-  type MapMark = { zones: MapZone[]; possibleLocations?: MapMarkLocation[] };
+  type MapMark = { id: string; users: string[]; zones: MapZoneType[]; possibleLocations?: MapMarkLocation[] };
   const randomMapId = ref(crypto.randomUUID());
   const props = withDefaults(defineProps<Props>(), {
     marks: () => [],
+    taskObjectives: () => [],
+  });
+  const progressStore = useProgressStore();
+  const preferencesStore = usePreferencesStore();
+  const { objectiveCompletions } = storeToRefs(progressStore);
+const objectiveMarks = computed(() => {
+    if (!props.taskObjectives) return [];
+    const userView = preferencesStore.getTaskUserView;
+    return props.taskObjectives
+      .filter((objective) => {
+        const hasLocations = (objective.possibleLocations?.length ?? 0) > 0 || (objective.zones?.length ?? 0) > 0;
+        const completions = objectiveCompletions.value?.[objective.id] || {};
+        const isCompleted = userView === 'all' 
+          ? Object.values(completions).every(Boolean)
+          : completions[userView] ?? false;
+        return hasLocations && !isCompleted;
+      })
+      .map((objective) => {
+        const cleanZones: MapZoneType[] = (objective.zones || [])
+          .filter((z) => z.outline && z.outline.length > 0)
+          .map((z) => ({
+            map: z.map,
+            outline: z.outline!.map((p) => ({ x: p.x, z: p.z }))
+          }));
+        const cleanLocations = (objective.possibleLocations || []) as unknown as MapMarkLocation[];
+        return {
+          id: objective.id,
+          users: ['self'],
+          possibleLocations: cleanLocations,
+          zones: cleanZones, 
+        };
+      });
+  });
+  const sortedFloors = computed(() => {
+    const svg = props.map?.svg;
+    if (!isSvgObject(svg) || !svg.floors) {
+      return [];
+    }
+    const floors = [...svg.floors];
+    return floors.sort((a, b) => {
+      const aIsUnderground = a.toLowerCase().includes('underground');
+      const bIsUnderground = b.toLowerCase().includes('underground');
+      if (aIsUnderground && !bIsUnderground) {
+        return -1;
+      }
+      if (!aIsUnderground && bIsUnderground) {
+        return 1;
+      }
+      return 0;
+    });
+  });
+  const allMarks = computed(() => {
+    return [...props.marks, ...objectiveMarks.value];
   });
   const MapMarker = defineAsyncComponent(() => import('~/features/maps/MapMarker.vue'));
   const MapZone = defineAsyncComponent(() => import('~/features/maps/MapZone.vue'));
@@ -83,7 +140,7 @@
     (() => {
       const svg = props.map?.svg;
       if (isSvgObject(svg)) {
-        return svg.defaultFloor ?? svg.floors?.[svg.floors.length - 1];
+        return svg.defaultFloor ?? sortedFloors.value?.[sortedFloors.value.length - 1];
       }
       return undefined;
     })()
@@ -107,9 +164,10 @@
     }
     return Math.abs(area / 2);
   };
-  const sortedZones = computed(() => {
-    const zones: { zone: MapZone; mark: MapMark }[] = [];
-    for (const mark of props.marks) {
+const sortedZones = computed(() => {
+    const zones: { zone: MapZoneType; mark: MapMark }[] = [];
+    for (const mark of allMarks.value) {
+      if (!mark.zones) continue;
       for (const zone of mark.zones) {
         if (zone.map.id === props.map.id) {
           zones.push({ zone, mark });
@@ -120,11 +178,26 @@
   });
   const setFloor = (floor: string) => {
     selectedFloor.value = floor;
-    // For Factory, just toggle visibility instead of full redraw
+    const mapContainer = document.getElementById(randomMapId.value);
+    if (!mapContainer) return;
     if (props.map.name?.toLowerCase() === 'factory' && isFactoryLoaded.value) {
       updateFactoryFloorVisibility();
     } else {
-      draw();
+        const mapSvg = props.map?.svg;
+        if (isSvgObject(mapSvg) && selectedFloor.value && sortedFloors.value && sortedFloors.value.length > 0) {
+        const floors = sortedFloors.value;
+        const selectedFloorIndex = floors.indexOf(selectedFloor.value);
+        if (selectedFloorIndex !== -1) {
+            floors.forEach((f: string, index: number) => {
+                const floorElement = select(mapContainer).select('svg').select(`#${f}`);
+                if (index > selectedFloorIndex) {
+                    floorElement.style('opacity', 0.02);
+                } else {
+                    floorElement.style('opacity', 1);
+                }
+            });
+        }
+      }
     }
   };
   watch(
@@ -137,7 +210,7 @@
       // Safely update selectedFloor only if floors exist, prioritize defaultFloor
       const svg = newMap?.svg;
       if (isSvgObject(svg)) {
-        selectedFloor.value = svg.defaultFloor ?? svg.floors?.[svg.floors.length - 1] ?? undefined;
+        selectedFloor.value = svg.defaultFloor ?? sortedFloors.value?.[sortedFloors.value.length - 1] ?? undefined;
       } else {
         selectedFloor.value = undefined;
       }
@@ -166,10 +239,10 @@
   };
   const drawFactoryFloors = async (mapContainer: HTMLElement) => {
     const svg = props.map?.svg;
-    if (!isSvgObject(svg) || !svg.floors || !selectedFloor.value) {
+    if (!isSvgObject(svg) || !sortedFloors.value || !selectedFloor.value) {
       return;
     }
-    const floors = svg.floors;
+    const floors = sortedFloors.value;
     // Create a single main SVG container (like other maps do)
     const mainSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     mainSvg.style.width = '100%';
@@ -222,8 +295,8 @@
   };
   const updateFactoryFloorVisibility = () => {
     const mapSvg = props.map?.svg;
-    if (!isSvgObject(mapSvg) || !mapSvg.floors || !selectedFloor.value) return;
-    const floors = mapSvg.floors;
+    if (!isSvgObject(mapSvg) || !sortedFloors.value || !selectedFloor.value) return;
+    const floors = sortedFloors.value;
     const selectedFloorIndex = floors.indexOf(selectedFloor.value);
     if (selectedFloorIndex === -1) return;
     const mapContainer = document.getElementById(randomMapId.value);
@@ -258,10 +331,21 @@
       logger.error(`Failed to load map SVG: ${svgUrl}`, error);
       return;
     }
+    // Reorder floor layers to fix display issue
+    const svgElement = select(mapContainer).select('svg');
+    const floorElements = [];
+    for (const floor of sortedFloors.value) {
+        const floorElement = svgElement.select(`#${floor}`);
+        if (!floorElement.empty()) {
+            floorElements.push(floorElement.node());
+            floorElement.remove();
+        }
+    }
+    floorElements.forEach(floorNode => svgElement.node().appendChild(floorNode));
     // Apply floor visibility logic for standard maps
     const mapSvg = props.map?.svg;
-    if (isSvgObject(mapSvg) && selectedFloor.value && mapSvg.floors && mapSvg.floors.length > 0) {
-      const floors = mapSvg.floors;
+    if (isSvgObject(mapSvg) && selectedFloor.value && sortedFloors.value && sortedFloors.value.length > 0) {
+      const floors = sortedFloors.value;
       const selectedFloorIndex = floors.indexOf(selectedFloor.value);
       if (selectedFloorIndex !== -1) {
         floors.forEach((floor: string, index: number) => {

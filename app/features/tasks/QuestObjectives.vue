@@ -6,8 +6,9 @@
         :title="row.title"
         :icon-name="row.iconName"
         :objectives="row.objectives"
+        @center-map="emit('center-map', $event)"
       />
-      <TaskObjective v-else :objective="row.objective" />
+      <TaskObjective v-else :objective="row.objective" @center-map="emit('center-map', $event)" />
     </div>
     <div v-if="irrelevantCount > 0" class="flex w-full items-center p-1 opacity-50">
       <UIcon name="i-mdi-eye-off" class="mr-1 h-4 w-4" />
@@ -34,6 +35,7 @@
     uncompletedIrrelevant: number;
   }>();
   const { t } = useI18n({ useScope: 'global' });
+  const emit = defineEmits(['center-map']);
   type Row =
     | {
         kind: 'objective';

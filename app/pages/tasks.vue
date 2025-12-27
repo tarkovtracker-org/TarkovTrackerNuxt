@@ -4,16 +4,26 @@
       <TaskLoadingState v-if="isLoading" />
       <div v-else>
         <!-- Task Filter Bar -->
-        <TaskFilterBar v-model:search-query="searchQuery" />
+          <TaskFilterBar 
+            v-model:search-query="searchQuery" 
+            v-model:show-map="showMap"
+          />
+        <!-- Task Map Panel -->
+        <div v-if="showMap && getTaskPrimaryView === 'maps'" class="mt-4">
+          <ClientOnly>
+            <TaskMapPanel ref="taskMapPanel" :tasks="filteredTasks" />
+          </ClientOnly>
+        </div>
         <div v-if="filteredTasks.length === 0" class="py-6">
           <TaskEmptyState />
         </div>
-        <div v-else class="space-y-4" data-testid="task-list">
+        <div v-else class="space-y-4 pt-4" data-testid="task-list">
           <TaskCard
             v-for="task in paginatedTasks"
             :key="task.id"
             :task="task"
             @on-task-action="onTaskAction"
+            @objective-clicked="onObjectiveClicked"
           />
           <!-- Sentinel for infinite scroll -->
           <div v-if="displayCount < filteredTasks.length" ref="tasksSentinel" class="h-1" />
@@ -74,6 +84,7 @@
   import TaskCard from '@/features/tasks/TaskCard.vue';
   import TaskEmptyState from '@/features/tasks/TaskEmptyState.vue';
   import TaskLoadingState from '@/features/tasks/TaskLoadingState.vue';
+  import TaskMapPanel from '@/features/tasks/TaskMapPanel.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useProgressStore } from '@/stores/useProgress';
@@ -104,10 +115,22 @@
   const metadataStore = useMetadataStore();
   const { tasks, maps, loading: tasksLoading } = storeToRefs(metadataStore);
   const progressStore = useProgressStore();
-  const { tasksCompletions, unlockedTasks } = storeToRefs(progressStore);
+  const { tasksCompletions, unlockedTasks, objectiveCompletions } = storeToRefs(progressStore);
   const { visibleTasks, reloadingTasks, updateVisibleTasks } = useTaskFiltering();
   const tarkovStore = useTarkovStore();
-  // Toast / Undo State
+  const showMap = ref(false);
+  const taskMapPanel = ref<InstanceType<typeof TaskMapPanel> | null>(null);
+  const onObjectiveClicked = (objective: TaskObjective) => {
+      // Force view to maps if not already
+      if (preferencesStore.getTaskPrimaryView !== 'maps') {
+        preferencesStore.setTaskPrimaryView('maps');
+      }
+      showMap.value = true;
+      nextTick(() => {
+        taskMapPanel.value?.centerOnObjective(objective);
+      });
+    };
+    // Toast / Undo State
   const taskStatusUpdated = ref(false);
   const taskStatus = ref('');
   const undoData = ref<{
@@ -154,6 +177,7 @@
       maps,
       tasksCompletions,
       unlockedTasks,
+      objectiveCompletions,
     ],
     () => {
       refreshVisibleTasks();
