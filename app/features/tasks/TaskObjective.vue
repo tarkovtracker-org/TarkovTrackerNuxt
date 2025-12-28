@@ -17,7 +17,7 @@
         <div class="text-sm leading-5 text-gray-100">
           {{ props.objective?.description }}
           <UIcon
-            v-if="props.objective.maps && props.objective.x && props.objective.y"
+            v-if="props.objective.maps && (props.objective.possibleLocations?.length || props.objective.zones?.length)"
             name="i-mdi-map-marker-radius"
             class="ml-1 inline-block h-4 w-4 cursor-pointer text-blue-400 hover:text-blue-300"
             @click.stop="emit('center-map', props.objective)"
