@@ -336,15 +336,21 @@ const sortedZones = computed(() => {
     }
     // Reorder floor layers to fix display issue
     const svgElement = select(mapContainer).select('svg');
-    const floorElements = [];
-    for (const floor of sortedFloors.value) {
+    const svgNode = svgElement.node() as Node | null;
+    if (svgNode) {
+      const floorsReversed = [...sortedFloors.value].reverse();
+      let nextSibling: Node | null = null;
+      for (const floor of floorsReversed) {
         const floorElement = svgElement.select(`#${floor}`);
         if (!floorElement.empty()) {
-            floorElements.push(floorElement.node());
-            floorElement.remove();
+          const node = floorElement.node() as Node;
+          if (node.nextSibling !== nextSibling) {
+            svgNode.insertBefore(node, nextSibling);
+          }
+          nextSibling = node;
         }
+      }
     }
-    floorElements.forEach(floorNode => svgElement.node().appendChild(floorNode));
     // Apply floor visibility logic for standard maps
     const mapSvg = props.map?.svg;
     if (isSvgObject(mapSvg) && selectedFloor.value && sortedFloors.value && sortedFloors.value.length > 0) {
