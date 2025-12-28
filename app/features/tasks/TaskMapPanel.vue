@@ -13,7 +13,7 @@
 </template>
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { ref, computed, watch, type PropType } from 'vue';
+import { computed, type PropType } from 'vue';
 import TarkovMap from '@/features/maps/TarkovMap.vue';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
@@ -31,9 +31,9 @@ const { getTaskMapView } = storeToRefs(preferencesStore);
 const allObjectives = computed(() => {
   return props.tasks.flatMap(task => task.objectives || []);
 });
-const selectedMapId = ref(getTaskMapView.value);
-watch(getTaskMapView, (newVal) => {
-    selectedMapId.value = newVal;
+const selectedMapId = computed({
+  get: () => getTaskMapView.value,
+  set: (val) => preferencesStore.setTaskMapView(val),
 });
 const selectedMap = computed(() => {
     return maps.value.find(m => m.id === selectedMapId.value)
