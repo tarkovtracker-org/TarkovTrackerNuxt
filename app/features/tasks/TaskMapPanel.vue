@@ -38,9 +38,9 @@ const selectedMap = computed(() => {
 const objectivesForSelectedMap = computed(() => {
     if (!selectedMap.value) return [];
     return allObjectives.value.filter(obj => {
-        return obj.maps?.some(m => m.id === selectedMap.value?.id)
+        return obj.maps?.some(m => m.id === selectedMap.value.id);
     });
-})
+});
 // Method to be called from parent page
 const centerOnObjective = (objective: TaskObjective) => {
   if (objective.maps && objective.maps.length > 0) {
