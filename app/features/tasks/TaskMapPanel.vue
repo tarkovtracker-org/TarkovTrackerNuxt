@@ -13,17 +13,14 @@
 </template>
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, type PropType } from 'vue';
+import { computed } from 'vue';
 import TarkovMap from '@/features/maps/TarkovMap.vue';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import type { Task, TaskObjective } from '@/types/tarkov';
-const props = defineProps({
-  tasks: {
-    type: Array as PropType<Task[]>,
-    required: true,
-  },
-});
+const props = defineProps<{
+  tasks: Task[];
+}>();
 const metadataStore = useMetadataStore();
 const { mapsWithSvg: maps } = storeToRefs(metadataStore);
 const preferencesStore = usePreferencesStore();
