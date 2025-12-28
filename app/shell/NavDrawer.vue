@@ -118,6 +118,8 @@
             :aria-expanded="showExternalMenu"
             aria-controls="external-menu-popover"
             @click="toggleMenu"
+            @keydown.space.prevent="toggleMenu"
+            @keydown.enter.prevent="toggleMenu"
             @mouseenter="handleEnter"
             @mouseleave="handleLeave('button')"
           >
@@ -184,7 +186,7 @@
 </template>
 <script setup lang="ts">
   import { onClickOutside } from '@vueuse/core';
-  import { computed, defineAsyncComponent, onUnmounted, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
@@ -326,7 +328,19 @@
     }
   };
 
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && showExternalMenu.value) {
+      showExternalMenu.value = false;
+      externalButtonRef.value?.focus();
+    }
+  };
+
+  onMounted(() => {
+    window.addEventListener('keydown', handleEscape);
+  });
+
   onUnmounted(() => {
+    window.removeEventListener('keydown', handleEscape);
     if (closeTimeout) clearTimeout(closeTimeout);
   });
 </script>
