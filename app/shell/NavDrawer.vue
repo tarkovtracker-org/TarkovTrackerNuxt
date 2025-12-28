@@ -25,7 +25,7 @@
         class="group mt-1 flex flex-col items-center px-3 py-1.5 transition-opacity hover:opacity-90"
       >
         <div
-          :class="isCollapsed ? 'w-8' : 'w-[130px] short:w-[100px]'"
+          :class="isCollapsed ? 'w-8' : 'short:w-[100px] w-[130px]'"
           class="relative mx-auto transition-all duration-200"
         >
           <NuxtImg
@@ -110,13 +110,21 @@
       <!-- External Links Button -->
       <div class="px-1 py-1">
         <div class="relative">
-          <button 
+          <button
+            id="external-link-button"
             ref="externalButtonRef"
             class="group flex w-full cursor-pointer items-center rounded-md border-l-2 border-transparent px-3 py-2.5 text-base font-medium text-[rgba(248,248,248,0.65)] transition-colors duration-150 hover:bg-white/5 hover:text-white"
+            aria-haspopup="true"
+            :aria-expanded="showExternalMenu"
+            aria-controls="external-menu-popover"
+            @click="toggleMenu"
             @mouseenter="handleEnter"
             @mouseleave="handleLeave('button')"
           >
-            <UIcon name="i-heroicons-link" class="mr-3 h-6 w-6 shrink-0 transition-colors group-hover:text-white" />
+            <UIcon
+              name="i-heroicons-link"
+              class="mr-3 h-6 w-6 shrink-0 transition-colors group-hover:text-white"
+            />
             <span v-if="!isCollapsed" class="truncate">External</span>
             <UIcon v-if="!isCollapsed" name="i-heroicons-chevron-right" class="ml-auto h-4 w-4" />
           </button>
@@ -124,58 +132,59 @@
       </div>
     </div>
     <Teleport to="body">
-      <div 
+      <div
         v-if="showExternalMenu"
+        id="external-menu-popover"
         ref="externalMenuRef"
-        class="popover-menu ring-primary-800/20 fixed z-50 flex flex-col rounded-lg border border-white/10 bg-[#0d0d0d] py-1.5 shadow-2xl backdrop-blur-md ring-1"
+        class="popover-menu ring-primary-800/20 fixed z-50 flex flex-col rounded-lg border border-white/10 bg-[#0d0d0d] py-1.5 shadow-2xl ring-1 backdrop-blur-md"
         :style="{
           bottom: `${menuPosition.bottom}px`,
           left: `${menuPosition.left}px`,
-          minWidth: '13rem'
+          minWidth: '13rem',
         }"
         @mouseenter="handleMenuEnter"
         @mouseleave="handleLeave('menu')"
       >
-            <div class="px-3 pt-1 pb-1.5 border-b border-white/5 mb-1">
-              <h3 class="text-[0.65rem] font-bold tracking-widest text-gray-500 uppercase">External</h3>
-            </div>
-            <ul class="flex flex-col gap-0.5">
-              <DrawerItem
-                avatar="/img/logos/tarkovdevlogo.webp"
-                locale-key="tarkovdev"
-                href="https://tarkov.dev/"
-                ext-link
-                :is-collapsed="false"
-              />
-              <DrawerItem
-                avatar="/img/logos/tarkovmonitorlogo.avif"
-                locale-key="tarkovmonitor"
-                href="https://github.com/the-hideout/TarkovMonitor"
-                ext-link
-                :is-collapsed="false"
-              />
-              <DrawerItem
-                avatar="/img/logos/ratscannerlogo.webp"
-                locale-key="ratscanner"
-                href="https://ratscanner.com/"
-                ext-link
-                :is-collapsed="false"
-              />
-              <DrawerItem
-                avatar="/img/logos/tarkovchangeslogo.svg"
-                locale-key="tarkovchanges"
-                href="https://tarkov-changes.com/"
-                ext-link
-                :is-collapsed="false"
-              />
-            </ul>
+        <div class="mb-1 border-b border-white/5 px-3 pt-1 pb-1.5">
+          <h3 class="text-[0.65rem] font-bold tracking-widest text-gray-500 uppercase">External</h3>
         </div>
-      </Teleport>
+        <ul class="flex flex-col gap-0.5">
+          <DrawerItem
+            avatar="/img/logos/tarkovdevlogo.webp"
+            locale-key="tarkovdev"
+            href="https://tarkov.dev/"
+            ext-link
+            :is-collapsed="false"
+          />
+          <DrawerItem
+            avatar="/img/logos/tarkovmonitorlogo.avif"
+            locale-key="tarkovmonitor"
+            href="https://github.com/the-hideout/TarkovMonitor"
+            ext-link
+            :is-collapsed="false"
+          />
+          <DrawerItem
+            avatar="/img/logos/ratscannerlogo.webp"
+            locale-key="ratscanner"
+            href="https://ratscanner.com/"
+            ext-link
+            :is-collapsed="false"
+          />
+          <DrawerItem
+            avatar="/img/logos/tarkovchangeslogo.svg"
+            locale-key="tarkovchanges"
+            href="https://tarkov-changes.com/"
+            ext-link
+            :is-collapsed="false"
+          />
+        </ul>
+      </div>
+    </Teleport>
   </aside>
 </template>
 <script setup lang="ts">
   import { onClickOutside } from '@vueuse/core';
-  import { computed, defineAsyncComponent, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, onUnmounted, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
@@ -270,17 +279,21 @@
   const isMenuHovered = ref(false);
   let closeTimeout: ReturnType<typeof setTimeout> | null = null;
   // Handle click outside to close menu (useful for touch devices)
-  onClickOutside(externalMenuRef, () => {
-    showExternalMenu.value = false;
-    isButtonHovered.value = false;
-    isMenuHovered.value = false;
-  }, { ignore: [externalButtonRef] });
+  onClickOutside(
+    externalMenuRef,
+    () => {
+      showExternalMenu.value = false;
+      isButtonHovered.value = false;
+      isMenuHovered.value = false;
+    },
+    { ignore: [externalButtonRef] }
+  );
   const updatePosition = () => {
     if (externalButtonRef.value) {
       const rect = externalButtonRef.value.getBoundingClientRect();
       menuPosition.value = {
-        bottom: window.innerHeight - rect.bottom, 
-        left: rect.right + 10
+        bottom: window.innerHeight - rect.bottom,
+        left: rect.right + 10,
       };
     }
   };
@@ -304,6 +317,18 @@
       }
     }, 300);
   };
+
+  const toggleMenu = () => {
+    if (showExternalMenu.value) {
+      showExternalMenu.value = false;
+    } else {
+      handleEnter();
+    }
+  };
+
+  onUnmounted(() => {
+    if (closeTimeout) clearTimeout(closeTimeout);
+  });
 </script>
 <style scoped>
   /* Hide scrollbar but keep scroll functionality */
@@ -313,11 +338,6 @@
   }
   .nav-drawer-scroll::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
-  }
-  @media (max-height: 900px) {
-    .short\:hidden { display: none !important; }
-    .short\:block { display: block !important; }
-    .short\:w-\[100px\] { width: 100px !important; }
   }
   /* Remove list styling (borders) from popover items */
   .popover-menu :deep(a),
@@ -329,7 +349,7 @@
     padding-right: 0.5rem !important;
     margin-left: 0 !important;
   }
-  
+
   .popover-menu :deep(a) {
     height: 38px !important;
     border-radius: 4px !important;

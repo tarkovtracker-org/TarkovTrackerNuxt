@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+
 /* Smooth scrolling for hash anchor navigation */
 html {
   scroll-behavior: smooth;
@@ -498,5 +499,22 @@ html {
   }
   100% {
     transform: skew(0deg);
+  }
+}
+
+/* Shared responsive utilities for short viewports */
+@media (max-height: 900px) {
+  .short\:hidden {
+    display: none !important;
+  }
+  .short\:block {
+    display: block !important;
+  }
+  .short\:w-\[100px\] {
+    width: 100px !important;
+  }
+  .short\:py-1 {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
   }
 }
