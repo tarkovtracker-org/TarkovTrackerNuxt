@@ -6,7 +6,6 @@
         :title="row.title"
         :icon-name="row.iconName"
         :objectives="row.objectives"
-        @center-map="emit('center-map', $event)"
       />
       <TaskObjective v-else :objective="row.objective" @center-map="emit('center-map', $event)" />
     </div>
