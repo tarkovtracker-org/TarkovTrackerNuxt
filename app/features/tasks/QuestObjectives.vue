@@ -34,7 +34,9 @@
     uncompletedIrrelevant: number;
   }>();
   const { t } = useI18n({ useScope: 'global' });
-  const emit = defineEmits(['center-map']);
+    const emit = defineEmits<{
+    'center-map': [objective: TaskObjectiveType]
+  }>();
   type Row =
     | {
         kind: 'objective';

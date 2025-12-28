@@ -95,7 +95,11 @@ const objectiveMarks = computed(() => {
             map: z.map,
             outline: z.outline!.map((p) => ({ x: p.x, z: p.z }))
           }));
-        const cleanLocations = (objective.possibleLocations || []) as unknown as MapMarkLocation[];
+        const cleanLocations: MapMarkLocation[] = Array.isArray(objective.possibleLocations)
+          ? objective.possibleLocations.map((loc) => ({
+              ...loc,
+            }))
+          : [];
         return {
           id: objective.id,
           users: ['self'],
