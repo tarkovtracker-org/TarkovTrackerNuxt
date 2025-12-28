@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <!-- Map Display -->
-    <div v-if="selectedMap" style="position: relative;">
+    <div v-if="selectedMap" class="relative">
       <TarkovMap
         :key="selectedMapId"
         :map="selectedMap"
