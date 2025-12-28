@@ -14,7 +14,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import TarkovMap from '@/features/maps/TarkovMap.vue';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import type { Task, TaskObjective } from '@/types/tarkov';
@@ -33,7 +32,7 @@ const selectedMapId = computed({
   set: (val) => preferencesStore.setTaskMapView(val),
 });
 const selectedMap = computed(() => {
-    return maps.value.find(m => m.id === selectedMapId.value)
+    return maps.value.find(m => m.id === selectedMapId.value);
 });
 const objectivesForSelectedMap = computed(() => {
     if (!selectedMap.value) return [];
