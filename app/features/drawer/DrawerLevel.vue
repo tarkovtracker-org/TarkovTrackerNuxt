@@ -13,10 +13,10 @@
     <template v-else>
       <!-- Card container for expanded state -->
       <div
-        class="w-full overflow-hidden rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 backdrop-blur-sm"
+        class="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 backdrop-blur-sm transition-all duration-300 short:py-1"
       >
         <div class="flex min-w-0 items-center gap-1">
-          <span class="mr-1 shrink-0 leading-none">
+          <span class="mr-1 shrink-0 leading-none short:hidden">
             <div class="group relative h-12 w-12 overflow-hidden">
               <template v-if="isDataReady && groupIcon">
                 <NuxtImg
@@ -156,7 +156,7 @@
         </div>
         <!-- XP Progress Display -->
         <div
-          class="hover:border-primary/30 mt-1.5 cursor-pointer rounded border border-white/5 bg-white/[0.02] px-2 py-1 transition-all hover:bg-white/[0.04]"
+          class="hover:border-primary/30 mt-1.5 cursor-pointer rounded border border-white/5 bg-white/2 px-2 py-1 transition-all hover:bg-white/4"
           @click="navigateToSettings"
         >
           <div class="mb-0.5 flex items-center justify-between text-[0.6rem]">
@@ -292,5 +292,17 @@
   input[type='number'] {
     appearance: textfield !important;
     -moz-appearance: textfield !important;
+  }
+</style>
+
+<style scoped>
+  @media (max-height: 900px) {
+    .short\:hidden {
+      display: none !important;
+    }
+    .short\:py-1 {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
+    }
   }
 </style>

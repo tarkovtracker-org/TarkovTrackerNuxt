@@ -18,14 +18,14 @@
     :class="[sidebarWidth]"
   >
     <div
-      class="nav-drawer-scroll relative z-10 flex h-full flex-col overflow-x-hidden overflow-y-auto"
+      class="nav-drawer-scroll relative z-10 flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
     >
       <NuxtLink
         to="/"
         class="group mt-1 flex flex-col items-center px-3 py-1.5 transition-opacity hover:opacity-90"
       >
         <div
-          :class="isCollapsed ? 'w-8' : 'w-[130px]'"
+          :class="isCollapsed ? 'w-8' : 'w-[130px] short:w-[100px]'"
           class="relative mx-auto transition-all duration-200"
         >
           <NuxtImg
@@ -42,7 +42,6 @@
           <div class="text-base leading-tight font-medium text-white">TarkovTracker.org</div>
         </div>
       </NuxtLink>
-      <div class="bg-primary-800/40 mx-3 my-0.5 h-px" />
       <ul class="flex flex-col gap-1 px-1">
         <template v-if="isLoggedIn">
           <UDropdownMenu :items="accountItems" :content="{ side: 'right', align: 'start' }">
@@ -83,7 +82,6 @@
           </UButton>
         </template>
       </ul>
-      <div class="bg-primary-800/40 mx-3 my-0.5 h-px" />
       <DrawerLevel :is-collapsed="isCollapsed" />
       <div v-if="!isCollapsed" class="my-2 flex flex-col items-center gap-1.5 px-4">
         <button
@@ -108,49 +106,76 @@
           </button>
         </div>
       </div>
-      <div class="bg-primary-800/40 mx-3 my-0.5 h-px" />
       <DrawerLinks :is-collapsed="isCollapsed" />
-      <div class="bg-primary-800/40 mx-3 my-0.5 h-px" />
-      <div class="flex flex-col gap-1">
-        <div v-if="!isCollapsed" class="px-4 py-0.5">
-          <h3 class="text-xs font-semibold tracking-wider text-gray-500 uppercase">External</h3>
+      <!-- External Links Button -->
+      <div class="px-1 py-1">
+        <div class="relative">
+          <button 
+            ref="externalButtonRef"
+            class="group flex w-full cursor-pointer items-center rounded-md border-l-2 border-transparent px-3 py-2.5 text-base font-medium text-[rgba(248,248,248,0.65)] transition-colors duration-150 hover:bg-white/5 hover:text-white"
+            @mouseenter="handleEnter"
+            @mouseleave="handleLeave('button')"
+          >
+            <UIcon name="i-heroicons-link" class="mr-3 h-6 w-6 shrink-0 transition-colors group-hover:text-white" />
+            <span v-if="!isCollapsed" class="truncate">External</span>
+            <UIcon v-if="!isCollapsed" name="i-heroicons-chevron-right" class="ml-auto h-4 w-4" />
+          </button>
         </div>
-        <ul class="flex flex-col gap-1 px-1">
-          <DrawerItem
-            avatar="/img/logos/tarkovdevlogo.webp"
-            locale-key="tarkovdev"
-            href="https://tarkov.dev/"
-            ext-link
-            :is-collapsed="isCollapsed"
-          />
-          <DrawerItem
-            avatar="/img/logos/tarkovmonitorlogo.avif"
-            locale-key="tarkovmonitor"
-            href="https://github.com/the-hideout/TarkovMonitor"
-            ext-link
-            :is-collapsed="isCollapsed"
-          />
-          <DrawerItem
-            avatar="/img/logos/ratscannerlogo.webp"
-            locale-key="ratscanner"
-            href="https://ratscanner.com/"
-            ext-link
-            :is-collapsed="isCollapsed"
-          />
-          <DrawerItem
-            avatar="/img/logos/tarkovchangeslogo.svg"
-            locale-key="tarkovchanges"
-            href="https://tarkov-changes.com/"
-            ext-link
-            :is-collapsed="isCollapsed"
-          />
-        </ul>
       </div>
     </div>
+    <Teleport to="body">
+      <div 
+        v-if="showExternalMenu"
+        ref="externalMenuRef"
+        class="popover-menu ring-primary-800/20 fixed z-50 flex flex-col rounded-lg border border-white/10 bg-[#0d0d0d] py-1.5 shadow-2xl backdrop-blur-md ring-1"
+        :style="{
+          bottom: `${menuPosition.bottom}px`,
+          left: `${menuPosition.left}px`,
+          minWidth: '13rem'
+        }"
+        @mouseenter="handleMenuEnter"
+        @mouseleave="handleLeave('menu')"
+      >
+            <div class="px-3 pt-1 pb-1.5 border-b border-white/5 mb-1">
+              <h3 class="text-[0.65rem] font-bold tracking-widest text-gray-500 uppercase">External</h3>
+            </div>
+            <ul class="flex flex-col gap-0.5">
+              <DrawerItem
+                avatar="/img/logos/tarkovdevlogo.webp"
+                locale-key="tarkovdev"
+                href="https://tarkov.dev/"
+                ext-link
+                :is-collapsed="false"
+              />
+              <DrawerItem
+                avatar="/img/logos/tarkovmonitorlogo.avif"
+                locale-key="tarkovmonitor"
+                href="https://github.com/the-hideout/TarkovMonitor"
+                ext-link
+                :is-collapsed="false"
+              />
+              <DrawerItem
+                avatar="/img/logos/ratscannerlogo.webp"
+                locale-key="ratscanner"
+                href="https://ratscanner.com/"
+                ext-link
+                :is-collapsed="false"
+              />
+              <DrawerItem
+                avatar="/img/logos/tarkovchangeslogo.svg"
+                locale-key="tarkovchanges"
+                href="https://tarkov-changes.com/"
+                ext-link
+                :is-collapsed="false"
+              />
+            </ul>
+        </div>
+      </Teleport>
   </aside>
 </template>
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, watch } from 'vue';
+  import { onClickOutside } from '@vueuse/core';
+  import { computed, defineAsyncComponent, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
@@ -237,6 +262,48 @@
       onSelect: logout,
     },
   ]);
+  const showExternalMenu = ref(false);
+  const externalButtonRef = ref<HTMLButtonElement | null>(null);
+  const externalMenuRef = ref<HTMLElement | null>(null);
+  const menuPosition = ref({ bottom: 0, left: 0 });
+  const isButtonHovered = ref(false);
+  const isMenuHovered = ref(false);
+  let closeTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Handle click outside to close menu (useful for touch devices)
+  onClickOutside(externalMenuRef, () => {
+    showExternalMenu.value = false;
+    isButtonHovered.value = false;
+    isMenuHovered.value = false;
+  }, { ignore: [externalButtonRef] });
+  const updatePosition = () => {
+    if (externalButtonRef.value) {
+      const rect = externalButtonRef.value.getBoundingClientRect();
+      menuPosition.value = {
+        bottom: window.innerHeight - rect.bottom, 
+        left: rect.right + 10
+      };
+    }
+  };
+  const handleEnter = () => {
+    isButtonHovered.value = true;
+    if (closeTimeout) clearTimeout(closeTimeout);
+    updatePosition();
+    showExternalMenu.value = true;
+  };
+  const handleMenuEnter = () => {
+    isMenuHovered.value = true;
+    if (closeTimeout) clearTimeout(closeTimeout);
+  };
+  const handleLeave = (source: 'button' | 'menu') => {
+    if (source === 'button') isButtonHovered.value = false;
+    if (source === 'menu') isMenuHovered.value = false;
+    if (closeTimeout) clearTimeout(closeTimeout);
+    closeTimeout = setTimeout(() => {
+      if (!isButtonHovered.value && !isMenuHovered.value) {
+        showExternalMenu.value = false;
+      }
+    }, 300);
+  };
 </script>
 <style scoped>
   /* Hide scrollbar but keep scroll functionality */
@@ -246,5 +313,29 @@
   }
   .nav-drawer-scroll::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
+  }
+  @media (max-height: 900px) {
+    .short\:hidden { display: none !important; }
+    .short\:block { display: block !important; }
+    .short\:w-\[100px\] { width: 100px !important; }
+  }
+  /* Remove list styling (borders) from popover items */
+  .popover-menu :deep(a),
+  .popover-menu :deep(li),
+  .popover-menu :deep(.group) {
+    border-left: 0 !important;
+    border-left-width: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    margin-left: 0 !important;
+  }
+  
+  .popover-menu :deep(a) {
+    height: 38px !important;
+    border-radius: 4px !important;
+  }
+  /* Force no border on the item wrapper itself */
+  .popover-menu :deep(li > div) {
+    border-left: 0 !important;
   }
 </style>
