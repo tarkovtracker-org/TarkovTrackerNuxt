@@ -5,7 +5,7 @@
         <template v-if="isSvgObject(props.map?.svg) && sortedFloors.length > 0">
           <template v-for="(floor, floorIndex) in sortedFloors" :key="floorIndex">
             <UButton
-              :variant="'solid'"
+              variant="solid"
               :color="floor === selectedFloor ? 'success' : 'white'"
               class="mx-2"
               :class="{
@@ -79,10 +79,13 @@ const objectiveMarks = computed(() => {
     return props.taskObjectives
       .filter((objective) => {
         const hasLocations = (objective.possibleLocations?.length ?? 0) > 0 || (objective.zones?.length ?? 0) > 0;
-        const completions = objectiveCompletions.value?.[objective.id] || {};
-        const isCompleted = userView === 'all' 
-          ? Object.values(completions).every(Boolean)
-          : completions[userView] ?? false;
+        const completions = objectiveCompletions.value?.[objective.id];
+        const isCompleted =
+          userView === 'all'
+            ? !!completions &&
+              Object.values(completions).length > 0 &&
+              Object.values(completions).every(Boolean)
+            : completions?.[userView] ?? false;
         return hasLocations && !isCompleted;
       })
       .map((objective) => {
