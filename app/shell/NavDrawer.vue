@@ -186,7 +186,7 @@
 </template>
 <script setup lang="ts">
   import { onClickOutside } from '@vueuse/core';
-  import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
@@ -325,6 +325,10 @@
       showExternalMenu.value = false;
     } else {
       handleEnter();
+      nextTick(() => {
+        const firstItem = externalMenuRef.value?.querySelector('a, button') as HTMLElement;
+        firstItem?.focus();
+      });
     }
   };
 
