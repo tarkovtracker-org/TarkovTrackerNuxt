@@ -15,6 +15,16 @@ html {
   [tabindex]:not([tabindex='-1']) {
     @apply focus-visible:ring-primary-500 focus:outline-none focus-visible:ring-2;
   }
+
+  /* Global Fixes for Nuxt UI Components */
+  [role='option'] {
+    cursor: pointer !important;
+  }
+
+  input[role="combobox"] {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
 }
 @theme {
   --font-sans: 'Share Tech Mono', ui-sans-serif, system-ui, sans-serif;

@@ -67,12 +67,6 @@
           :popper="{ placement: 'bottom-end', strategy: 'fixed' }"
           :ui="{
             base: 'bg-surface-900/90 border border-white/15 ring-1 ring-white/10 rounded-md px-1.5 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1.5 cursor-pointer !pe-1.5 sm:!pe-3',
-            width: 'w-auto min-w-32',
-            background: 'bg-surface-900',
-            shadow: 'shadow-xl',
-            rounded: 'rounded-lg',
-            ring: 'ring-1 ring-white/10',
-            padding: 'p-1',
           }"
           class="h-auto min-w-0"
         >
@@ -209,12 +203,4 @@
     },
   });
 </script>
-<style>
-  [role='option'] {
-    cursor: pointer !important;
-  }
-  input[role="combobox"] {
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-  }
-</style>
+
