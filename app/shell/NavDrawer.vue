@@ -326,8 +326,10 @@
     } else {
       handleEnter();
       nextTick(() => {
-        const firstItem = externalMenuRef.value?.querySelector('a, button') as HTMLElement;
-        firstItem?.focus();
+        if (externalMenuRef.value) {
+          const firstItem = externalMenuRef.value.querySelector('a, button') as HTMLElement;
+          if (firstItem) firstItem.focus();
+        }
       });
     }
   };

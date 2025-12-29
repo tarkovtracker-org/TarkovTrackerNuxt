@@ -289,5 +289,3 @@
     -moz-appearance: textfield !important;
   }
 </style>
-
-
