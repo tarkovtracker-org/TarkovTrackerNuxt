@@ -93,19 +93,26 @@
           {{ currentEditionName }}
         </button>
         <div class="border-primary-800/50 flex w-full overflow-hidden rounded-md border">
-          <button
-            v-for="faction in factions"
-            :key="faction"
-            class="focus-visible:z-10 focus-visible:ring-inset flex-1 px-2 py-1 text-xs font-semibold uppercase transition-colors"
-            :class="
-              faction === currentFaction
-                ? 'bg-primary-700 text-white'
-                : 'bg-transparent text-white/65 hover:bg-white/5 hover:text-white'
-            "
-            @click="setFaction(faction)"
-          >
-            {{ faction }}
-          </button>
+          <template v-for="(faction, index) in factions" :key="faction">
+            <button
+              class="focus-visible:z-10 focus-visible:ring-inset flex-1 px-2 py-1 text-xs font-semibold uppercase transition-colors"
+              :class="[
+                faction === currentFaction
+                  ? 'bg-primary-700 text-white'
+                  : 'bg-transparent text-white/65 hover:bg-white/5 hover:text-white',
+                index === 0 ? 'rounded-l-[5px]' : '',
+                index === factions.length - 1 ? 'rounded-r-[5px]' : '',
+              ]"
+              @click="setFaction(faction)"
+            >
+              {{ faction }}
+            </button>
+            <div
+              v-if="index < factions.length - 1"
+              class="bg-primary-800/50 w-px"
+              aria-hidden="true"
+            />
+          </template>
         </div>
       </div>
       <div class="bg-primary-800/40 mx-3 my-0.5 h-px" />

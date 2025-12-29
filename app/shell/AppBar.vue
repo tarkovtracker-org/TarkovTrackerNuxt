@@ -38,7 +38,7 @@
         >
           <button
             type="button"
-            class="focus-visible:ring-inset focus-visible:z-10 cursor-pointer inline-flex items-center justify-center gap-0.5 px-1.5 py-1 text-[10px] font-semibold tracking-wide uppercase transition-colors sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs md:px-3.5 md:text-sm lg:px-4 lg:text-[15px]"
+            class="focus-visible:ring-inset focus-visible:z-10 rounded-l-[5px] cursor-pointer inline-flex items-center justify-center gap-0.5 px-1.5 py-1 text-[10px] font-semibold tracking-wide uppercase transition-colors sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs md:px-3.5 md:text-sm lg:px-4 lg:text-[15px]"
             :class="pvpClasses"
             :disabled="dataLoading"
             @click="switchMode(GAME_MODES.PVP)"
@@ -49,7 +49,7 @@
           <div class="h-6 w-px self-center bg-white/15 sm:h-8" aria-hidden="true" />
           <button
             type="button"
-            class="focus-visible:ring-inset focus-visible:z-10 cursor-pointer inline-flex items-center justify-center gap-0.5 px-1.5 py-1 text-[10px] font-semibold tracking-wide uppercase transition-colors sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs md:px-3.5 md:text-sm lg:px-4 lg:text-[15px]"
+            class="focus-visible:ring-inset focus-visible:z-10 rounded-r-[5px] cursor-pointer inline-flex items-center justify-center gap-0.5 px-1.5 py-1 text-[10px] font-semibold tracking-wide uppercase transition-colors sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs md:px-3.5 md:text-sm lg:px-4 lg:text-[15px]"
             :class="pveClasses"
             :disabled="dataLoading"
             @click="switchMode(GAME_MODES.PVE)"
