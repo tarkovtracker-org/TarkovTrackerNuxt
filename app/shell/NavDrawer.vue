@@ -113,7 +113,7 @@
           <button
             id="external-link-button"
             ref="externalButtonRef"
-            class="group flex w-full cursor-pointer items-center rounded-md border-l-2 border-transparent px-3 py-2.5 text-base font-medium text-[rgba(248,248,248,0.65)] transition-colors duration-150 hover:bg-white/5 hover:text-white"
+            class="group flex w-full cursor-pointer items-center rounded-md border-l-2 border-transparent px-3 py-2.5 text-base font-medium text-white/65 transition-colors duration-150 hover:bg-white/5 hover:text-white"
             aria-haspopup="true"
             :aria-expanded="showExternalMenu"
             aria-controls="external-menu-popover"
