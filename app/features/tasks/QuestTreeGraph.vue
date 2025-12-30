@@ -39,6 +39,7 @@
           @mousemove="onMainMouseMove"
           @mouseup="onMainMouseUp"
           @mouseleave="onMainMouseUp"
+          @contextmenu.prevent
         >
           <div
             class="quest-tree-stage relative"
@@ -363,7 +364,7 @@
   };
 
   const onMainMouseDown = (event: MouseEvent) => {
-    if (!scrollRef.value || event.button !== 1) return;
+    if (!scrollRef.value || event.button !== 2) return;
     isPanning.value = true;
     panStart.value = {
       x: event.clientX,
