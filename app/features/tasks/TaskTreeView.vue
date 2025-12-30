@@ -44,7 +44,7 @@
         </svg>
         <div
           v-for="node in nodes"
-          :key="node.taskId"
+          :key="node.key"
           class="absolute rounded-lg shadow-sm"
           :style="{
             left: `${node.x}px`,
@@ -237,42 +237,6 @@
     return 'bg-red-400/70';
   };
 
-  const depthMap = computed(() => {
-    const depth = new Map<string, number>();
-    const parentMap = new Map<string, string[]>();
-    props.tasks.forEach((task) => {
-      const parents = (task.parents ?? []).filter((parentId) => tasksById.value.has(parentId));
-      parentMap.set(task.id, parents);
-      if (parents.length === 0) {
-        depth.set(task.id, 0);
-      }
-    });
-    let progress = true;
-    let safety = 0;
-    while (progress && safety < props.tasks.length) {
-      progress = false;
-      safety += 1;
-      props.tasks.forEach((task) => {
-        if (depth.has(task.id)) return;
-        const parents = parentMap.get(task.id) ?? [];
-        if (parents.length === 0) {
-          depth.set(task.id, 0);
-          progress = true;
-          return;
-        }
-        const parentDepths = parents.map((parentId) => depth.get(parentId));
-        if (parentDepths.some((value) => value === undefined)) return;
-        const maxDepth = Math.max(...(parentDepths as number[]));
-        depth.set(task.id, maxDepth + 1);
-        progress = true;
-      });
-    }
-    props.tasks.forEach((task) => {
-      if (!depth.has(task.id)) depth.set(task.id, 0);
-    });
-    return depth;
-  });
-
   const childrenMap = computed(() => {
     const childMap = new Map<string, string[]>();
     props.tasks.forEach((task) => {
@@ -285,101 +249,132 @@
     return childMap;
   });
 
-  const columns = computed(() => {
-    const columnsMap = new Map<number, string[]>();
+  type TreeNode = {
+    key: string;
+    taskId: string;
+    children: TreeNode[];
+    units?: number;
+  };
+
+  const roots = computed(() => {
+    const rootIds: string[] = [];
+    const allIds = new Set(props.tasks.map((task) => task.id));
     props.tasks.forEach((task) => {
-      const depth = depthMap.value.get(task.id) ?? 0;
-      const list = columnsMap.get(depth) ?? [];
-      list.push(task.id);
-      columnsMap.set(depth, list);
-    });
-    const sortedDepths = [...columnsMap.keys()].sort((a, b) => a - b);
-    const ordered: Array<{ depth: number; taskIds: string[] }> = [];
-    const positionMap = new Map<string, number>();
-    sortedDepths.forEach((depth) => {
-      const taskIds = columnsMap.get(depth) ?? [];
-      if (depth === 0) {
-        taskIds.sort((a, b) =>
-          (tasksById.value.get(a)?.name ?? '').localeCompare(tasksById.value.get(b)?.name ?? '')
-        );
-      } else {
-        taskIds.sort((a, b) => {
-          const aParents = (tasksById.value.get(a)?.parents ?? []).filter((id) =>
-            positionMap.has(id)
-          );
-          const bParents = (tasksById.value.get(b)?.parents ?? []).filter((id) =>
-            positionMap.has(id)
-          );
-          const aAvg =
-            aParents.length > 0
-              ? aParents.reduce((sum, id) => sum + (positionMap.get(id) ?? 0), 0) /
-                aParents.length
-              : 0;
-          const bAvg =
-            bParents.length > 0
-              ? bParents.reduce((sum, id) => sum + (positionMap.get(id) ?? 0), 0) /
-                bParents.length
-              : 0;
-          if (aAvg !== bAvg) return aAvg - bAvg;
-          return (tasksById.value.get(a)?.name ?? '').localeCompare(
-            tasksById.value.get(b)?.name ?? ''
-          );
-        });
+      const parents = (task.parents ?? []).filter((parentId) => allIds.has(parentId));
+      if (parents.length === 0) {
+        rootIds.push(task.id);
       }
-      taskIds.forEach((taskId, index) => {
-        positionMap.set(taskId, index);
-      });
-      ordered.push({ depth, taskIds });
     });
-    return ordered;
+    const reachable = new Set<string>();
+    const walk = (taskId: string) => {
+      if (reachable.has(taskId)) return;
+      reachable.add(taskId);
+      const children = childrenMap.value.get(taskId) ?? [];
+      children.forEach((childId) => walk(childId));
+    };
+    rootIds.forEach((rootId) => walk(rootId));
+    props.tasks.forEach((task) => {
+      if (!reachable.has(task.id)) {
+        rootIds.push(task.id);
+      }
+    });
+    return rootIds;
   });
 
-  const nodes = computed(() => {
-    const result: Array<{ taskId: string; x: number; y: number }> = [];
-    columns.value.forEach((column) => {
-      column.taskIds.forEach((taskId, index) => {
-        const x = PADDING + column.depth * (NODE_WIDTH + COLUMN_GAP);
-        const y = PADDING + index * (NODE_HEIGHT + ROW_GAP);
-        result.push({ taskId, x, y });
-      });
+  const buildTree = (taskId: string, path: Set<string>, nextKey: () => string): TreeNode | null => {
+    if (path.has(taskId)) return null;
+    const node: TreeNode = { key: nextKey(), taskId, children: [] };
+    const children = childrenMap.value.get(taskId) ?? [];
+    const nextPath = new Set(path);
+    nextPath.add(taskId);
+    children.forEach((childId) => {
+      const child = buildTree(childId, nextPath, nextKey);
+      if (child) node.children.push(child);
     });
-    return result;
+    return node;
+  };
+
+  const computeUnits = (node: TreeNode): number => {
+    if (!node.children.length) {
+      node.units = 1;
+      return 1;
+    }
+    const total = node.children.reduce((sum, child) => sum + computeUnits(child), 0);
+    node.units = total;
+    return total;
+  };
+
+  const layout = computed(() => {
+    const nodes: Array<{ key: string; taskId: string; x: number; y: number }> = [];
+    const edges: Array<{ id: string; from: string; to: string }> = [];
+    const unitHeight = NODE_HEIGHT + ROW_GAP;
+    const TREE_GAP = 80;
+    let yOffset = PADDING;
+    let maxX = 0;
+    let maxY = 0;
+    let counter = 0;
+    const nextKey = () => `node-${counter++}`;
+
+    const layoutNode = (node: TreeNode, depth: number, yStart: number): number => {
+      const units = node.units ?? 1;
+      const blockHeight = units * unitHeight - ROW_GAP;
+      const nodeY = yStart + Math.max(0, (blockHeight - NODE_HEIGHT) / 2);
+      const x = PADDING + depth * (NODE_WIDTH + COLUMN_GAP);
+      nodes.push({ key: node.key, taskId: node.taskId, x, y: nodeY });
+      maxX = Math.max(maxX, x + NODE_WIDTH);
+      maxY = Math.max(maxY, nodeY + NODE_HEIGHT);
+
+      let childY = yStart;
+      node.children.forEach((child) => {
+        edges.push({ id: `${node.key}-${child.key}`, from: node.key, to: child.key });
+        const childHeight = (child.units ?? 1) * unitHeight - ROW_GAP;
+        layoutNode(child, depth + 1, childY);
+        childY += childHeight + ROW_GAP;
+      });
+      return yStart + blockHeight;
+    };
+
+    roots.value.forEach((rootId) => {
+      const tree = buildTree(rootId, new Set(), nextKey);
+      if (!tree) return;
+      computeUnits(tree);
+      const treeBottom = layoutNode(tree, 0, yOffset);
+      yOffset = treeBottom + TREE_GAP;
+      maxY = Math.max(maxY, treeBottom);
+    });
+
+    return {
+      nodes,
+      edges,
+      width: maxX + PADDING,
+      height: maxY + PADDING,
+    };
   });
 
+  const nodes = computed(() => layout.value.nodes);
   const nodePositions = computed(() => {
     const map = new Map<string, { x: number; y: number }>();
-    nodes.value.forEach((node) => {
-      map.set(node.taskId, { x: node.x, y: node.y });
+    layout.value.nodes.forEach((node) => {
+      map.set(node.key, { x: node.x, y: node.y });
     });
     return map;
   });
-
-  const canvasWidth = computed(() => {
-    const maxDepth = Math.max(0, ...columns.value.map((column) => column.depth));
-    return PADDING * 2 + (maxDepth + 1) * NODE_WIDTH + maxDepth * COLUMN_GAP;
-  });
-
-  const canvasHeight = computed(() => {
-    const maxRows = Math.max(1, ...columns.value.map((column) => column.taskIds.length));
-    return PADDING * 2 + maxRows * NODE_HEIGHT + (maxRows - 1) * ROW_GAP;
-  });
+  const canvasWidth = computed(() => layout.value.width);
+  const canvasHeight = computed(() => layout.value.height);
 
   const edges = computed(() => {
     const paths: Array<{ id: string; path: string }> = [];
-    childrenMap.value.forEach((children, parentId) => {
-      const parent = nodePositions.value.get(parentId);
-      if (!parent) return;
+    layout.value.edges.forEach((edge) => {
+      const parent = nodePositions.value.get(edge.from);
+      const child = nodePositions.value.get(edge.to);
+      if (!parent || !child) return;
       const startX = parent.x + NODE_WIDTH;
       const startY = parent.y + NODE_HEIGHT / 2;
-      children.forEach((childId) => {
-        const child = nodePositions.value.get(childId);
-        if (!child) return;
-        const endX = child.x;
-        const endY = child.y + NODE_HEIGHT / 2;
-        const midX = startX + (endX - startX) / 2;
-        const path = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
-        paths.push({ id: `${parentId}-${childId}`, path });
-      });
+      const endX = child.x;
+      const endY = child.y + NODE_HEIGHT / 2;
+      const midX = startX + (endX - startX) / 2;
+      const path = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+      paths.push({ id: edge.id, path });
     });
     return paths;
   });
