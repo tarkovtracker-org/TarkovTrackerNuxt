@@ -11,7 +11,7 @@
       <div
         v-if="visible"
         ref="menuRef"
-        class="context-menu fixed z-9999 min-w-[180px] overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+        class="context-menu fixed z-9999 min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
         :style="{ top: `${y}px`, left: `${x}px` }"
         @click.stop
       >
@@ -22,30 +22,58 @@
 </template>
 <script setup lang="ts">
   import { onClickOutside } from '@vueuse/core';
-  import { nextTick, ref } from 'vue';
+  import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+
+  const props = defineProps<{
+    align?: 'left' | 'right';
+  }>();
+
   const visible = ref(false);
   const x = ref(0);
   const y = ref(0);
   const menuRef = ref<HTMLElement>();
-  const open = (event: MouseEvent) => {
+
+  const open = (event: MouseEvent, options?: { align?: 'left' | 'right'; trigger?: HTMLElement }) => {
     event.preventDefault();
     event.stopPropagation();
-    x.value = event.clientX;
-    y.value = event.clientY;
+    
+    let clientX = event.clientX;
+    let clientY = event.clientY;
+
+    if (options?.trigger) {
+      const rect = options.trigger.getBoundingClientRect();
+      clientX = (options.align || props.align) === 'right' ? rect.right : rect.left;
+      clientY = rect.bottom + 4; // Add a small gap
+    }
+    
+    x.value = clientX;
+    y.value = clientY;
     visible.value = true;
+
     // Adjust position if menu goes off-screen
     nextTick(() => {
       if (menuRef.value) {
         const rect = menuRef.value.getBoundingClientRect();
         const padding = 8; // padding from edge of screen
+        
+        const alignToUse = options?.align || props.align;
+
         // Adjust horizontal position
-        if (rect.right > window.innerWidth - padding) {
-          x.value = Math.max(padding, window.innerWidth - rect.width - padding);
+        if (alignToUse === 'right') {
+          // Align right edge of menu with the click position
+          x.value = Math.max(padding, clientX - rect.width);
+        } else {
+          // Default: align left edge, adjust if off-screen
+          if (rect.right > window.innerWidth - padding) {
+            x.value = Math.max(padding, window.innerWidth - rect.width - padding);
+          }
         }
+
         // Adjust vertical position
         if (rect.bottom > window.innerHeight - padding) {
           y.value = Math.max(padding, window.innerHeight - rect.height - padding);
         }
+
         // Ensure menu doesn't go off left or top edge
         if (x.value < padding) x.value = padding;
         if (y.value < padding) y.value = padding;

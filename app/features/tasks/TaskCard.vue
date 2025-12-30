@@ -488,7 +488,11 @@
   });
   const tarkovDevTaskUrl = computed(() => `https://tarkov.dev/task/${props.task.id}`);
   const openOverflowMenu = (event: MouseEvent) => {
-    taskContextMenu.value?.open(event);
+    const isClick = event.type === 'click';
+    taskContextMenu.value?.open(event, {
+      align: isClick ? 'right' : undefined,
+      trigger: isClick ? (event.currentTarget as HTMLElement) : undefined,
+    });
   };
   const openItemContextMenu = (
     event: MouseEvent,
