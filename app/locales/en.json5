@@ -177,7 +177,6 @@
         item: 'Item',
         completebutton: 'Complete',
         availablebutton: 'Mark Available',
-        uncompletebutton: 'Mark Uncompleted',
         statuscomplete: 'Marked {name} as complete',
         statusuncomplete: 'Marked {name} as uncompleted',
         statusavailable: 'Marked all prerequisites for {name} as complete',

@@ -181,24 +181,14 @@
           <!-- Action buttons in header for consistent positioning -->
           <template v-if="isOurFaction">
             <UButton
-              v-if="isLocked"
+              v-if="isLocked || isComplete"
               :size="actionButtonSize"
               color="primary"
               variant="solid"
               class="shrink-0 !bg-primary-600 hover:!bg-primary-700 !text-white shadow-sm"
-              @click.stop="markTaskAvailable()"
+              @click.stop="isComplete ? markTaskUncomplete() : markTaskAvailable()"
             >
               {{ t('page.tasks.questcard.availablebutton', 'Mark Available') }}
-            </UButton>
-            <UButton
-              v-if="isComplete"
-              :size="actionButtonSize"
-              color="error"
-              variant="solid"
-              class="shrink-0 !bg-red-600 hover:!bg-red-700 text-white"
-              @click.stop="markTaskUncomplete()"
-            >
-              {{ t('page.tasks.questcard.uncompletebutton', 'Mark Uncompleted') }}
             </UButton>
             <UButton
               v-if="!isComplete && !isLocked"
