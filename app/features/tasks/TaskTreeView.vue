@@ -145,11 +145,11 @@
   const teamIds = computed(() => Object.keys(progressStore.visibleTeamStores || {}));
   const tasksById = computed(() => new Map(props.tasks.map((task) => [task.id, task])));
   const lightkeeperTraderId = computed(() => metadataStore.getTraderByName('lightkeeper')?.id);
-  const NODE_WIDTH = 220;
-  const NODE_HEIGHT = 44;
-  const COLUMN_GAP = 90;
-  const ROW_GAP = 16;
-  const PADDING = 24;
+  const NODE_WIDTH = 240;
+  const NODE_HEIGHT = 52;
+  const COLUMN_GAP = 160;
+  const ROW_GAP = 40;
+  const PADDING = 48;
   const isPanning = ref(false);
   const panStart = ref({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
@@ -287,19 +287,51 @@
 
   const columns = computed(() => {
     const columnsMap = new Map<number, string[]>();
-    const taskName = (taskId: string) => tasksById.value.get(taskId)?.name ?? '';
     props.tasks.forEach((task) => {
       const depth = depthMap.value.get(task.id) ?? 0;
       const list = columnsMap.get(depth) ?? [];
       list.push(task.id);
       columnsMap.set(depth, list);
     });
-    return [...columnsMap.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([depth, taskIds]) => ({
-        depth,
-        taskIds: taskIds.sort((a, b) => taskName(a).localeCompare(taskName(b))),
-      }));
+    const sortedDepths = [...columnsMap.keys()].sort((a, b) => a - b);
+    const ordered: Array<{ depth: number; taskIds: string[] }> = [];
+    const positionMap = new Map<string, number>();
+    sortedDepths.forEach((depth) => {
+      const taskIds = columnsMap.get(depth) ?? [];
+      if (depth === 0) {
+        taskIds.sort((a, b) =>
+          (tasksById.value.get(a)?.name ?? '').localeCompare(tasksById.value.get(b)?.name ?? '')
+        );
+      } else {
+        taskIds.sort((a, b) => {
+          const aParents = (tasksById.value.get(a)?.parents ?? []).filter((id) =>
+            positionMap.has(id)
+          );
+          const bParents = (tasksById.value.get(b)?.parents ?? []).filter((id) =>
+            positionMap.has(id)
+          );
+          const aAvg =
+            aParents.length > 0
+              ? aParents.reduce((sum, id) => sum + (positionMap.get(id) ?? 0), 0) /
+                aParents.length
+              : 0;
+          const bAvg =
+            bParents.length > 0
+              ? bParents.reduce((sum, id) => sum + (positionMap.get(id) ?? 0), 0) /
+                bParents.length
+              : 0;
+          if (aAvg !== bAvg) return aAvg - bAvg;
+          return (tasksById.value.get(a)?.name ?? '').localeCompare(
+            tasksById.value.get(b)?.name ?? ''
+          );
+        });
+      }
+      taskIds.forEach((taskId, index) => {
+        positionMap.set(taskId, index);
+      });
+      ordered.push({ depth, taskIds });
+    });
+    return ordered;
   });
 
   const nodes = computed(() => {
