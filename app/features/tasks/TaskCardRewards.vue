@@ -31,11 +31,11 @@
       </template>
       <!-- Trader Unlock -->
       <span
-        v-if="traderUnlockReward"
+        v-if="displayedTraderUnlock?.name"
         class="inline-flex items-center gap-1.5 rounded bg-amber-500/10 px-2 py-0.5"
       >
         <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4 text-amber-400" />
-        <span class="text-amber-300">{{ traderUnlockReward.name }}</span>
+        <span class="text-amber-300">{{ displayedTraderUnlock.name }}</span>
       </span>
       <!-- Item Rewards Summary -->
       <AppTooltip v-if="itemRewards.length > 0" :text="itemRewardsSummaryTooltip">
@@ -226,7 +226,7 @@
     taskId: string;
     traderStandingRewards: TraderStanding[];
     skillRewards: SkillReward[];
-    traderUnlockReward?: TraderUnlock | null;
+    traderUnlockReward?: TraderUnlock | TraderUnlock[] | null;
     itemRewards: ItemReward[];
     offerUnlockRewards: OfferUnlock[];
     parentTasks: Task[];
@@ -237,6 +237,14 @@
   }>();
   const { t } = useI18n({ useScope: 'global' });
   const formatNumber = useLocaleNumberFormatter();
+
+  const displayedTraderUnlock = computed(() => {
+    if (Array.isArray(props.traderUnlockReward)) {
+      return props.traderUnlockReward.length > 0 ? props.traderUnlockReward[0] : null;
+    }
+    return props.traderUnlockReward || null;
+  });
+
   const rewardLinkClass =
     'text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 inline-flex items-center gap-1.5 text-xs';
   const rewardItemCardClass = [
@@ -251,7 +259,7 @@
     return (
       props.traderStandingRewards.length > 0 ||
       props.skillRewards.length > 0 ||
-      props.traderUnlockReward != null
+      displayedTraderUnlock.value != null
     );
   });
   const hasDetailedRewards = computed(() => {
