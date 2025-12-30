@@ -205,6 +205,7 @@ export function getLeafletMapOptions(
     // Touch support for mobile
     touchZoom: true,
     bounceAtZoomLimits: true,
+    scrollWheelZoom: false, // Disabled default scroll zoom to allow Shift+Scroll interaction
   } as L.MapOptions;
 }
 /**
