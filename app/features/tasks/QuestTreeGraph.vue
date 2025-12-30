@@ -35,7 +35,6 @@
         v-else
         ref="scrollRef"
         class="quest-tree-scroll relative overflow-auto"
-        @scroll="syncPreview"
         @mousedown="onMainMouseDown"
         @mousemove="onMainMouseMove"
         @mouseup="onMainMouseUp"
@@ -80,10 +79,10 @@
             :width="preview.width"
             :height="preview.height"
             class="block"
-            @mousedown.stop="onPreviewMouseDown"
-            @mousemove.stop="onPreviewMouseMove"
-            @mouseup.stop="onPreviewMouseUp"
-            @mouseleave.stop="onPreviewMouseUp"
+            @pointerdown.stop="onPreviewPointerDown"
+            @pointermove.stop="onPreviewPointerMove"
+            @pointerup.stop="onPreviewPointerUp"
+            @pointerleave.stop="onPreviewPointerUp"
           >
             <rect x="0" y="0" :width="preview.width" :height="preview.height" fill="transparent" />
             <path
@@ -122,7 +121,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import QuestTreeNodeCard from '@/features/tasks/QuestTreeNodeCard.vue';
   import type { TaskTreeNode } from '@/composables/useQuestTree';
@@ -159,6 +158,7 @@
   const isPanning = ref(false);
   const panStart = ref({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const isPreviewDragging = ref(false);
+  const scrollState = ref({ left: 0, top: 0, width: 0, height: 0 });
 
   const hasNodes = computed(() => props.nodes.length > 0);
   const taskStatus = (id: string) => props.taskStatuses[id] ?? 'locked';
@@ -169,15 +169,11 @@
   const graphWidth = computed(() => layout.value.width);
   const graphHeight = computed(() => layout.value.height);
   const getViewportRect = (scale: number) => {
-    const el = scrollRef.value;
-    if (!el) {
-      return { x: 0, y: 0, width: 0, height: 0 };
-    }
     return {
-      x: el.scrollLeft * scale,
-      y: el.scrollTop * scale,
-      width: el.clientWidth * scale,
-      height: el.clientHeight * scale,
+      x: scrollState.value.left * scale,
+      y: scrollState.value.top * scale,
+      width: scrollState.value.width * scale,
+      height: scrollState.value.height * scale,
     };
   };
 
@@ -289,8 +285,15 @@
     return `M ${startX} ${startY} C ${startX + offset} ${startY}, ${endX - offset} ${endY}, ${endX} ${endY}`;
   }
 
-  const syncPreview = () => {
-    // Trigger computed refresh
+  const updateScrollState = () => {
+    const el = scrollRef.value;
+    if (!el) return;
+    scrollState.value = {
+      left: el.scrollLeft,
+      top: el.scrollTop,
+      width: el.clientWidth,
+      height: el.clientHeight,
+    };
   };
 
   const centerPreviewAt = (x: number, y: number) => {
@@ -303,20 +306,27 @@
     el.scrollTop = Math.max(0, Math.min(targetTop, graphHeight.value - el.clientHeight));
   };
 
-  const onPreviewMouseDown = (event: MouseEvent) => {
+  const onPreviewPointerDown = (event: PointerEvent) => {
     isPreviewDragging.value = true;
-    const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-    centerPreviewAt(event.clientX - rect.left, event.clientY - rect.top);
+    (event.currentTarget as SVGElement).setPointerCapture(event.pointerId);
+    updatePreviewDrag(event);
   };
 
-  const onPreviewMouseMove = (event: MouseEvent) => {
+  const onPreviewPointerMove = (event: PointerEvent) => {
     if (!isPreviewDragging.value) return;
-    const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-    centerPreviewAt(event.clientX - rect.left, event.clientY - rect.top);
+    updatePreviewDrag(event);
   };
 
-  const onPreviewMouseUp = () => {
-    isPreviewDragging.value = false;
+  const onPreviewPointerUp = (event: PointerEvent) => {
+    if (isPreviewDragging.value) {
+      isPreviewDragging.value = false;
+      (event.currentTarget as SVGElement).releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const updatePreviewDrag = (event: PointerEvent) => {
+    const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
+    centerPreviewAt(event.clientX - rect.left, event.clientY - rect.top);
   };
 
   const onMainMouseDown = (event: MouseEvent) => {
@@ -342,6 +352,29 @@
   const onMainMouseUp = () => {
     isPanning.value = false;
   };
+
+  const onGlobalPointerUp = () => {
+    isPreviewDragging.value = false;
+  };
+
+  onMounted(() => {
+    updateScrollState();
+    const el = scrollRef.value;
+    if (el) {
+      el.addEventListener('scroll', updateScrollState, { passive: true });
+    }
+    window.addEventListener('resize', updateScrollState);
+    window.addEventListener('pointerup', onGlobalPointerUp);
+  });
+
+  onBeforeUnmount(() => {
+    const el = scrollRef.value;
+    if (el) {
+      el.removeEventListener('scroll', updateScrollState);
+    }
+    window.removeEventListener('resize', updateScrollState);
+    window.removeEventListener('pointerup', onGlobalPointerUp);
+  });
 </script>
 <style scoped>
 .quest-tree-header {
