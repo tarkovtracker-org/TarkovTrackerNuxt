@@ -150,8 +150,17 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     // Shift + Scroll: Zoom
     if (e.shiftKey) {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -1 : 1;
-      const newZoom = mapInstance.value.getZoom() + delta;
+      const options = mapInstance.value.options;
+      const zoomDelta = options?.zoomDelta ?? 1;
+      const zoomSnap = options?.zoomSnap ?? 1;
+      
+      const delta = e.deltaY > 0 ? -zoomDelta : zoomDelta;
+      let newZoom = mapInstance.value.getZoom() + delta;
+
+      if (zoomSnap > 0) {
+        newZoom = Math.round(newZoom / zoomSnap) * zoomSnap;
+      }
+
       mapInstance.value.setZoom(newZoom);
     }
     // Ctrl + Scroll: Cycle Floors
