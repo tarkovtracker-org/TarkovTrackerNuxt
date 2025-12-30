@@ -85,7 +85,7 @@
         class="bg-surface-900 h-[400px] w-full rounded sm:h-[500px] lg:h-[600px]"
       />
       <!-- Legends Footer -->
-      <div class="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+      <div class="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-4">
         <!-- Main Objective Legend -->
         <div
           v-if="props.showLegend"
