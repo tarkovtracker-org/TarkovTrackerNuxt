@@ -23,12 +23,24 @@
         </span>
       </div>
     </div>
-    <div class="quest-tree-canvas rounded-3xl border border-white/5 bg-surface-900/70 p-6">
+    <div
+      class="quest-tree-canvas rounded-3xl border border-white/5 bg-surface-900/70 p-6"
+      :class="isPanning ? 'cursor-grabbing' : 'cursor-grab'"
+    >
       <div v-if="!hasNodes" class="flex flex-col items-center gap-3 py-12 text-center text-white/60">
         <UIcon name="i-mdi-source-branch-off" class="h-10 w-10 text-white/30" />
         <p>{{ t('page.tasks.questtree.empty', 'No quest data available.') }}</p>
       </div>
-      <div v-else class="quest-tree-scroll relative overflow-auto">
+      <div
+        v-else
+        ref="scrollRef"
+        class="quest-tree-scroll relative overflow-auto"
+        @scroll="syncPreview"
+        @mousedown="onMainMouseDown"
+        @mousemove="onMainMouseMove"
+        @mouseup="onMainMouseUp"
+        @mouseleave="onMainMouseUp"
+      >
         <div
           class="quest-tree-stage relative"
           :style="{
@@ -61,12 +73,56 @@
             @cancel="emit('cancel', $event)"
           />
         </div>
+        <div
+          class="quest-tree-mini absolute right-4 top-4 rounded-lg border border-white/10 bg-surface-900/80 p-2"
+        >
+          <svg
+            :width="preview.width"
+            :height="preview.height"
+            class="block"
+            @mousedown.stop="onPreviewMouseDown"
+            @mousemove.stop="onPreviewMouseMove"
+            @mouseup.stop="onPreviewMouseUp"
+            @mouseleave.stop="onPreviewMouseUp"
+          >
+            <rect x="0" y="0" :width="preview.width" :height="preview.height" fill="transparent" />
+            <path
+              v-for="edge in edges"
+              :key="edge.key"
+              :d="edge.path"
+              :transform="previewTransform"
+              stroke="rgba(255,255,255,0.18)"
+              stroke-width="1"
+              fill="none"
+            />
+            <rect
+              v-for="node in positionedNodes"
+              :key="`${node.key}-preview`"
+              :x="node.x * preview.scale"
+              :y="node.y * preview.scale"
+              :width="NODE_WIDTH * preview.scale"
+              :height="NODE_HEIGHT * preview.scale"
+              rx="2"
+              ry="2"
+              fill="rgba(255,255,255,0.15)"
+            />
+            <rect
+              :x="preview.viewport.x"
+              :y="preview.viewport.y"
+              :width="preview.viewport.width"
+              :height="preview.viewport.height"
+              fill="none"
+              stroke="rgba(255,255,255,0.8)"
+              stroke-width="1.5"
+            />
+          </svg>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import QuestTreeNodeCard from '@/features/tasks/QuestTreeNodeCard.vue';
   import type { TaskTreeNode } from '@/composables/useQuestTree';
@@ -99,6 +155,10 @@
   }>();
 
   const { t } = useI18n({ useScope: 'global' });
+  const scrollRef = ref<HTMLElement | null>(null);
+  const isPanning = ref(false);
+  const panStart = ref({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const isPreviewDragging = ref(false);
 
   const hasNodes = computed(() => props.nodes.length > 0);
   const taskStatus = (id: string) => props.taskStatuses[id] ?? 'locked';
@@ -108,6 +168,34 @@
   const edges = computed(() => layout.value.edges);
   const graphWidth = computed(() => layout.value.width);
   const graphHeight = computed(() => layout.value.height);
+  const getViewportRect = (scale: number) => {
+    const el = scrollRef.value;
+    if (!el) {
+      return { x: 0, y: 0, width: 0, height: 0 };
+    }
+    return {
+      x: el.scrollLeft * scale,
+      y: el.scrollTop * scale,
+      width: el.clientWidth * scale,
+      height: el.clientHeight * scale,
+    };
+  };
+
+  const preview = computed(() => {
+    const maxWidth = 220;
+    const maxHeight = 140;
+    const scale = Math.min(maxWidth / graphWidth.value, maxHeight / graphHeight.value, 1);
+    const width = graphWidth.value * scale;
+    const height = graphHeight.value * scale;
+    const viewport = getViewportRect(scale);
+    return {
+      width,
+      height,
+      scale,
+      viewport,
+    };
+  });
+  const previewTransform = computed(() => `scale(${preview.value.scale})`);
 
   function buildLayout(nodes: TaskTreeNode[]) {
     const nodeDepth = new WeakMap<TaskTreeNode, number>();
@@ -200,6 +288,60 @@
     const offset = (endX - startX) / 2;
     return `M ${startX} ${startY} C ${startX + offset} ${startY}, ${endX - offset} ${endY}, ${endX} ${endY}`;
   }
+
+  const syncPreview = () => {
+    // Trigger computed refresh
+  };
+
+  const centerPreviewAt = (x: number, y: number) => {
+    const el = scrollRef.value;
+    if (!el) return;
+    const scale = preview.value.scale;
+    const targetLeft = x / scale - el.clientWidth / 2;
+    const targetTop = y / scale - el.clientHeight / 2;
+    el.scrollLeft = Math.max(0, Math.min(targetLeft, graphWidth.value - el.clientWidth));
+    el.scrollTop = Math.max(0, Math.min(targetTop, graphHeight.value - el.clientHeight));
+  };
+
+  const onPreviewMouseDown = (event: MouseEvent) => {
+    isPreviewDragging.value = true;
+    const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
+    centerPreviewAt(event.clientX - rect.left, event.clientY - rect.top);
+  };
+
+  const onPreviewMouseMove = (event: MouseEvent) => {
+    if (!isPreviewDragging.value) return;
+    const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
+    centerPreviewAt(event.clientX - rect.left, event.clientY - rect.top);
+  };
+
+  const onPreviewMouseUp = () => {
+    isPreviewDragging.value = false;
+  };
+
+  const onMainMouseDown = (event: MouseEvent) => {
+    if (!scrollRef.value || event.button !== 1) return;
+    isPanning.value = true;
+    panStart.value = {
+      x: event.clientX,
+      y: event.clientY,
+      scrollLeft: scrollRef.value.scrollLeft,
+      scrollTop: scrollRef.value.scrollTop,
+    };
+    event.preventDefault();
+  };
+
+  const onMainMouseMove = (event: MouseEvent) => {
+    if (!isPanning.value || !scrollRef.value) return;
+    const dx = event.clientX - panStart.value.x;
+    const dy = event.clientY - panStart.value.y;
+    scrollRef.value.scrollLeft = panStart.value.scrollLeft - dx;
+    scrollRef.value.scrollTop = panStart.value.scrollTop - dy;
+  };
+
+  const onMainMouseUp = () => {
+    isPanning.value = false;
+  };
 </script>
 <style scoped>
 .quest-tree-header {
