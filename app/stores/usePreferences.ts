@@ -73,7 +73,7 @@ export const preferencesDefaultState: PreferencesState = {
   neededitemsStyle: null,
   hideoutPrimaryView: null,
   localeOverride: null,
-  theme: 'dark', // Default to dark mode to match app aesthetic
+  theme: 'system', // Default to system to respect OS preference
   // Task filter settings (all shown by default)
   showNonSpecialTasks: true,
   showEodTasks: true,
