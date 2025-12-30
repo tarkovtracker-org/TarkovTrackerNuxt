@@ -190,6 +190,7 @@ export function getLeafletMapOptions(
     tap: true,
     touchZoom: true,
     bounceAtZoomLimits: true,
+    scrollWheelZoom: false, // Disabled default scroll zoom to allow Shift+Scroll interaction
   };
 }
 /**
