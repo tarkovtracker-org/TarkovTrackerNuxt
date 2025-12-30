@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col divide-y divide-white/5">
+  <div class="flex flex-col divide-y divide-gray-100 dark:divide-white/5">
     <div v-for="row in rows" :key="row.key" class="py-2">
       <TaskObjectiveItemGroup
         v-if="row.kind === 'itemGroup'"

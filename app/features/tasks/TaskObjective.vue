@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full cursor-pointer items-start gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
+    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full cursor-pointer items-center gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
     :class="isComplete ? 'bg-success-500/10' : 'hover:bg-surface-200'"
     @click="handleRowClick"
     @mouseenter="objectiveMouseEnter()"
@@ -9,7 +9,7 @@
     <UIcon
       :name="objectiveIcon.startsWith('mdi-') ? `i-${objectiveIcon}` : objectiveIcon"
       aria-hidden="true"
-      class="mt-0.5 h-4 w-4 shrink-0"
+      class="h-5 w-5 shrink-0"
       :class="isComplete ? 'text-success-500 dark:text-success-300' : 'text-content-tertiary group-hover:text-content-secondary'"
     />
     <div class="flex flex-1 flex-wrap items-center gap-2">

@@ -1,7 +1,7 @@
 <template>
   <UCard
     :id="`task-${task.id}`"
-    class="relative overflow-hidden border border-base bg-surface-elevated shadow-sm"
+    class="relative overflow-hidden border border-base bg-surface-elevated shadow-md dark:shadow-sm"
     :class="taskClasses"
     :ui="{ body: cardBodyClass }"
     @contextmenu.prevent="openOverflowMenu"
@@ -206,8 +206,8 @@
         </div>
       </div>
       <!-- 2) Top strip: Before (only show when there are pending prerequisites) -->
-      <div v-if="lockedBefore > 0" class="text-xs text-content-tertiary">
-        <span class="text-content-secondary">{{ t('page.tasks.questcard.requires', 'Requires') }}:</span>
+      <div v-if="lockedBefore > 0" class="text-xs text-content-tertiary dark:text-content-secondary">
+        <span class="text-content-secondary dark:text-content-primary">{{ t('page.tasks.questcard.requires', 'Requires') }}:</span>
         <template v-if="pendingParentTasks.length">
           <span class="ml-2 inline-flex flex-wrap items-center gap-1.5">
             <AppTooltip
@@ -241,7 +241,7 @@
         />
       </div>
       <!-- 4) Chain info -->
-      <div v-if="afterHasContent" class="text-xs text-content-tertiary">
+      <div v-if="afterHasContent" class="text-xs text-content-tertiary dark:text-content-secondary">
         <AppTooltip
           v-if="unlocksNextCount > 0"
           :text="
@@ -391,7 +391,8 @@
     return taskFaction === 'Any' || taskFaction === tarkovStore.getPMCFaction();
   });
   const taskClasses = computed(() => {
-    if (isComplete.value && !isFailed.value) return 'border-success-500/25 bg-success-500/10';
+    if (isComplete.value && !isFailed.value)
+      return 'border-success-200 bg-success-50 dark:border-success-500/25 dark:bg-success-500/15';
     if (isLocked.value || isFailed.value) return 'border-error-500/25 bg-error-500/10';
     return 'border-base';
   });

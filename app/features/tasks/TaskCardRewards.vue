@@ -5,9 +5,9 @@
     :class="{ 'cursor-pointer hover:bg-white/5': hasExpandableDetails }"
     @click="onAreaClick"
   >
-    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
       <!-- Rewards title -->
-      <span class="font-medium text-gray-500">
+      <span class="font-medium text-gray-700 dark:text-gray-500">
         <UIcon name="i-mdi-gift" aria-hidden="true" class="mr-1 inline h-3.5 w-3.5" />
         {{ t('page.tasks.questcard.rewards', 'Rewards') }}:
       </span>
@@ -18,7 +18,7 @@
           <span :class="standing.standing >= 0 ? 'text-green-400' : 'text-red-400'">
             {{ standing.standing >= 0 ? '+' : '' }}{{ standing.standing.toFixed(2) }}
           </span>
-          <span class="text-gray-300">{{ standing.trader.name }}</span>
+          <span class="text-gray-700 dark:text-gray-300">{{ standing.trader.name }}</span>
         </span>
       </template>
       <!-- Skill Rewards -->
@@ -97,12 +97,12 @@
       :id="detailsId"
       role="region"
       :aria-label="t('page.tasks.questcard.details', 'Task details')"
-      class="mt-2 rounded-md bg-white/5 p-2"
+      class="mt-2 rounded-md bg-gray-50 p-2 dark:bg-white/5"
     >
       <div class="flex flex-col gap-4 lg:flex-row">
         <!-- Left: Previous Quests -->
         <div v-if="parentTasks.length > 0" class="space-y-2 lg:w-64">
-          <div class="text-xs font-medium text-gray-400">
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
             {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
           </div>
           <div class="flex flex-col gap-1">
@@ -124,7 +124,7 @@
         >
           <!-- Item Rewards -->
           <div v-if="itemRewards.length > 0" class="min-w-0 flex-1 space-y-2">
-            <div class="text-xs font-medium text-gray-400">
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
               {{ t('page.tasks.questcard.rewardItems', 'Items') }}:
             </div>
             <div class="flex flex-wrap gap-2">
@@ -149,10 +149,10 @@
                     class="h-16 w-16 object-contain"
                   />
                   <div class="flex flex-col items-center gap-0.5">
-                    <span class="max-w-[72px] truncate text-center text-xs text-gray-300">
+                    <span class="max-w-[72px] truncate text-center text-xs text-gray-700 dark:text-gray-300">
                       {{ reward.item?.shortName || reward.item?.name || '' }}
                     </span>
-                    <span v-if="reward.count > 1" class="text-xs font-medium text-gray-400">
+                    <span v-if="reward.count > 1" class="text-xs font-medium text-gray-500 dark:text-gray-400">
                       x{{ formatNumber(reward.count) }}
                     </span>
                   </div>
@@ -162,7 +162,7 @@
           </div>
           <!-- Offer Unlocks -->
           <div v-if="offerUnlockRewards.length > 0" class="min-w-0 flex-1 space-y-2">
-            <div class="text-xs font-medium text-gray-400">
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
               {{ t('page.tasks.questcard.unlocksPurchase', 'Unlocks purchase') }}:
             </div>
             <div class="flex flex-wrap gap-2">
@@ -187,7 +187,7 @@
                     class="h-16 w-16 object-contain"
                   />
                   <div class="flex flex-col items-center gap-0.5">
-                    <span class="max-w-[72px] truncate text-center text-xs text-gray-300">
+                    <span class="max-w-[72px] truncate text-center text-xs text-gray-700 dark:text-gray-300">
                       {{ offer.item?.shortName || offer.item?.name || '' }}
                     </span>
                     <span class="text-xs text-gray-500">
@@ -201,7 +201,7 @@
         </div>
         <!-- Right: Next Quests -->
         <div v-if="childTasks.length > 0" class="space-y-2 lg:w-64">
-          <div class="text-xs font-medium text-gray-400">
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400">
             {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
           </div>
           <div class="flex flex-col gap-1">
@@ -264,7 +264,7 @@
   const rewardLinkClass =
     'text-primary-400 hover:text-primary-300 inline-flex items-center gap-1.5 text-xs';
   const rewardItemCardClass = [
-    'group relative flex flex-col items-center gap-1 rounded-lg bg-white/5 p-2',
+    'group relative flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-2 dark:bg-white/5',
     'transition-colors hover:bg-white/10 focus:outline-none',
     'focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900',
     'focus-visible:ring-2 focus-visible:ring-offset-2',

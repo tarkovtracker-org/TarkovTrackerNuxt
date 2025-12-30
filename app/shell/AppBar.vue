@@ -58,44 +58,20 @@
             PvE
           </button>
         </div>
-        <!-- Theme selector -->
-        <USelectMenu
-          v-model="selectedTheme"
-          :items="themeItems"
-          value-attribute="value"
-          :popper="{ placement: 'bottom-end', strategy: 'fixed' }"
-          :ui="{
-            base: 'bg-surface-elevated border border-base ring-1 ring-gray-200/50 rounded-md px-2 py-1.5 dark:bg-surface-900/90 dark:border-white/15 dark:ring-white/10',
-            leading: { padding: { sm: 'pl-1' } },
-          }"
-          :ui-menu="{
-            container: 'z-[9999]',
-            width: 'w-32',
-            background: 'bg-surface-floating dark:bg-surface-900',
-            shadow: 'shadow-xl',
-            rounded: 'rounded-lg',
-            ring: 'ring-1 ring-gray-200 dark:ring-white/10',
-            padding: 'p-1',
-            option: {
-              base: 'px-3 py-2 text-sm cursor-pointer transition-colors rounded',
-              inactive: 'text-content-secondary hover:bg-surface-200 dark:hover:bg-surface-800 hover:text-content-primary dark:text-surface-200 dark:hover:text-white',
-              active: 'bg-surface-200 text-content-primary dark:bg-surface-800 dark:text-white',
-              selected: 'bg-primary-50 text-primary-600 ring-1 ring-primary-500 dark:bg-primary-500/10 dark:text-primary-100',
-              icon: { base: 'flex-shrink-0 h-4 w-4', active: 'text-primary-600 dark:text-white', inactive: 'text-gray-400 dark:text-surface-400' },
-            },
-          }"
-          class="h-auto min-w-0"
-        >
-          <template #leading>
-            <UIcon :name="currentThemeIcon" class="h-4 w-4 text-content-tertiary" />
-          </template>
-          <template #default>
-            <span class="sr-only">Theme</span>
-          </template>
-          <template #trailing>
-            <UIcon name="i-mdi-chevron-down" class="text-surface-400 h-3 w-3" />
-          </template>
-        </USelectMenu>
+        <!-- Theme toggle -->
+        <AppTooltip :text="nextThemeLabel">
+          <button
+            type="button"
+            class="bg-surface-elevated border-base flex items-center justify-center rounded-md border px-2 py-1.5 ring-1 ring-gray-200/50 transition-colors hover:bg-surface-100 dark:bg-surface-900/90 dark:border-white/15 dark:ring-white/10 dark:hover:bg-surface-800"
+            @click="cycleTheme"
+            :aria-label="nextThemeLabel"
+          >
+            <UIcon
+              :name="currentThemeIcon"
+              class="text-content-tertiary h-4 w-4 transition-transform duration-200"
+            />
+          </button>
+        </AppTooltip>
         <!-- Language selector -->
         <USelectMenu
           v-model="selectedLocale"
@@ -254,24 +230,35 @@
   });
 
   // Theme Logic
-  const themeItems = [
-    { label: 'System', value: 'system', icon: 'i-mdi-desktop-mac' },
-    { label: 'Light', value: 'light', icon: 'i-mdi-white-balance-sunny' },
-    { label: 'Dark', value: 'dark', icon: 'i-mdi-moon-waning-crescent' },
-  ];
+  const themeModes = ['system', 'dark', 'light'] as const;
+  type ThemeMode = (typeof themeModes)[number];
 
-  const selectedTheme = computed({
-    get() {
-      return preferencesStore.getTheme;
-    },
-    set(newValue: string | { value: string }) {
-      const newTheme = typeof newValue === 'string' ? newValue : newValue.value;
-      preferencesStore.setTheme(newTheme as 'system' | 'light' | 'dark');
-    },
+  const currentTheme = computed(() => preferencesStore.getTheme as ThemeMode);
+
+  const themeIconMap: Record<ThemeMode, string> = {
+    system: 'i-mdi-desktop-mac',
+    light: 'i-mdi-white-balance-sunny',
+    dark: 'i-mdi-moon-waning-crescent',
+  };
+
+  const currentThemeIcon = computed(() => themeIconMap[currentTheme.value]);
+
+  const nextTheme = computed(() => {
+    const currentIndex = themeModes.indexOf(currentTheme.value);
+    const nextIndex = (currentIndex + 1) % themeModes.length;
+    return themeModes[nextIndex];
   });
 
-  const currentThemeIcon = computed(() => {
-    const current = themeItems.find((i) => i.value === preferencesStore.getTheme);
-    return current ? current.icon : 'i-mdi-moon-waning-crescent';
+  const nextThemeLabel = computed(() => {
+    const labels: Record<ThemeMode, string> = {
+      system: 'Switch to System Theme',
+      light: 'Switch to Light Mode',
+      dark: 'Switch to Dark Mode',
+    };
+    return labels[nextTheme.value];
   });
+
+  function cycleTheme() {
+    preferencesStore.setTheme(nextTheme.value);
+  }
 </script>

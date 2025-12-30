@@ -59,12 +59,12 @@
         />
       </div>
       <!-- Simple count display for single items -->
-      <div v-else-if="props.count" class="mr-2 text-sm font-medium text-gray-300">
+      <div v-else-if="props.count" class="mr-2 text-sm font-medium text-gray-600 dark:text-gray-300">
         {{ formatNumber(props.count) }}
       </div>
       <div
         v-if="props.itemName"
-        class="flex items-center justify-center text-center text-sm leading-tight font-bold text-white"
+        class="flex items-center justify-center text-center text-sm leading-tight font-bold text-gray-900 dark:text-white"
       >
         {{ props.itemName }}
       </div>
