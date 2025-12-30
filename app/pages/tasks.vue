@@ -5,6 +5,21 @@
       <div v-else>
         <!-- Task Filter Bar -->
         <TaskFilterBar v-model:search-query="searchQuery" />
+        <div class="mb-6 mt-3 flex justify-center">
+          <UButton
+            size="lg"
+            color="primary"
+            variant="solid"
+            class="w-full max-w-xl px-6 py-4 text-base font-semibold sm:text-lg"
+            @click="toggleTreeView"
+          >
+            {{
+              isTreeView
+                ? t('page.tasks.tree.mode_classic', 'Repasser en mode classique')
+                : t('page.tasks.tree.mode_tree', 'Passez en mode arbre')
+            }}
+          </UButton>
+        </div>
         <!-- Map Display (shown when MAPS view is selected) -->
         <div v-if="showMapDisplay" class="mb-6">
           <div class="bg-surface-800/50 rounded-lg p-4">
@@ -36,15 +51,20 @@
         <div v-if="filteredTasks.length === 0" class="py-6">
           <TaskEmptyState />
         </div>
-        <div v-else class="space-y-4" data-testid="task-list">
-          <TaskCard
-            v-for="task in paginatedTasks"
-            :key="task.id"
-            :task="task"
-            @on-task-action="onTaskAction"
-          />
-          <!-- Sentinel for infinite scroll -->
-          <div v-if="displayCount < filteredTasks.length" ref="tasksSentinel" class="h-1" />
+        <div v-else>
+          <div v-if="isTreeView" class="space-y-4" data-testid="task-tree">
+            <TaskTreeView :tasks="treeTasks" @on-task-action="onTaskAction" />
+          </div>
+          <div v-else class="space-y-4" data-testid="task-list">
+            <TaskCard
+              v-for="task in paginatedTasks"
+              :key="task.id"
+              :task="task"
+              @on-task-action="onTaskAction"
+            />
+            <!-- Sentinel for infinite scroll -->
+            <div v-if="displayCount < filteredTasks.length" ref="tasksSentinel" class="h-1" />
+          </div>
         </div>
       </div>
     </div>
@@ -103,11 +123,13 @@
   import TaskCard from '@/features/tasks/TaskCard.vue';
   import TaskEmptyState from '@/features/tasks/TaskEmptyState.vue';
   import TaskLoadingState from '@/features/tasks/TaskLoadingState.vue';
+  import TaskTreeView from '@/features/tasks/TaskTreeView.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useProgressStore } from '@/stores/useProgress';
   import { useTarkovStore } from '@/stores/useTarkov';
   import type { Task, TaskObjective } from '@/types/tarkov';
+  import { EXCLUDED_SCAV_KARMA_TASKS } from '@/utils/constants';
   import { logger } from '@/utils/logger';
   // Lazy load LeafletMap for performance
   const LeafletMapComponent = defineAsyncComponent(() => import('@/features/maps/LeafletMap.vue'));
@@ -161,6 +183,15 @@
   const showMapDisplay = computed(() => {
     return getTaskPrimaryView.value === 'maps' && getTaskMapView.value !== 'all';
   });
+  const isTreeView = computed(() => getTaskPrimaryView.value === 'tree');
+  const lastClassicView = ref(getTaskPrimaryView.value === 'tree' ? 'all' : getTaskPrimaryView.value);
+  const toggleTreeView = () => {
+    if (isTreeView.value) {
+      preferencesStore.setTaskPrimaryView(lastClassicView.value || 'all');
+      return;
+    }
+    preferencesStore.setTaskPrimaryView('tree');
+  };
   const selectedMapData = computed(() => {
     const mapId = getTaskMapView.value;
     if (!mapId || mapId === 'all') return null;
@@ -307,6 +338,15 @@
     },
     { immediate: true }
   );
+  watch(
+    getTaskPrimaryView,
+    (view) => {
+      if (view !== 'tree') {
+        lastClassicView.value = view;
+      }
+    },
+    { immediate: true }
+  );
   const isLoading = computed(
     () => !metadataStore.hasInitialized || tasksLoading.value || reloadingTasks.value
   );
@@ -319,6 +359,16 @@
     }
     const query = searchQuery.value.toLowerCase().trim();
     return visibleTasks.value.filter((task) => task.name?.toLowerCase().includes(query));
+  });
+  const treeTasks = computed(() => {
+    const baseTasks = (metadataStore.tasks || []).filter(
+      (task) => !EXCLUDED_SCAV_KARMA_TASKS.includes(task.id)
+    );
+    if (!searchQuery.value.trim()) {
+      return baseTasks;
+    }
+    const query = searchQuery.value.toLowerCase().trim();
+    return baseTasks.filter((task) => task.name?.toLowerCase().includes(query));
   });
   // Pagination state for infinite scroll
   const displayCount = ref(15);
@@ -341,7 +391,9 @@
     }
   };
   // Setup infinite scroll
-  const infiniteScrollEnabled = computed(() => displayCount.value < filteredTasks.value.length);
+  const infiniteScrollEnabled = computed(
+    () => !isTreeView.value && displayCount.value < filteredTasks.value.length
+  );
   const { stop: _stopInfiniteScroll, start: _startInfiniteScroll } = useInfiniteScroll(
     tasksSentinel,
     loadMoreTasks,

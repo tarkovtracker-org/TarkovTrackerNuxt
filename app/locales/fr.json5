@@ -82,6 +82,21 @@
     },
     tasks: {
       title: 'Quêtes',
+      questtree: {
+        title: 'Arbre des quêtes',
+        legend_context: 'Dépendances et aperçu de la progression.',
+        legend_available: 'Disponible',
+        legend_locked: 'Verrouillée',
+        legend_completed: 'Terminée',
+        empty: 'Aucune donnée de quête disponible.',
+        unknown_name: 'Quête inconnue',
+        kappa: 'Kappa',
+        lightkeeper: 'Lightkeeper',
+      },
+      tree: {
+        mode_tree: 'Passez en mode arbre',
+        mode_classic: 'Repasser en mode classique',
+      },
       primaryviews: {
         all: 'Toutes',
         maps: 'Cartes',

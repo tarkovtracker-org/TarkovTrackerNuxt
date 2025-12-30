@@ -83,6 +83,21 @@
     },
     tasks: {
       title: 'Misiones',
+      questtree: {
+        title: 'Árbol de misiones',
+        legend_context: 'Dependencias y vista general del progreso.',
+        legend_available: 'Disponible',
+        legend_locked: 'Bloqueadas',
+        legend_completed: 'Completadas',
+        empty: 'No hay datos de misiones disponibles.',
+        unknown_name: 'Misión desconocida',
+        kappa: 'Kappa',
+        lightkeeper: 'Lightkeeper',
+      },
+      tree: {
+        mode_tree: 'Cambiar al modo árbol',
+        mode_classic: 'Volver al modo clásico',
+      },
       primaryviews: {
         all: 'Todas',
         maps: 'Mapas',

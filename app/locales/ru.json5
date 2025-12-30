@@ -82,6 +82,21 @@
     },
     tasks: {
       title: 'Задания',
+      questtree: {
+        title: 'Дерево квестов',
+        legend_context: 'Зависимости и обзор прогресса.',
+        legend_available: 'Доступно',
+        legend_locked: 'Заблокировано',
+        legend_completed: 'Завершено',
+        empty: 'Данные о квестах недоступны.',
+        unknown_name: 'Неизвестный квест',
+        kappa: 'Каппа',
+        lightkeeper: 'Лайткипер',
+      },
+      tree: {
+        mode_tree: 'Перейти в режим дерева',
+        mode_classic: 'Вернуться в классический режим',
+      },
       primaryviews: {
         all: 'Все',
         maps: 'Карты',

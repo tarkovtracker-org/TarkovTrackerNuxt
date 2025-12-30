@@ -99,6 +99,21 @@
     },
     tasks: {
       title: 'Aufgaben',
+      questtree: {
+        title: 'Quest-Baum',
+        legend_context: 'Abhängigkeiten und Fortschrittsübersicht.',
+        legend_available: 'Verfügbar',
+        legend_locked: 'Gesperrt',
+        legend_completed: 'Abgeschlossen',
+        empty: 'Keine Questdaten verfügbar.',
+        unknown_name: 'Unbekannte Quest',
+        kappa: 'Kappa',
+        lightkeeper: 'Lightkeeper',
+      },
+      tree: {
+        mode_tree: 'Zum Baum-Modus wechseln',
+        mode_classic: 'Zurück zum klassischen Modus',
+      },
       primaryviews: {
         all: 'Alle',
         maps: 'Karten',

@@ -99,6 +99,21 @@
     },
     tasks: {
       title: 'Tasks',
+      questtree: {
+        title: 'Quest Tree',
+        legend_context: 'Dependencies and progress overview.',
+        legend_available: 'Available',
+        legend_locked: 'Locked',
+        legend_completed: 'Completed',
+        empty: 'No quest data available.',
+        unknown_name: 'Unknown task',
+        kappa: 'Kappa',
+        lightkeeper: 'Lightkeeper',
+      },
+      tree: {
+        mode_tree: 'Switch to tree mode',
+        mode_classic: 'Back to classic mode',
+      },
       primaryviews: {
         all: 'All',
         maps: 'Maps',
