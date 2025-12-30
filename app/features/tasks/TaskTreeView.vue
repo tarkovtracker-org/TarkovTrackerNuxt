@@ -1,19 +1,16 @@
 <template>
-  <div class="overflow-x-auto rounded-lg bg-surface-900/60 p-4">
+  <div class="min-h-[70vh] w-full overflow-x-auto rounded-2xl border border-white/10 bg-surface-900/70 p-6">
     <div class="flex min-w-max items-start gap-6">
       <div
         v-for="column in columns"
         :key="column.depth"
         class="flex min-w-[220px] flex-col gap-3"
       >
-        <div
-          v-for="taskId in column.taskIds"
-          :key="taskId"
-          class="rounded-md bg-surface-900/80 px-2.5 py-2"
-        >
+        <div v-for="taskId in column.taskIds" :key="taskId">
           <button
             type="button"
-            class="flex items-start gap-2 text-left text-xs text-gray-200"
+            class="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-xs text-white shadow-sm transition hover:brightness-110"
+            :class="statusBgClass(taskId)"
             @click="goToTask(taskId)"
           >
             <span class="relative mt-0.5 h-4 w-4 shrink-0 rounded-sm border" :class="statusColorClass(taskId)">
@@ -126,6 +123,13 @@
     if (status === 'available') return 'bg-emerald-500 border-emerald-300';
     if (status === 'inprogress' || status === 'completed') return 'bg-gray-500 border-gray-300';
     return 'bg-red-500 border-red-300';
+  };
+
+  const statusBgClass = (taskId: string) => {
+    const status = statusById.value.get(taskId);
+    if (status === 'available') return 'bg-emerald-700/60';
+    if (status === 'inprogress' || status === 'completed') return 'bg-gray-700/60';
+    return 'bg-red-700/60';
   };
 
   const depthMap = computed(() => {
