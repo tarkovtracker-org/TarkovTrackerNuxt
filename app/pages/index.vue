@@ -65,35 +65,35 @@
             </div>
             <!-- Quick Stats Grid -->
             <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
+              <div class="rounded-xl border border-gray-200 bg-gray-100 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
                 <div class="text-xl font-bold text-primary-600 dark:text-primary-400 md:text-3xl">
                   {{ dashboardStats.completedTasks.value }}
                 </div>
-                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-400 md:text-xs">
+                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-300 md:text-xs">
                   {{ $t('page.dashboard.hero.tasksComplete') }}
                 </div>
               </div>
-              <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
+              <div class="rounded-xl border border-gray-200 bg-gray-100 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
                 <div class="text-xl font-bold text-success-600 dark:text-success-400 md:text-3xl">
                   {{ dashboardStats.availableTasksCount.value }}
                 </div>
-                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-400 md:text-xs">
+                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-300 md:text-xs">
                   {{ $t('page.dashboard.hero.available') }}
                 </div>
               </div>
-              <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
+              <div class="rounded-xl border border-gray-200 bg-gray-100 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
                 <div class="text-xl font-bold text-error-600 dark:text-error-400 md:text-3xl">
                   {{ dashboardStats.failedTasksCount.value }}
                 </div>
-                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-400 md:text-xs">
+                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-300 md:text-xs">
                   {{ $t('page.dashboard.hero.failed') }}
                 </div>
               </div>
-              <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
+              <div class="rounded-xl border border-gray-200 bg-gray-100 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
                 <div class="text-xl font-bold text-warning-600 dark:text-warning-400 md:text-3xl">
                   {{ currentLevel }}
                 </div>
-                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-400 md:text-xs">
+                <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-300 md:text-xs">
                   {{ $t('page.dashboard.hero.level') }}
                 </div>
               </div>
@@ -171,7 +171,7 @@
           <div
             role="button"
             tabindex="0"
-            class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all outline-none hover:border-primary-500/30 hover:shadow-md focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:border-primary-700/30 dark:bg-surface-900 dark:hover:border-primary-700/50"
+            class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all outline-none hover:border-primary-500/30 hover:shadow-md focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:border-primary-700/30 dark:bg-surface-800 dark:hover:border-primary-700/50"
             :aria-label="$t('page.dashboard.traders.viewTasks', { name: trader.name })"
             @click="navigateToTraderTasks(trader.id)"
             @keydown.enter="navigateToTraderTasks(trader.id)"
@@ -188,12 +188,12 @@
                 <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">
                   {{ trader.name }}
                 </div>
-                <div class="text-sm text-gray-500 dark:text-surface-400">
+                <div class="text-sm text-gray-500 dark:text-surface-300">
                   {{ trader.completedTasks }}/{{ trader.totalTasks }}
                 </div>
               </div>
             </div>
-            <div class="relative h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-surface-800">
+            <div class="relative h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-surface-700">
               <div
                 class="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
                 :class="

@@ -7,11 +7,11 @@
         <TaskFilterBar v-model:search-query="searchQuery" />
         <!-- Map Display (shown when MAPS view is selected) -->
         <div v-if="showMapDisplay" class="mb-6">
-          <div class="bg-surface-800/50 rounded-lg p-4">
+          <div class="rounded-lg bg-gray-100 p-4 dark:bg-surface-800/50">
             <div class="mb-3 flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-200">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200">
                 {{ selectedMapData?.name || 'Map' }}
-                <span class="ml-2 text-sm font-normal text-gray-400">
+                <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
                   {{ displayTime }}
                 </span>
               </h3>
@@ -61,7 +61,7 @@
           v-if="taskStatusUpdated"
           class="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
         >
-          <UCard class="bg-surface-900/95 w-full max-w-xl border border-white/10 shadow-2xl">
+          <UCard class="bg-white/95 dark:bg-surface-900/95 w-full max-w-xl border border-gray-200/50 dark:border-white/10 shadow-2xl backdrop-blur-sm text-gray-900 dark:text-gray-100">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
               <span
                 class="text-sm sm:text-base"
