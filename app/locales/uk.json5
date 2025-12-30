@@ -93,6 +93,10 @@
         kappa: 'Каппа',
         lightkeeper: 'Лайткіпер',
       },
+      tree: {
+        mode_tree: 'Перейти в режим дерева',
+        mode_classic: 'Повернутися в класичний режим',
+      },
       primaryviews: {
         all: 'Усі',
         maps: 'Карти',

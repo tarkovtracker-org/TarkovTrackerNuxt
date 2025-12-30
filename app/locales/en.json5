@@ -110,6 +110,10 @@
         kappa: 'Kappa',
         lightkeeper: 'Lightkeeper',
       },
+      tree: {
+        mode_tree: 'Switch to tree mode',
+        mode_classic: 'Back to classic mode',
+      },
       primaryviews: {
         all: 'All',
         maps: 'Maps',

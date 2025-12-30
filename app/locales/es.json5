@@ -94,6 +94,10 @@
         kappa: 'Kappa',
         lightkeeper: 'Lightkeeper',
       },
+      tree: {
+        mode_tree: 'Cambiar al modo árbol',
+        mode_classic: 'Volver al modo clásico',
+      },
       primaryviews: {
         all: 'Todas',
         maps: 'Mapas',

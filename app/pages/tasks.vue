@@ -13,7 +13,11 @@
             class="w-full max-w-xl px-6 py-4 text-base font-semibold sm:text-lg"
             @click="toggleTreeView"
           >
-            {{ isTreeView ? 'Repasser en mode classique' : 'Passez en mode arbre' }}
+            {{
+              isTreeView
+                ? t('page.tasks.tree.mode_classic', 'Repasser en mode classique')
+                : t('page.tasks.tree.mode_tree', 'Passez en mode arbre')
+            }}
           </UButton>
         </div>
         <!-- Map Display (shown when MAPS view is selected) -->
