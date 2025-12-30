@@ -1,48 +1,79 @@
 <template>
-  <div class="min-h-[70vh] w-full overflow-x-auto rounded-2xl border border-white/10 bg-surface-900/70 p-6">
-    <div class="flex min-w-max items-start gap-6">
-      <div
-        v-for="column in columns"
-        :key="column.depth"
-        class="flex min-w-[220px] flex-col gap-3"
+  <div
+    ref="canvasRef"
+    class="min-h-[70vh] w-full overflow-auto rounded-2xl border border-white/10 bg-surface-900/70 p-4"
+    tabindex="0"
+    @click="focusCanvas"
+    @keydown="onKeyScroll"
+  >
+    <div class="relative" :style="{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }">
+      <svg
+        class="pointer-events-none absolute inset-0"
+        :width="canvasWidth"
+        :height="canvasHeight"
+        role="presentation"
+        aria-hidden="true"
       >
-        <div v-for="taskId in column.taskIds" :key="taskId">
-          <button
-            type="button"
-            class="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-xs text-white shadow-sm transition hover:brightness-110"
-            :class="statusBgClass(taskId)"
-            @click="goToTask(taskId)"
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
+            orient="auto"
           >
-            <span class="relative mt-0.5 h-4 w-4 shrink-0 rounded-sm border" :class="statusColorClass(taskId)">
-              <span
-                v-if="isLightkeeperTask(taskId)"
-                class="absolute -left-1 -top-1 rounded-sm bg-white px-0.5 text-[9px] font-bold text-black"
-              >
-                K
-              </span>
-              <span
-                v-if="isKappaTask(taskId)"
-                class="absolute -right-1 -top-1 rounded-sm bg-white px-0.5 text-[9px] font-bold text-black"
-              >
-                K
-              </span>
-            </span>
-            <span class="leading-tight">
-              {{ tasksById.get(taskId)?.name ?? 'Task' }}
-            </span>
-          </button>
-          <div v-if="childrenMap.get(taskId)?.length" class="mt-2 text-[11px] text-gray-400">
-            <span class="mr-1 text-gray-500">-></span>
-            <span>{{ formatChildren(taskId) }}</span>
-          </div>
-        </div>
-      </div>
+            <polygon points="0 0, 8 3, 0 6" fill="rgba(148,163,184,0.8)" />
+          </marker>
+        </defs>
+        <path
+          v-for="edge in edges"
+          :key="edge.id"
+          :d="edge.path"
+          stroke="rgba(148,163,184,0.7)"
+          stroke-width="1.5"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+      </svg>
+      <button
+        v-for="node in nodes"
+        :key="node.taskId"
+        type="button"
+        class="absolute flex items-start gap-2 rounded-lg px-3 py-2 text-left text-xs text-white shadow-sm transition hover:brightness-110"
+        :class="statusBgClass(node.taskId)"
+        :style="{
+          left: `${node.x}px`,
+          top: `${node.y}px`,
+          width: `${NODE_WIDTH}px`,
+          height: `${NODE_HEIGHT}px`,
+        }"
+        @click="goToTask(node.taskId)"
+      >
+        <span class="relative mt-0.5 h-4 w-4 shrink-0 rounded-sm border" :class="statusColorClass(node.taskId)">
+          <span
+            v-if="isLightkeeperTask(node.taskId)"
+            class="absolute -left-1 -top-1 rounded-sm bg-white px-0.5 text-[9px] font-bold text-black"
+          >
+            K
+          </span>
+          <span
+            v-if="isKappaTask(node.taskId)"
+            class="absolute -right-1 -top-1 rounded-sm bg-white px-0.5 text-[9px] font-bold text-black"
+          >
+            K
+          </span>
+        </span>
+        <span class="leading-tight">
+          {{ tasksById.get(node.taskId)?.name ?? 'Task' }}
+        </span>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { useRouter } from 'vue-router';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
@@ -57,10 +88,16 @@
   const progressStore = useProgressStore();
   const metadataStore = useMetadataStore();
   const router = useRouter();
+  const canvasRef = ref<HTMLElement | null>(null);
   const userView = computed(() => preferencesStore.getTaskUserView);
   const teamIds = computed(() => Object.keys(progressStore.visibleTeamStores || {}));
   const tasksById = computed(() => new Map(props.tasks.map((task) => [task.id, task])));
   const lightkeeperTraderId = computed(() => metadataStore.getTraderByName('lightkeeper')?.id);
+  const NODE_WIDTH = 220;
+  const NODE_HEIGHT = 44;
+  const COLUMN_GAP = 90;
+  const ROW_GAP = 16;
+  const PADDING = 24;
 
   const statusById = computed(() => {
     const statuses = new Map<string, 'locked' | 'available' | 'inprogress' | 'completed'>();
@@ -197,6 +234,56 @@
       }));
   });
 
+  const nodes = computed(() => {
+    const result: Array<{ taskId: string; x: number; y: number }> = [];
+    columns.value.forEach((column) => {
+      column.taskIds.forEach((taskId, index) => {
+        const x = PADDING + column.depth * (NODE_WIDTH + COLUMN_GAP);
+        const y = PADDING + index * (NODE_HEIGHT + ROW_GAP);
+        result.push({ taskId, x, y });
+      });
+    });
+    return result;
+  });
+
+  const nodePositions = computed(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    nodes.value.forEach((node) => {
+      map.set(node.taskId, { x: node.x, y: node.y });
+    });
+    return map;
+  });
+
+  const canvasWidth = computed(() => {
+    const maxDepth = Math.max(0, ...columns.value.map((column) => column.depth));
+    return PADDING * 2 + (maxDepth + 1) * NODE_WIDTH + maxDepth * COLUMN_GAP;
+  });
+
+  const canvasHeight = computed(() => {
+    const maxRows = Math.max(1, ...columns.value.map((column) => column.taskIds.length));
+    return PADDING * 2 + maxRows * NODE_HEIGHT + (maxRows - 1) * ROW_GAP;
+  });
+
+  const edges = computed(() => {
+    const paths: Array<{ id: string; path: string }> = [];
+    childrenMap.value.forEach((children, parentId) => {
+      const parent = nodePositions.value.get(parentId);
+      if (!parent) return;
+      const startX = parent.x + NODE_WIDTH;
+      const startY = parent.y + NODE_HEIGHT / 2;
+      children.forEach((childId) => {
+        const child = nodePositions.value.get(childId);
+        if (!child) return;
+        const endX = child.x;
+        const endY = child.y + NODE_HEIGHT / 2;
+        const midX = startX + (endX - startX) / 2;
+        const path = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+        paths.push({ id: `${parentId}-${childId}`, path });
+      });
+    });
+    return paths;
+  });
+
   const isTaskInProgress = (task: Task, teamId: string) => {
     if (!task.objectives?.length) return false;
     return task.objectives.some(
@@ -223,10 +310,25 @@
     router.push({ path: '/tasks', query: { task: taskId } });
   };
 
-  const formatChildren = (taskId: string) => {
-    const children = childrenMap.value.get(taskId) ?? [];
-    return children
-      .map((childId) => tasksById.value.get(childId)?.name ?? 'Task')
-      .join(', ');
+  const onKeyScroll = (event: KeyboardEvent) => {
+    if (!canvasRef.value) return;
+    const step = 120;
+    if (event.key === 'ArrowRight') {
+      canvasRef.value.scrollBy({ left: step, behavior: 'smooth' });
+      event.preventDefault();
+    } else if (event.key === 'ArrowLeft') {
+      canvasRef.value.scrollBy({ left: -step, behavior: 'smooth' });
+      event.preventDefault();
+    } else if (event.key === 'ArrowDown') {
+      canvasRef.value.scrollBy({ top: step, behavior: 'smooth' });
+      event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
+      canvasRef.value.scrollBy({ top: -step, behavior: 'smooth' });
+      event.preventDefault();
+    }
+  };
+
+  const focusCanvas = () => {
+    canvasRef.value?.focus();
   };
 </script>
