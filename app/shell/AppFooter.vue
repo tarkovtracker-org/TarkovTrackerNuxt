@@ -60,7 +60,7 @@
                 class="group flex items-center gap-2.5 transition-all duration-150 hover:-translate-y-0.5"
               >
                 <span
-                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-[#f0f6fc] transition-all duration-150 group-hover:bg-[#c9d1d9] group-hover:text-[#0d1117] group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-200 text-content-primary transition-all duration-150 group-hover:bg-surface-300 group-hover:dark:bg-white/20 group-hover:text-black group-hover:dark:text-white dark:bg-white/10 dark:text-gray-200 group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
                 >
                   <UIcon name="i-mdi-github" class="h-5 w-5" />
                 </span>
@@ -124,7 +124,7 @@
       <div class="my-4 h-px bg-divider dark:bg-transparent dark:bg-linear-to-r dark:from-transparent dark:via-white/10 dark:to-transparent" />
       <!-- Bottom Row: Copyright & Attribution -->
       <div class="flex flex-col items-center gap-1.5 text-center">
-        <div class="flex items-center justify-center gap-2 text-sm font-semibold text-content-secondary dark:text-[#bfbfbf]">
+        <div class="flex items-center justify-center gap-2 text-sm font-semibold text-content-secondary">
           <span>TarkovTracker &copy; 2020–{{ new Date().getFullYear() }}</span>
           <span class="text-sm text-content-tertiary dark:text-white/40">·</span>
           <router-link

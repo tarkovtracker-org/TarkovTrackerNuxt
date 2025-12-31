@@ -29,14 +29,14 @@
       </span>
       <!-- Trader Standing Rewards -->
       <template v-for="standing in traderStandingRewards" :key="`standing-${standing.trader.id}`">
-        <span class="inline-flex items-center gap-1.5 rounded !bg-gray-600 px-2 py-0.5 !text-white">
+        <span class="inline-flex items-center gap-1.5 rounded !bg-surface-600 px-2 py-0.5 !text-white">
           <UIcon
             name="i-mdi-handshake"
             aria-hidden="true"
             class="h-4 w-4 !text-white"
           />
           <span
-            :class="standing.standing >= 0 ? '!text-green-400 font-bold' : '!text-red-400 font-bold'"
+            :class="standing.standing >= 0 ? '!text-success-400 font-bold' : '!text-error-400 font-bold'"
           >
             {{ standing.standing >= 0 ? '+' : '' }}{{ standing.standing.toFixed(2) }}
           </span>
@@ -98,12 +98,12 @@
             "
           >
             <span
-              class="cursor-help border-b border-dotted border-gray-400 text-gray-600 dark:border-gray-500 dark:text-gray-200"
+              class="cursor-help border-b border-dotted border-base text-content-secondary"
             >
               {{ t('page.tasks.questcard.unlocksNext', 'Unlocks next') }}: {{ unlocksNextCount }}
             </span>
           </AppTooltip>
-          <span v-if="unlocksNextCount > 0 && impactCount > 0" class="mx-2 text-gray-600">•</span>
+          <span v-if="unlocksNextCount > 0 && impactCount > 0" class="mx-2 text-content-secondary">•</span>
           <AppTooltip
             v-if="impactCount > 0"
             :text="
@@ -114,7 +114,7 @@
             "
           >
             <span
-              class="cursor-help border-b border-dotted border-gray-400 text-gray-600 dark:border-gray-500 dark:text-gray-200"
+              class="cursor-help border-b border-dotted border-base text-content-secondary"
             >
               {{ t('page.tasks.questcard.impact', 'Impact') }}: {{ impactCount }}
             </span>
@@ -135,7 +135,7 @@
             <UIcon
               :name="showDetails ? 'i-mdi-chevron-up' : 'i-mdi-chevron-down'"
               aria-hidden="true"
-              class="h-5 w-5 text-gray-500"
+              class="h-5 w-5 text-content-tertiary"
             />
           </UButton>
         </AppTooltip>
@@ -156,7 +156,7 @@
         >
           <!-- Item Rewards (Left) -->
           <div v-if="itemRewards.length > 0" class="flex min-w-0 flex-1 flex-col gap-2">
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-300">
+            <div class="text-xs font-medium text-content-tertiary">
               {{ t('page.tasks.questcard.rewardItems', 'Items') }}:
             </div>
             <div class="flex flex-wrap gap-2">
@@ -182,13 +182,13 @@
                   />
                   <div class="flex flex-col items-center gap-0.5">
                     <span
-                      class="max-w-[72px] truncate text-center text-xs text-gray-700 dark:text-gray-300"
+                      class="max-w-[72px] truncate text-center text-xs text-content-primary"
                     >
                       {{ reward.item?.shortName || reward.item?.name || '' }}
                     </span>
                     <span
                       v-if="reward.count > 1"
-                      class="text-xs font-medium text-gray-500 dark:text-gray-400"
+                      class="text-xs font-medium text-content-tertiary"
                     >
                       x{{ formatNumber(reward.count) }}
                     </span>
@@ -203,7 +203,7 @@
             v-if="offerUnlockRewards.length > 0"
             class="flex min-w-0 flex-1 flex-col items-end gap-2 text-right"
           >
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-300">
+            <div class="text-xs font-medium text-content-tertiary">
               {{ t('page.tasks.questcard.unlocksPurchase', 'Unlocks purchase') }}:
             </div>
             <div class="flex flex-wrap justify-end gap-2 text-left">
@@ -229,11 +229,11 @@
                   />
                   <div class="flex flex-col items-center gap-0.5">
                     <span
-                      class="max-w-[72px] truncate text-center text-xs text-gray-700 dark:text-gray-300"
+                      class="max-w-[72px] truncate text-center text-xs text-content-primary"
                     >
                       {{ offer.item?.shortName || offer.item?.name || '' }}
                     </span>
-                    <span class="text-xs text-gray-500">
+                    <span class="text-xs text-content-tertiary">
                       {{ offer.trader.name }} LL{{ offer.level }}
                     </span>
                   </div>
@@ -253,7 +253,7 @@
           <div class="flex flex-nowrap items-start justify-between gap-4 px-1">
             <!-- Left: Previous Quests -->
             <div v-if="parentTasks.length > 0" class="flex min-w-0 flex-1 flex-col gap-1.5">
-              <div class="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <div class="text-[10px] font-medium uppercase tracking-wider text-content-tertiary">
                 {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
               </div>
               <div class="flex flex-col items-start gap-1">
@@ -273,7 +273,7 @@
 
             <!-- Right: Next Quests -->
             <div v-if="childTasks.length > 0" class="flex min-w-0 flex-1 flex-col items-end gap-1.5 text-right">
-              <div class="text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <div class="text-[10px] font-medium uppercase tracking-wider text-content-tertiary">
                 {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
               </div>
               <div class="flex flex-col items-end gap-1 text-right">

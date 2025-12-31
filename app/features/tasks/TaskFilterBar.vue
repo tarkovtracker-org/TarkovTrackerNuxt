@@ -62,7 +62,7 @@
         <FilterPill
           :active="secondaryView === 'all'"
           :count="statusCounts.all"
-          count-color="bg-blue-600"
+          count-color="bg-secondary-600"
           @click="setSecondaryView('all')"
         >
           <template #icon>
@@ -89,7 +89,7 @@
           :label="t('page.tasks.secondaryviews.locked').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.locked"
-          count-color="bg-gray-600"
+          count-color="bg-surface-600"
           @click="setSecondaryView('locked')"
         >
             <template #icon>
@@ -102,7 +102,7 @@
           :label="t('page.tasks.secondaryviews.completed').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.completed"
-          count-color="bg-green-600"
+          count-color="bg-success-600"
           @click="setSecondaryView('completed')"
         >
             <template #icon>
@@ -178,7 +178,7 @@
             'focus:ring-primary-500 focus:ring-1 focus:outline-none',
             preferencesStore.getTaskTraderView === trader.id
               ? 'bg-primary-100 text-primary-900 shadow-sm dark:bg-primary-500/20 dark:text-primary-100 dark:shadow-none'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white',
+              : 'text-content-tertiary hover:text-content-primary',
           ]"
           @click="onTraderSelect({ label: trader.name, value: trader.id })"
         >
@@ -196,7 +196,7 @@
             <span
               :class="[
                 'absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] font-bold text-white',
-                (traderCounts[trader.id] ?? 0) > 0 ? 'bg-primary-500' : 'bg-gray-600',
+                (traderCounts[trader.id] ?? 0) > 0 ? 'bg-primary-500' : 'bg-surface-600',
               ]"
             >
               {{ traderCounts[trader.id] ?? 0 }}

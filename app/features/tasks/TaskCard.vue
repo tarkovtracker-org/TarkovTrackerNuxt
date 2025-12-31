@@ -226,7 +226,7 @@
       <!-- 2) Metadata Row: Requires -->
       <div
         v-if="isLocked && pendingParentTasks.length > 0"
-        class="flex flex-nowrap items-center gap-4 text-xs text-gray-600 dark:text-content-secondary"
+        class="flex flex-nowrap items-center gap-4 text-xs text-content-secondary"
       >
         <!-- Requires strip (Left) -->
         <div class="flex min-w-0 items-center">

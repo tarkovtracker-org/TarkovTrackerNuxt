@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div class="text-xs font-medium text-gray-600 dark:text-gray-400">
+    <div class="text-xs font-medium text-content-secondary">
       {{ $t('page.tasks.questcard.keysHeader', 'Suggested Keys') }}
       <span class="font-normal text-gray-500">
         {{ $t('page.tasks.questcard.keysSubtext', '(may help but not always required)') }}

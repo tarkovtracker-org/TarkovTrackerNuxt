@@ -111,7 +111,7 @@
           </i18n-t>
         </InfoRow>
         <!-- Task ID -->
-        <div v-if="preferencesStore.getShowTaskIds" class="mt-2 text-xs text-gray-600">
+        <div v-if="preferencesStore.getShowTaskIds" class="mt-2 text-xs text-content-secondary">
           ID: {{ task.id }}
         </div>
       </div>

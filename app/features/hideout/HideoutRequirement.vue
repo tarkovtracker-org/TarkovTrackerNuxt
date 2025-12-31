@@ -33,8 +33,8 @@
         </div>
         <!-- FiR Badge -->
         <AppTooltip v-if="isFoundInRaid" text="Found in Raid required">
-          <div class="absolute top-0 right-2 z-10 rounded bg-yellow-500/90 p-0.5 shadow-sm">
-            <UIcon name="i-mdi-checkbox-marked-circle-outline" class="h-3 w-3 text-yellow-950" />
+          <div class="absolute top-0 right-2 z-10 rounded bg-warning-500/90 p-0.5 shadow-sm">
+            <UIcon name="i-mdi-checkbox-marked-circle-outline" class="h-3 w-3 text-warning-950" />
           </div>
         </AppTooltip>
         <!-- Count Badge -->
