@@ -14,10 +14,10 @@
       <!-- XP Badge -->
       <span
         v-if="preferencesStore.getShowExperienceRewards && experience > 0"
-        class="inline-flex items-center gap-1 rounded !bg-yellow-600/20 px-2 py-0.5 text-yellow-700 dark:text-yellow-400"
+        class="inline-flex items-center gap-1 rounded !bg-primary-600 px-2 py-0.5 !text-white"
       >
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
-        <span class="font-bold">{{ formatNumber(experience) }} XP</span>
+        <span>{{ formatNumber(experience) }} XP</span>
       </span>
       <!-- Trader Standing Rewards -->
       <template v-for="standing in traderStandingRewards" :key="`standing-${standing.trader.id}`">
