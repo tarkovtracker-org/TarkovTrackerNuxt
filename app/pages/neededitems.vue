@@ -251,8 +251,13 @@
       const searchLower = search.value.toLowerCase();
       items = items.filter((item) => {
         // Some task objectives use markerItem instead of item; guard against missing objects
-        const itemName = item.item?.name || (item as NeededItemTaskObjective).markerItem?.name;
-        if (itemName?.toLowerCase().includes(searchLower)) {
+        const itemObj = item.item || (item as NeededItemTaskObjective).markerItem;
+        const itemName = itemObj?.name;
+        const itemShortName = itemObj?.shortName;
+        if (
+          itemName?.toLowerCase().includes(searchLower) ||
+          itemShortName?.toLowerCase().includes(searchLower)
+        ) {
           return true;
         }
         // Search by task name for task objectives
