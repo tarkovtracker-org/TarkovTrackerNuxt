@@ -1,21 +1,23 @@
 <template>
-  <div class="flex items-center gap-0.5">
+  <div class="flex items-center gap-1">
     <!-- Counter controls group with background -->
     <div
-      class="bg-surface-elevated flex items-center rounded-lg border border-base shadow-sm transition-colors"
+      class="flex items-center rounded-md border border-gray-300 bg-white dark:border-white/10 dark:bg-white/5"
     >
       <!-- Decrease button -->
       <AppTooltip text="Decrease count">
         <button
-          class="text-content-secondary hover:bg-surface-hover active:bg-surface-active flex h-5 w-5 items-center justify-center rounded-l-lg transition-colors hover:text-content-primary sm:h-6 sm:w-6 lg:h-8 lg:w-8"
+          type="button"
+          :disabled="currentCount <= 0"
+          class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-l-md text-gray-500 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-white/10 dark:active:bg-white/15"
           aria-label="Decrease count"
           @click="$emit('decrease')"
         >
-          <UIcon name="i-mdi-minus" class="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-5 lg:w-5" />
+          <UIcon name="i-mdi-minus" aria-hidden="true" class="h-4 w-4" />
         </button>
       </AppTooltip>
       <div
-        class="bg-surface-base flex h-5 min-w-8 items-center justify-center border-x border-base sm:h-6 sm:min-w-10 lg:h-8 lg:min-w-16"
+        class="flex h-7 min-w-14 items-center justify-center px-2 text-[11px] font-semibold text-gray-900 tabular-nums dark:text-gray-100"
       >
         <template v-if="isEditing">
           <input
@@ -24,7 +26,7 @@
             type="number"
             :min="0"
             :max="neededCount"
-            class="bg-surface-base focus:ring-primary-500 h-full w-full px-0.5 text-center text-[10px] font-semibold text-content-primary focus:ring-2 focus:outline-none focus:ring-inset sm:text-xs lg:px-2 lg:text-sm"
+            class="h-full w-full bg-transparent px-0.5 text-center text-[11px] font-semibold text-gray-900 focus:outline-none dark:text-gray-100"
             @blur="submitEdit"
             @keydown.enter="submitEdit"
             @keydown.escape="cancelEdit"
@@ -33,7 +35,7 @@
         <template v-else>
           <AppTooltip text="Click to enter value">
             <button
-              class="hover:bg-surface-hover h-full w-full cursor-pointer px-0.5 text-[10px] font-semibold text-content-primary transition-colors sm:text-xs lg:px-2 lg:text-sm"
+              class="h-full w-full cursor-pointer px-0.5 text-[11px] font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-white/10"
               aria-label="Click to enter value"
               @click="startEditing"
             >
@@ -45,29 +47,32 @@
       <!-- Increase button -->
       <AppTooltip text="Increase count">
         <button
-          class="text-content-secondary hover:bg-surface-hover active:bg-surface-active flex h-5 w-5 items-center justify-center rounded-r-lg transition-colors hover:text-content-primary sm:h-6 sm:w-6 lg:h-8 lg:w-8"
+          type="button"
+          :disabled="currentCount >= neededCount"
+          class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-r-md text-gray-500 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-white/10 dark:active:bg-white/15"
           aria-label="Increase count"
           @click="$emit('increase')"
         >
-          <UIcon name="i-mdi-plus" class="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-5 lg:w-5" />
+          <UIcon name="i-mdi-plus" aria-hidden="true" class="h-4 w-4" />
         </button>
       </AppTooltip>
     </div>
-    <!-- Mark as 100% complete button - separated with more spacing -->
+    <!-- Mark as 100% complete button -->
     <AppTooltip
       :text="currentCount >= neededCount ? 'Mark as incomplete' : 'Mark as 100% complete'"
     >
       <button
-        class="flex h-5 w-5 items-center justify-center rounded-lg border transition-colors sm:h-6 sm:w-6 lg:h-8 lg:w-8"
+        type="button"
+        class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         :aria-label="currentCount >= neededCount ? 'Mark as incomplete' : 'Mark as 100% complete'"
         :class="
           currentCount >= neededCount
             ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
-            : 'bg-surface-elevated text-content-secondary hover:bg-surface-hover border-base hover:text-content-primary'
+            : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
         "
         @click="$emit('toggle')"
       >
-        <UIcon name="i-mdi-check-circle" class="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-5 lg:w-5" />
+        <UIcon name="i-mdi-check" aria-hidden="true" class="h-4 w-4" />
       </button>
     </AppTooltip>
   </div>

@@ -19,6 +19,14 @@
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
         <span>{{ formatNumber(experience) }} XP</span>
       </span>
+      <!-- Trader Unlock -->
+      <span
+        v-if="displayedTraderUnlock?.name"
+        class="inline-flex items-center gap-1.5 rounded !bg-amber-300 px-2 py-0.5 !text-amber-950"
+      >
+        <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4 !text-amber-950" />
+        <span>{{ displayedTraderUnlock.name }}</span>
+      </span>
       <!-- Trader Standing Rewards -->
       <template v-for="standing in traderStandingRewards" :key="`standing-${standing.trader.id}`">
         <span class="inline-flex items-center gap-1.5 rounded !bg-gray-500 px-2 py-0.5 !text-white">
@@ -43,14 +51,6 @@
           <span>{{ skill.name }}</span>
         </span>
       </template>
-      <!-- Trader Unlock -->
-      <span
-        v-if="displayedTraderUnlock?.name"
-        class="inline-flex items-center gap-1.5 rounded !bg-amber-300 px-2 py-0.5 !text-amber-950"
-      >
-        <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4 !text-amber-950" />
-        <span>{{ displayedTraderUnlock.name }}</span>
-      </span>
       <!-- Item Rewards Summary -->
       <AppTooltip v-if="itemRewards.length > 0" :text="itemRewardsSummaryTooltip">
         <span
