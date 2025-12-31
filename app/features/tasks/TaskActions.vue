@@ -20,7 +20,7 @@
         :xs="xs"
         color="accent"
         icon="mdi-undo"
-        :text="t('page.tasks.questcard.uncompletebutton')"
+        :text="t('page.tasks.questcard.incompletebutton')"
         @click="$emit('uncomplete')"
       />
       <AlternativesList

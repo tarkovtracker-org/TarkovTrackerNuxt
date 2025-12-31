@@ -205,7 +205,7 @@
               class="shrink-0 !bg-error-600 hover:!bg-error-700 !text-white shadow-sm"
               @click.stop="markTaskUncomplete()"
             >
-              {{ t('page.tasks.questcard.uncompletebutton', 'Uncomplete').toUpperCase() }}
+              {{ t('page.tasks.questcard.incompletebutton', 'Incomplete').toUpperCase() }}
             </UButton>
           </template>
           <!-- Menu button -->
