@@ -24,7 +24,7 @@
           <div class="text-sm tracking-wider uppercase text-content-secondary dark:text-surface-400">
             {{ label }}
           </div>
-          <div class="text-2xl font-bold text-content-primary dark:text-white">{{ completed }}/{{ total }}</div>
+          <div class="text-2xl font-bold text-content-primary">{{ completed }}/{{ total }}</div>
         </div>
       </div>
       <div class="text-3xl font-bold" :class="percentageColorClass">{{ percentageDisplay }}%</div>

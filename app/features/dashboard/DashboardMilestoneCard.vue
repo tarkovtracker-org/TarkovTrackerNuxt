@@ -10,7 +10,7 @@
         :name="isAchieved ? achievedIcon : unachievedIcon"
         :class="['mb-3 h-12 w-12', isAchieved ? iconColorClass : 'text-content-tertiary dark:text-surface-600']"
       />
-      <div class="mb-1 text-3xl font-bold text-content-primary dark:text-white">{{ title }}</div>
+      <div class="mb-1 text-3xl font-bold text-content-primary">{{ title }}</div>
       <div class="text-xs tracking-wider uppercase text-content-secondary dark:text-surface-400">{{ subtitle }}</div>
     </div>
   </div>

@@ -15,7 +15,7 @@
         />
       </AppTooltip>
       <!-- Center: Page Title -->
-      <span class="min-w-0 flex-1 truncate text-xl font-bold text-content-primary dark:text-white">
+      <span class="min-w-0 flex-1 truncate text-xl font-bold text-content-primary">
         {{ pageTitle }}
       </span>
       <!-- Right: Status Icons & Settings -->

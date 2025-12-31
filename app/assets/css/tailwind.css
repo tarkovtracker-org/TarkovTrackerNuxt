@@ -489,7 +489,10 @@ select:disabled,
   
   /* Semantic Text */
   .text-content-primary {
-    @apply text-gray-900 dark:text-white;
+    @apply text-gray-900;
+  }
+  .dark .text-content-primary {
+    color: rgba(255, 255, 255, 0.8);
   }
   .text-content-secondary {
     @apply text-gray-600;
