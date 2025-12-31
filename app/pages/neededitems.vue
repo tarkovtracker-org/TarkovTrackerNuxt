@@ -255,8 +255,8 @@
         const itemName = itemObj?.name;
         const itemShortName = itemObj?.shortName;
         if (
-          itemName?.toLowerCase().includes(searchLower) ||
-          itemShortName?.toLowerCase().includes(searchLower)
+          itemName?.toLowerCase()?.includes(searchLower) ||
+          itemShortName?.toLowerCase()?.includes(searchLower)
         ) {
           return true;
         }
