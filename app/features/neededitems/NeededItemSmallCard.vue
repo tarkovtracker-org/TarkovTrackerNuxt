@@ -148,7 +148,6 @@
       </template>
     </div>
   </KeepAlive>
-  </KeepAlive>
 </template>
 <script setup lang="ts">
   import { computed, defineAsyncComponent, inject } from 'vue';
