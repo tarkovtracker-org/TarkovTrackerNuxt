@@ -16,6 +16,7 @@
     "supabase:types": "supabase gen types typescript --linked > supabase/functions/_shared/database.types.ts"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.4",
     "@iconify-json/mdi": "^1.2.3",
     "@intlify/unplugin-vue-i18n": "^11.0.3",
     "@mdi/font": "^7.4.47",
@@ -29,7 +30,6 @@
     "@vueuse/core": "^14.1.0",
     "d3": "^7.9.0",
     "eslint": "^9.39.2",
-    "floating-vue": "^5.2.2",
     "graphology": "^0.26.0",
     "graphology-types": "^0.24.8",
     "ipaddr.js": "^2.3.0",

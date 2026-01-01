@@ -165,7 +165,7 @@ export const usePreferencesStore = defineStore('preferences', {
       return state.taskTraderView ?? 'all';
     },
     getTaskSecondaryView: (state) => {
-      const valid = ['all', 'available', 'locked', 'completed'];
+      const valid = ['all', 'available', 'locked', 'completed', 'failed'];
       const val = state.taskSecondaryView;
       return val && valid.includes(val) ? val : 'available';
     },

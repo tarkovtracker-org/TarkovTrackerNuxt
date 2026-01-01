@@ -88,12 +88,11 @@
                 `Minimum player level ${task.minPlayerLevel} required to unlock this quest`
               )
             "
-          >
             <UBadge
               size="xs"
-              :color="meetsLevelRequirement ? 'success' : 'error'"
-              variant="soft"
-              class="cursor-help text-[11px]"
+              color="gray"
+              variant="solid"
+              class="cursor-help text-xs !bg-gray-400 !text-white"
             >
               {{ t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel }) }}
             </UBadge>
@@ -110,16 +109,7 @@
               {{ t('page.tasks.questcard.progress', objectiveProgress) }}
             </UBadge>
           </AppTooltip>
-          <UBadge
-            v-if="objectiveProgress.total > 0"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            class="inline-flex items-center gap-1 text-[11px]"
-          >
-            <UIcon name="i-mdi-progress-check" aria-hidden="true" class="h-3 w-3" />
-            {{ t('page.tasks.questcard.progress', objectiveProgress) }}
-          </UBadge>
+
           <UBadge v-if="isFailed" size="xs" color="error" variant="soft" class="text-[11px]">
             {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
           </UBadge>
@@ -132,7 +122,12 @@
               )
             "
           >
-            <UBadge size="xs" color="neutral" variant="soft" class="cursor-help text-[11px]">
+            <UBadge
+              size="xs"
+              color="gray"
+              variant="solid"
+              class="cursor-help text-xs !bg-gray-400 !text-white"
+            >
               {{ t('page.tasks.questcard.blocked', 'Blocked') }}
             </UBadge>
           </AppTooltip>
@@ -145,7 +140,12 @@
               )
             "
           >
-            <UBadge size="xs" color="error" variant="soft" class="cursor-help text-[11px]">
+            <UBadge
+              size="xs"
+              color="red"
+              variant="solid"
+              class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
+            >
               {{ t('page.tasks.questcard.kappa', 'Kappa') }}
             </UBadge>
           </AppTooltip>
@@ -158,7 +158,12 @@
               )
             "
           >
-            <UBadge size="xs" color="warning" variant="soft" class="cursor-help text-[11px]">
+            <UBadge
+              size="xs"
+              color="amber"
+              variant="solid"
+              class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
+            >
               {{ t('page.tasks.questcard.lightkeeper', 'Lightkeeper') }}
             </UBadge>
           </AppTooltip>

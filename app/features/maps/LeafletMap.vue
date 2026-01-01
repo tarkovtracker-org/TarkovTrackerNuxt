@@ -288,16 +288,12 @@
         const popupContent =
         task || objective
           ? `
-          <div class="v-popper__popper v-popper--theme-tooltip">
-            <div class="v-popper__wrapper">
-              <div class="v-popper__inner" style="visibility: visible; position: relative;">
-                <div class="text-sm">
-                  ${task ? `<div class="font-semibold">${task.name}</div>` : ''}
-                  ${objective ? `<div class="text-gray-400">${objective.description}</div>` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-lg dark:bg-surface-800 dark:text-gray-200">
+             <div class="text-sm">
+               ${task ? `<div class="font-semibold">${task.name}</div>` : ''}
+               ${objective ? `<div class="text-gray-400">${objective.description}</div>` : ''}
+             </div>
+           </div>
         `
           : undefined;
       // Handle point markers (possibleLocations)
@@ -452,14 +448,10 @@
           ? extract.faction.charAt(0).toUpperCase() + extract.faction.slice(1)
           : 'Unknown';
       const popupContent = `
-      <div class="v-popper__popper v-popper--theme-tooltip">
-        <div class="v-popper__wrapper">
-          <div class="v-popper__inner" style="visibility: visible; position: relative;">
-            <div class="text-sm">
-              <div class="font-semibold">${extract.name}</div>
-              <div class="text-gray-400">Faction: ${factionText}</div>
-            </div>
-          </div>
+      <div class="rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-lg dark:bg-surface-800 dark:text-gray-200">
+        <div class="text-sm">
+          <div class="font-semibold">${extract.name}</div>
+          <div class="text-gray-400">Faction: ${factionText}</div>
         </div>
       </div>
     `;
