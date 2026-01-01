@@ -137,7 +137,7 @@
   // Use mapsWithSvg getter to get maps with merged SVG config from maps.json
   const maps = computed(() => metadataStore.mapsWithSvg);
   const progressStore = useProgressStore();
-  const { tasksCompletions, unlockedTasks } = storeToRefs(progressStore);
+  const { tasksCompletions, unlockedTasks, tasksFailed } = storeToRefs(progressStore);
   const { visibleTasks, reloadingTasks, updateVisibleTasks } = useTaskFiltering();
   const tarkovStore = useTarkovStore();
   const { tarkovTime } = useTarkovTime();
@@ -356,7 +356,9 @@
     }
   );
   // Handle deep linking to a specific task via ?task=taskId query param
-  const getTaskStatus = (taskId: string): 'available' | 'locked' | 'completed' => {
+  const getTaskStatus = (taskId: string): 'available' | 'locked' | 'completed' | 'failed' => {
+    const isFailed = tasksFailed.value?.[taskId]?.['self'] ?? false;
+    if (isFailed) return 'failed';
     const isCompleted = tasksCompletions.value?.[taskId]?.['self'] ?? false;
     if (isCompleted) return 'completed';
     const isUnlocked = unlockedTasks.value?.[taskId]?.['self'] ?? false;
@@ -577,6 +579,22 @@
         }
       }
       updateTaskStatus('page.tasks.questcard.undouncomplete', taskName);
+    } else if (action === 'resetfailed') {
+      // Undo reset by restoring failed state (without altering alternatives)
+      tarkovStore.setTaskFailed(taskId);
+      const taskToUndo = tasks.value.find((task) => task.id === taskId);
+      if (taskToUndo?.objectives) {
+        handleTaskObjectives(taskToUndo.objectives, 'setTaskObjectiveComplete');
+      }
+      updateTaskStatus('page.tasks.questcard.undoresetfailed', taskName);
+    } else if (action === 'fail') {
+      // Undo manual fail by clearing completion/failed flags
+      tarkovStore.setTaskUncompleted(taskId);
+      const taskToUndo = tasks.value.find((task) => task.id === taskId);
+      if (taskToUndo?.objectives) {
+        handleTaskObjectives(taskToUndo.objectives, 'setTaskObjectiveUncomplete');
+      }
+      updateTaskStatus('page.tasks.questcard.undofailed', taskName);
     }
     showUndoButton.value = false;
     undoData.value = null;

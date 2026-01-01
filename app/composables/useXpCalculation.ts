@@ -12,10 +12,12 @@ import { useTarkovStore } from '@/stores/useTarkov';
 export function useXpCalculation() {
   const tarkovStore = useTarkovStore();
   const metadataStore = useMetadataStore();
+  const isTaskSuccessful = (taskId: string) =>
+    tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
   // Computed: Sum of XP from all completed tracked tasks
   const calculatedQuestXP = computed(() => {
     return metadataStore.tasks
-      .filter((task) => tarkovStore.isTaskComplete(task.id))
+      .filter((task) => isTaskSuccessful(task.id))
       .reduce((sum, task) => sum + (task.experience || 0), 0);
   });
   // Computed: User's total XP (calculated + offset)

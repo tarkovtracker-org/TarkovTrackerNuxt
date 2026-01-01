@@ -1,0 +1,139 @@
+import type { FinishRewards, TarkovTaskRewardsQueryResult } from '~/types/tarkov';
+import { createTarkovFetcher, edgeCache } from '~/server/utils/edgeCache';
+import { createLogger } from '~/server/utils/logger';
+import { TARKOV_TASKS_REWARDS_QUERY } from '~/server/utils/tarkov-queries';
+import { API_SUPPORTED_LANGUAGES } from '~/utils/constants';
+type TarkovGraphqlResponse<T> = {
+  data?: T;
+  errors?: Array<{ message: string; [key: string]: unknown }>;
+};
+const logger = createLogger('TarkovTaskRewards');
+/**
+ * Custom error for GraphQL response validation failures
+ */
+class GraphQLResponseError extends Error {
+  constructor(
+    message: string,
+    public readonly errors?: Array<{ message: string; [key: string]: unknown }>
+  ) {
+    super(message);
+    this.name = 'GraphQLResponseError';
+  }
+}
+/**
+ * Sanitizes reward data to remove invalid entries from the API response
+ */
+function sanitizeTaskRewards(response: { data: TarkovTaskRewardsQueryResult }): {
+  data: TarkovTaskRewardsQueryResult;
+} {
+  const tasks = response.data?.tasks || [];
+  const sanitizeRewards = (rewards?: FinishRewards) => {
+    if (!rewards) return rewards;
+    return {
+      ...rewards,
+      skillLevelReward: rewards.skillLevelReward?.filter(
+        (reward) => reward && reward.skill !== null
+      ),
+    };
+  };
+  const sanitizedTasks = tasks.map((task) => {
+    if (!task) return task;
+    return {
+      ...task,
+      startRewards: sanitizeRewards(task.startRewards),
+      finishRewards: sanitizeRewards(task.finishRewards),
+      failureOutcome: sanitizeRewards(task.failureOutcome),
+    };
+  });
+  return {
+    data: {
+      ...response.data,
+      tasks: sanitizedTasks,
+    },
+  };
+}
+/**
+ * Type guard to validate GraphQL response structure
+ */
+function isValidGraphQLResponse(
+  response: unknown
+): response is TarkovGraphqlResponse<TarkovTaskRewardsQueryResult> {
+  return (
+    response !== null &&
+    typeof response === 'object' &&
+    ('data' in response || 'errors' in response)
+  );
+}
+/**
+ * Validates GraphQL response and narrows type to ensure data.data exists
+ * @param allowPartialData - If true, allows responses with errors as long as data exists
+ * @throws GraphQLResponseError if response is invalid or contains errors
+ */
+function validateGraphQLResponse(
+  response: unknown,
+  allowPartialData = false
+): asserts response is { data: TarkovTaskRewardsQueryResult } {
+  // Check basic structure
+  if (!isValidGraphQLResponse(response)) {
+    throw new GraphQLResponseError('Invalid GraphQL response structure');
+  }
+  // Check for missing data
+  if (!response.data) {
+    throw new GraphQLResponseError('GraphQL response missing data field');
+  }
+  // Check for GraphQL errors (only throw if not allowing partial data)
+  if (
+    !allowPartialData &&
+    response.errors &&
+    Array.isArray(response.errors) &&
+    response.errors.length > 0
+  ) {
+    const errorMessages = response.errors.map((e) => e.message).join('; ');
+    throw new GraphQLResponseError(`GraphQL errors: ${errorMessages}`, response.errors);
+  }
+  // If we have partial data and errors, log them but don't throw
+  if (
+    allowPartialData &&
+    response.errors &&
+    Array.isArray(response.errors) &&
+    response.errors.length > 0
+  ) {
+    logger.warn('GraphQL response contains errors but returning partial data:', response.errors);
+  }
+}
+// Valid game modes
+const VALID_GAME_MODES = ['regular', 'pve'] as const;
+// Cache TTL: 12 hours in seconds
+const CACHE_TTL = 43200;
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event);
+  // Validate and sanitize inputs
+  let lang = (query.lang as string)?.toLowerCase() || 'en';
+  let gameMode = (query.gameMode as string)?.toLowerCase() || 'regular';
+  // Ensure valid language (fallback to English if unsupported)
+  if (!API_SUPPORTED_LANGUAGES.includes(lang as (typeof API_SUPPORTED_LANGUAGES)[number])) {
+    lang = 'en';
+  }
+  // Ensure valid game mode
+  if (!VALID_GAME_MODES.includes(gameMode as (typeof VALID_GAME_MODES)[number])) {
+    gameMode = 'regular';
+  }
+  const cacheKey = `tasks-rewards-${lang}-${gameMode}`;
+  const baseFetcher = createTarkovFetcher(TARKOV_TASKS_REWARDS_QUERY, { lang, gameMode });
+  const fetcher = async () => {
+    const rawResponse = await baseFetcher();
+    try {
+      validateGraphQLResponse(rawResponse, true);
+    } catch (error) {
+      if (error instanceof GraphQLResponseError) {
+        logger.error('GraphQL validation failed:', error.message);
+        if (error.errors) {
+          logger.error('GraphQL errors detail:', JSON.stringify(error.errors, null, 2));
+        }
+      }
+      throw error;
+    }
+    return sanitizeTaskRewards(rawResponse);
+  };
+  return await edgeCache(event, cacheKey, fetcher, CACHE_TTL, { cacheKeyPrefix: 'tarkov' });
+});

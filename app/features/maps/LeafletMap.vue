@@ -375,15 +375,15 @@
       // Color based on faction
       let markerColor: string;
       switch (extract.faction) {
-      case 'pmc':
-        markerColor = '#22c55e'; // green-500
-        break;
-      case 'scav':
-        markerColor = '#f59e0b'; // amber-500
-        break;
-      case 'shared':
-        markerColor = isCoop ? '#0284c7' : '#38bdf8'; // sky-600 : sky-400
-        break;
+        case 'pmc':
+          markerColor = '#22c55e'; // green-500
+          break;
+        case 'scav':
+          markerColor = '#f59e0b'; // amber-500
+          break;
+        case 'shared':
+          markerColor = isCoop ? '#0284c7' : '#38bdf8'; // sky-600 : sky-400
+          break;
         default:
           markerColor = '#3b82f6'; // blue-500
           break;

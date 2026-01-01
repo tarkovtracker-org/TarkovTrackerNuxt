@@ -122,7 +122,7 @@ function parseSvgContent(content: string): SVGElement | null {
     logger.error('SVG parse error:', parseError.textContent);
     return null;
   }
-  return doc.documentElement as SVGElement;
+  return doc.documentElement as unknown as SVGElement;
 }
 export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapReturn {
   const {
@@ -261,7 +261,7 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     if (selectedIndex === -1) return;
     const svgConfig = map.value?.svg;
     const stackFloors =
-      (isValidMapSvgConfig(svgConfig) && svgConfig.stackFloors === false) ? false : true;
+      isValidMapSvgConfig(svgConfig) && svgConfig.stackFloors === false ? false : true;
     const inactiveFloorOpacity = 0.7;
     const undergroundOverlayOpacity = 0.3;
     // Detect underground/basement/bunker floors
@@ -269,7 +269,8 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     const groundFloorIndex = isUnderground ? findGroundOverlayIndex(selectedIndex) : -1;
     // Track selected floor element for reordering (to render on top)
     let selectedFloorGroup: SVGElement | null = null;
-    floors.value.forEach((floor, index) => {
+    for (let index = 0; index < floors.value.length; index++) {
+      const floor = floors.value[index];
       const floorGroup = svgElement.querySelector(`#${floor}`);
       if (floorGroup instanceof SVGElement) {
         const keepWith = floorGroup.getAttribute('data-keep-with-group');
@@ -277,12 +278,15 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
         const isKeptWithSelected = keepWith === selectedFloor.value;
         const isGroundOverlay = isUnderground && index === groundFloorIndex;
         const shouldShow =
-          isSelected || isKeptWithSelected || isGroundOverlay || (stackFloors && index <= selectedIndex);
+          isSelected ||
+          isKeptWithSelected ||
+          isGroundOverlay ||
+          (stackFloors && index <= selectedIndex);
         floorGroup.style.display = shouldShow ? 'block' : 'none';
         if (!shouldShow) {
           floorGroup.style.opacity = '0';
           floorGroup.style.pointerEvents = 'none';
-          return;
+          continue;
         }
         let opacity = inactiveFloorOpacity;
         if (isSelected) opacity = 1;
@@ -294,10 +298,10 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
           selectedFloorGroup = floorGroup;
         }
       }
-    });
+    }
     // Move selected floor to end of parent so it renders on top of overlay floors
     // This ensures basement/bunker floors appear above the transparent ground overlay
-    if (selectedFloorGroup && selectedFloorGroup.parentNode) {
+    if (selectedFloorGroup?.parentNode) {
       selectedFloorGroup.parentNode.appendChild(selectedFloorGroup);
     }
   }

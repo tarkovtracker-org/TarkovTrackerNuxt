@@ -14,25 +14,44 @@
           <p class="text-surface-200 text-sm font-semibold">
             {{ $t('settings.prestige.current_level', 'Current Prestige Level') }}
           </p>
-          <USelectMenu
-            v-model="currentPrestige"
-            :items="prestigeOptions"
-            value-key="value"
-            :popper="{ placement: 'bottom-start', strategy: 'fixed' }"
-            :ui="selectUi"
-            :ui-menu="selectMenuUi"
+          <AppTooltip
+            :text="
+              isPveMode
+                ? $t('settings.prestige.pve_disabled', 'Prestige is not available in PVE mode')
+                : ''
+            "
+            :disabled="!isPveMode"
           >
-            <template #leading>
-              <UIcon name="i-mdi-trophy" class="text-gold-400 h-4 w-4" />
-            </template>
-          </USelectMenu>
+            <USelectMenu
+              v-model="currentPrestige"
+              :items="prestigeOptions"
+              value-key="value"
+              :disabled="isPveMode"
+              :popper="{ placement: 'bottom-start', strategy: 'fixed' }"
+              :ui="selectUi"
+              :ui-menu="selectMenuUi"
+            >
+              <template #leading>
+                <UIcon
+                  name="i-mdi-trophy"
+                  class="text-gold-400 h-4 w-4"
+                  :class="{ 'opacity-50': isPveMode }"
+                />
+              </template>
+            </USelectMenu>
+          </AppTooltip>
           <p class="text-surface-400 text-xs">
-            {{
-              $t(
-                'settings.prestige.hint',
-                'Select your current prestige level. This is display-only and does not affect game progression.'
-              )
-            }}
+            <template v-if="isPveMode">
+              {{ $t('settings.prestige.pve_hint', 'Prestige is not available in PVE mode.') }}
+            </template>
+            <template v-else>
+              {{
+                $t(
+                  'settings.prestige.hint',
+                  'Select your current prestige level. This is display-only and does not affect game progression.'
+                )
+              }}
+            </template>
           </p>
         </div>
       </div>
@@ -43,7 +62,10 @@
   import { computed } from 'vue';
   import GenericCard from '@/components/ui/GenericCard.vue';
   import { useTarkovStore } from '@/stores/useTarkov';
+  import { GAME_MODES } from '@/utils/constants';
   const tarkovStore = useTarkovStore();
+  // Check if user is in PVE mode (prestige not available in PVE)
+  const isPveMode = computed(() => tarkovStore.currentGameMode === GAME_MODES.PVE);
   // Prestige options for dropdown (0-6)
   const prestigeOptions = computed(() => {
     return Array.from({ length: 7 }, (_, i) => ({

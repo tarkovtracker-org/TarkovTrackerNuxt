@@ -26,6 +26,33 @@ import type { AbstractGraph } from 'graphology-types';
  * Extracts complex graph algorithms from the metadata store
  */
 export function useGraphBuilder() {
+  const normalizeStatus = (status: string[] | undefined) =>
+    (status ?? []).map((entry) => entry.toLowerCase());
+  const hasStatus = (status: string[] | undefined, statuses: string[]) => {
+    const normalized = normalizeStatus(status);
+    return statuses.some((value) => normalized.includes(value));
+  };
+  const isActiveOnly = (status: string[] | undefined) => {
+    const normalized = normalizeStatus(status);
+    const hasActive =
+      normalized.includes('active') ||
+      normalized.includes('accept') ||
+      normalized.includes('accepted');
+    const hasOther =
+      normalized.includes('complete') ||
+      normalized.includes('completed') ||
+      normalized.includes('failed');
+    return hasActive && !hasOther;
+  };
+  const isFailedOnly = (status: string[] | undefined) => {
+    const normalized = normalizeStatus(status);
+    return (
+      normalized.includes('failed') &&
+      !normalized.includes('active') &&
+      !normalized.includes('complete') &&
+      !normalized.includes('completed')
+    );
+  };
   /**
    * Builds the task graph from task requirements
    */
@@ -37,7 +64,7 @@ export function useGraphBuilder() {
       safeAddNode(newGraph, task.id);
       task.taskRequirements?.forEach((requirement) => {
         if (requirement?.task?.id) {
-          if (requirement.status?.includes('active')) {
+          if (isActiveOnly(requirement.status)) {
             activeRequirements.push({ task, requirement });
           } else {
             // Ensure the required task exists before adding edge
@@ -70,22 +97,27 @@ export function useGraphBuilder() {
     const tempObjectiveGPS: { [taskId: string]: ObjectiveGPSInfo[] } = {};
     const tempAlternativeTasks: { [taskId: string]: string[] } = {};
     const tempNeededObjectives: NeededItemTaskObjective[] = [];
-    taskList.forEach((task) => {
-      // Process finish rewards for alternative tasks
-      if (Array.isArray(task.finishRewards)) {
-        task.finishRewards.forEach((reward) => {
-          if (
-            reward?.__typename === 'QuestStatusReward' &&
-            reward.status === 'Fail' &&
-            reward.quest?.id
-          ) {
-            if (!tempAlternativeTasks[reward.quest.id]) {
-              tempAlternativeTasks[reward.quest.id] = [];
-            }
-            tempAlternativeTasks[reward.quest.id]!.push(task.id);
-          }
-        });
+    const addAlternative = (sourceId: string | undefined, alternativeId: string) => {
+      if (!sourceId || sourceId === alternativeId) return;
+      if (!tempAlternativeTasks[sourceId]) {
+        tempAlternativeTasks[sourceId] = [];
       }
+      if (!tempAlternativeTasks[sourceId]!.includes(alternativeId)) {
+        tempAlternativeTasks[sourceId]!.push(alternativeId);
+      }
+    };
+    taskList.forEach((task) => {
+      // Process taskRequirements to find alternative tasks
+      // If Task B requires Task A to be 'failed', then A and B are alternatives
+      // Completing A means B can never be completed (B needs A to be failed)
+      task.taskRequirements?.forEach((requirement) => {
+        if (requirement?.task?.id && isFailedOnly(requirement.status)) {
+          // This task requires another task to be failed
+          // So completing the required task would make this task impossible
+          // The required task has THIS task as an alternative (one-directional)
+          addAlternative(requirement.task.id, task.id);
+        }
+      });
       // Process objectives
       normalizeTaskObjectives<TaskObjective>(task.objectives).forEach((objective) => {
         // Map and location data
@@ -120,20 +152,27 @@ export function useGraphBuilder() {
         // Exclude "findItem" and "findQuestItem" objectives as they are passive checks that auto-complete
         // when the player acquires the items for the corresponding "giveItem"/"giveQuestItem" objective
         if (
-          (objective?.item?.id || objective?.markerItem?.id) &&
+          (objective?.item?.id || objective?.items?.[0]?.id || objective?.markerItem?.id) &&
           objective.type !== 'findItem' &&
           objective.type !== 'findQuestItem'
         ) {
+          const primaryItem = objective.item ?? objective.items?.[0];
           tempNeededObjectives.push({
             id: objective.id,
             needType: 'taskObjective',
             taskId: task.id,
             type: objective.type,
-            item: objective.item!,
+            item: primaryItem ?? objective.markerItem!,
             markerItem: objective.markerItem,
             count: objective.count ?? 1,
             foundInRaid: objective.foundInRaid ?? false,
           });
+        }
+      });
+      // Process fail conditions for alternative tasks (complete-status triggers)
+      normalizeTaskObjectives<TaskObjective>(task.failConditions).forEach((objective) => {
+        if (objective?.task?.id && hasStatus(objective.status, ['complete', 'completed'])) {
+          addAlternative(objective.task.id, task.id);
         }
       });
     });
@@ -148,10 +187,15 @@ export function useGraphBuilder() {
   /**
    * Enhances tasks with graph relationship data
    */
-  function enhanceTasksWithRelationships(taskList: Task[], graph: AbstractGraph): Task[] {
+  function enhanceTasksWithRelationships(
+    taskList: Task[],
+    graph: AbstractGraph,
+    alternativeTasks: Record<string, string[]>
+  ): Task[] {
     return taskList.map((task) => ({
       ...task,
       traderIcon: task.trader?.imageLink,
+      alternatives: alternativeTasks[task.id] ?? task.alternatives,
       predecessors: getPredecessors(graph, task.id),
       successors: getSuccessors(graph, task.id),
       parents: getParents(graph, task.id),
@@ -257,7 +301,11 @@ export function useGraphBuilder() {
     }
     const newGraph = buildTaskGraph(taskList);
     const processedData = processTaskRelationships(taskList);
-    const enhancedTasks = enhanceTasksWithRelationships(taskList, newGraph);
+    const enhancedTasks = enhanceTasksWithRelationships(
+      taskList,
+      newGraph,
+      processedData.tempAlternativeTasks
+    );
     return {
       tasks: enhancedTasks,
       taskGraph: newGraph,

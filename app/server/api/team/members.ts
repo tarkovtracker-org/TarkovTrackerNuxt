@@ -81,12 +81,12 @@ export default defineEventHandler(async (event) => {
       pvp_data?: {
         displayName?: string | null;
         level?: number | null;
-        taskCompletions?: Record<string, { complete?: boolean }>;
+        taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
       };
       pve_data?: {
         displayName?: string | null;
         level?: number | null;
-        taskCompletions?: Record<string, { complete?: boolean }>;
+        taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
       };
     }>;
     profiles.forEach((p) => {
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
       const data = (p as Record<string, unknown>)[`${mode}_data`] as {
         displayName?: string | null;
         level?: number | null;
-        taskCompletions?: Record<string, { complete?: boolean }>;
+        taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
       } | null;
       const completedCount = data?.taskCompletions
         ? Object.values(data.taskCompletions).filter((t) => t?.complete).length
@@ -118,12 +118,12 @@ export default defineEventHandler(async (event) => {
         pvp_data?: {
           displayName?: string | null;
           level?: number | null;
-          taskCompletions?: Record<string, { complete?: boolean }>;
+          taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
         };
         pve_data?: {
           displayName?: string | null;
           level?: number | null;
-          taskCompletions?: Record<string, { complete?: boolean }>;
+          taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
         };
       }>;
       profiles.forEach((p) => {
@@ -131,7 +131,7 @@ export default defineEventHandler(async (event) => {
         const data = (p as Record<string, unknown>)[`${mode}_data`] as {
           displayName?: string | null;
           level?: number | null;
-          taskCompletions?: Record<string, { complete?: boolean }>;
+          taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
         } | null;
         const completedCount = data?.taskCompletions
           ? Object.values(data.taskCompletions).filter((t) => t?.complete).length

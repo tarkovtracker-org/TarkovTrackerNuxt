@@ -2,6 +2,7 @@ import { ref, shallowRef } from 'vue';
 import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import { useProgressStore } from '@/stores/useProgress';
+import { useTarkovStore } from '@/stores/useTarkov';
 import type { Task } from '@/types/tarkov';
 import { EXCLUDED_SCAV_KARMA_TASKS } from '@/utils/constants';
 import { logger } from '@/utils/logger';
@@ -13,6 +14,7 @@ export function useTaskFiltering() {
   const progressStore = useProgressStore();
   const metadataStore = useMetadataStore();
   const preferencesStore = usePreferencesStore();
+  const tarkovStore = useTarkovStore();
   const reloadingTasks = ref(false);
   const visibleTasks = shallowRef<Task[]>([]);
   const mapObjectiveTypes = [
@@ -77,6 +79,17 @@ export function useTaskFiltering() {
     }
   };
   /**
+   * Check if a task is invalid (permanently blocked) for a user
+   */
+  const isTaskInvalid = (taskId: string, userView: string): boolean => {
+    if (userView === 'all') {
+      // For "all" view, check if invalid for ALL team members
+      const teamIds = Object.keys(progressStore.visibleTeamStores || {});
+      return teamIds.every((teamId) => progressStore.invalidTasks?.[taskId]?.[teamId] === true);
+    }
+    return progressStore.invalidTasks?.[taskId]?.[userView] === true;
+  };
+  /**
    * Filter tasks by status (available, locked, completed) and user view
    */
   const filterTasksByStatus = (taskList: Task[], secondaryView: string, userView: string) => {
@@ -102,7 +115,8 @@ export function useTaskFiltering() {
   const getTaskStatus = (taskId: string, teamId: string) => {
     const isUnlocked = progressStore.unlockedTasks?.[taskId]?.[teamId] === true;
     const isCompleted = progressStore.tasksCompletions?.[taskId]?.[teamId] === true;
-    return { isUnlocked, isCompleted };
+    const isFailed = progressStore.tasksFailed?.[taskId]?.[teamId] === true;
+    return { isUnlocked, isCompleted, isFailed };
   };
   /**
    * Filter tasks for all team members view
@@ -121,12 +135,18 @@ export function useTaskFiltering() {
       if (secondaryView === 'all') {
         // Show all tasks regardless of status
         const usersWhoNeedTask = taskStatuses
-          .filter(({ isUnlocked, isCompleted }) => isUnlocked && !isCompleted)
+          .filter(
+            ({ isUnlocked, isCompleted, isFailed }) => isUnlocked && !isCompleted && !isFailed
+          )
           .map(({ teamId }) => progressStore.getDisplayName(teamId));
         tempVisibleTasks.push({ ...task, neededBy: usersWhoNeedTask });
       } else if (secondaryView === 'available') {
+        // Exclude permanently invalid/blocked tasks from available view
+        if (isTaskInvalid(task.id, 'all')) continue;
         const usersWhoNeedTask = taskStatuses
-          .filter(({ isUnlocked, isCompleted }) => isUnlocked && !isCompleted)
+          .filter(
+            ({ isUnlocked, isCompleted, isFailed }) => isUnlocked && !isCompleted && !isFailed
+          )
           .map(({ teamId }) => progressStore.getDisplayName(teamId));
         if (usersWhoNeedTask.length > 0) {
           if (usersWhoNeedTask.length > 1) {
@@ -137,16 +157,26 @@ export function useTaskFiltering() {
           }
           tempVisibleTasks.push({ ...task, neededBy: usersWhoNeedTask });
         }
+      } else if (secondaryView === 'failed') {
+        const hasFailed = taskStatuses.some(({ isFailed }) => isFailed);
+        if (hasFailed) {
+          tempVisibleTasks.push({ ...task, neededBy: [] });
+        }
       } else if (secondaryView === 'locked') {
+        // Exclude permanently invalid/blocked tasks from locked view
+        if (isTaskInvalid(task.id, 'all')) continue;
         const isAvailableForAny = taskStatuses.some(
-          ({ isUnlocked, isCompleted }) => isUnlocked && !isCompleted
+          ({ isUnlocked, isCompleted, isFailed }) => isUnlocked && !isCompleted && !isFailed
         );
         const isCompletedByAll = taskStatuses.every(({ isCompleted }) => isCompleted);
-        if (!isAvailableForAny && !isCompletedByAll) {
+        const isFailedForAny = taskStatuses.some(({ isFailed }) => isFailed);
+        if (!isAvailableForAny && !isCompletedByAll && !isFailedForAny) {
           tempVisibleTasks.push({ ...task, neededBy: [] });
         }
       } else if (secondaryView === 'completed') {
-        const isCompletedByAll = taskStatuses.every(({ isCompleted }) => isCompleted);
+        const isCompletedByAll = taskStatuses.every(
+          ({ isCompleted, isFailed }) => isCompleted && !isFailed
+        );
         if (isCompletedByAll) {
           tempVisibleTasks.push({ ...task, neededBy: [] });
         }
@@ -167,19 +197,35 @@ export function useTaskFiltering() {
     // 'all' shows all tasks regardless of status
     if (secondaryView === 'available') {
       filtered = filtered.filter((task) => {
+        // Exclude permanently invalid/blocked tasks from available view
+        if (isTaskInvalid(task.id, userView)) return false;
         const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[userView] === true;
         const isCompleted = progressStore.tasksCompletions?.[task.id]?.[userView] === true;
-        return isUnlocked && !isCompleted;
+        const isFailed = progressStore.tasksFailed?.[task.id]?.[userView] === true;
+        return isUnlocked && !isCompleted && !isFailed;
       });
+    } else if (secondaryView === 'failed') {
+      filtered = filtered.filter(
+        (task) => progressStore.tasksFailed?.[task.id]?.[userView] === true
+      );
     } else if (secondaryView === 'locked') {
       filtered = filtered.filter((task) => {
+        // Exclude permanently invalid/blocked tasks from locked view
+        if (isTaskInvalid(task.id, userView)) return false;
         const taskCompletions = progressStore.tasksCompletions?.[task.id];
         const unlockedTasks = progressStore.unlockedTasks?.[task.id];
-        return taskCompletions?.[userView] !== true && unlockedTasks?.[userView] !== true;
+        const failedTasks = progressStore.tasksFailed?.[task.id];
+        return (
+          taskCompletions?.[userView] !== true &&
+          failedTasks?.[userView] !== true &&
+          unlockedTasks?.[userView] !== true
+        );
       });
     } else if (secondaryView === 'completed') {
       filtered = filtered.filter(
-        (task) => progressStore.tasksCompletions?.[task.id]?.[userView] === true
+        (task) =>
+          progressStore.tasksCompletions?.[task.id]?.[userView] === true &&
+          progressStore.tasksFailed?.[task.id]?.[userView] !== true
       );
     }
     // 'all' case: no status filtering, just filter by faction below
@@ -207,9 +253,21 @@ export function useTaskFiltering() {
     // EOD filter stored for future use when EOD task data is available
     const _showEod = preferencesStore.getShowEodTasks;
     const lightkeeperTraderId = metadataStore.getTraderByName('lightkeeper')?.id;
+    // Get prestige filtering data
+    const userPrestigeLevel = tarkovStore.getPrestigeLevel();
+    const prestigeTaskMap = metadataStore.prestigeTaskMap;
+    const prestigeTaskIds = metadataStore.prestigeTaskIds;
     return taskList.filter((task) => {
       // Skip excluded tasks (Scav Karma)
       if (EXCLUDED_SCAV_KARMA_TASKS.includes(task.id)) return false;
+      // Filter prestige-gated tasks ("New Beginning")
+      // Only show the task that matches the user's current prestige level
+      if (prestigeTaskIds.includes(task.id)) {
+        const taskPrestigeLevel = prestigeTaskMap.get(task.id);
+        if (taskPrestigeLevel !== userPrestigeLevel) {
+          return false;
+        }
+      }
       const isKappaRequired = task.kappaRequired === true;
       const isLightkeeperRequired = task.lightkeeperRequired === true;
       const isLightkeeperTraderTask =
@@ -330,11 +388,16 @@ export function useTaskFiltering() {
       if (userView === 'all') {
         // For "all" view, count as incomplete if ANY team member hasn't completed it
         return teamIds.some(
-          (teamId) => progressStore.tasksCompletions?.[successorId]?.[teamId] !== true
+          (teamId) =>
+            progressStore.tasksCompletions?.[successorId]?.[teamId] !== true ||
+            progressStore.tasksFailed?.[successorId]?.[teamId] === true
         );
       } else {
         // For single user view, check that user's completion status
-        return progressStore.tasksCompletions?.[successorId]?.[userView] !== true;
+        return (
+          progressStore.tasksCompletions?.[successorId]?.[userView] !== true ||
+          progressStore.tasksFailed?.[successorId]?.[userView] === true
+        );
       }
     }).length;
   };
@@ -392,12 +455,21 @@ export function useTaskFiltering() {
    */
   const calculateStatusCounts = (
     userView: string
-  ): { all: number; available: number; locked: number; completed: number } => {
-    const counts = { all: 0, available: 0, locked: 0, completed: 0 };
+  ): { all: number; available: number; locked: number; completed: number; failed: number } => {
+    const counts = { all: 0, available: 0, locked: 0, completed: 0, failed: 0 };
     const taskList = metadataStore.tasks;
+    // Get prestige filtering data
+    const userPrestigeLevel = tarkovStore.getPrestigeLevel();
+    const prestigeTaskMap = metadataStore.prestigeTaskMap;
+    const prestigeTaskIds = metadataStore.prestigeTaskIds;
     for (const task of taskList) {
       // Skip excluded tasks
       if (EXCLUDED_SCAV_KARMA_TASKS.includes(task.id)) continue;
+      // Skip prestige tasks that don't match user's prestige level
+      if (prestigeTaskIds.includes(task.id)) {
+        const taskPrestigeLevel = prestigeTaskMap.get(task.id);
+        if (taskPrestigeLevel !== userPrestigeLevel) continue;
+      }
       if (userView === 'all') {
         // For "all" view
         const teamIds = Object.keys(progressStore.visibleTeamStores || {});
@@ -408,19 +480,30 @@ export function useTaskFiltering() {
         });
         if (relevantTeamIds.length === 0) continue;
         counts.all++;
+        const isFailedForAny = relevantTeamIds.some(
+          (teamId) => progressStore.tasksFailed?.[task.id]?.[teamId] === true
+        );
         const isAvailableForAny = relevantTeamIds.some((teamId) => {
           const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[teamId] === true;
           const isCompleted = progressStore.tasksCompletions?.[task.id]?.[teamId] === true;
-          return isUnlocked && !isCompleted;
+          const isFailed = progressStore.tasksFailed?.[task.id]?.[teamId] === true;
+          return isUnlocked && !isCompleted && !isFailed;
         });
         const isCompletedByAll = relevantTeamIds.every((teamId) => {
-          return progressStore.tasksCompletions?.[task.id]?.[teamId] === true;
+          return (
+            progressStore.tasksCompletions?.[task.id]?.[teamId] === true &&
+            progressStore.tasksFailed?.[task.id]?.[teamId] !== true
+          );
         });
-        if (isCompletedByAll) {
+        if (isFailedForAny) {
+          counts.failed++;
+        } else if (isCompletedByAll) {
           counts.completed++;
-        } else if (isAvailableForAny) {
+        } else if (isAvailableForAny && !isTaskInvalid(task.id, 'all')) {
+          // Only count as available if not permanently invalid/blocked
           counts.available++;
-        } else {
+        } else if (!isTaskInvalid(task.id, 'all')) {
+          // Only count as locked if not permanently invalid/blocked
           counts.locked++;
         }
       } else {
@@ -431,11 +514,16 @@ export function useTaskFiltering() {
         counts.all++;
         const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[userView] === true;
         const isCompleted = progressStore.tasksCompletions?.[task.id]?.[userView] === true;
-        if (isCompleted) {
+        const isFailed = progressStore.tasksFailed?.[task.id]?.[userView] === true;
+        if (isFailed) {
+          counts.failed++;
+        } else if (isCompleted) {
           counts.completed++;
-        } else if (isUnlocked) {
+        } else if (isUnlocked && !isTaskInvalid(task.id, userView)) {
+          // Only count as available if not permanently invalid/blocked
           counts.available++;
-        } else {
+        } else if (!isTaskInvalid(task.id, userView)) {
+          // Only count as locked if not permanently invalid/blocked
           counts.locked++;
         }
       }
@@ -443,14 +531,23 @@ export function useTaskFiltering() {
     return counts;
   };
   /**
-   * Calculate task counts per trader (available tasks only)
+   * Calculate task counts per trader based on current status filter
    */
-  const calculateTraderCounts = (userView: string) => {
+  const calculateTraderCounts = (userView: string, secondaryView: string = 'available') => {
     const counts: Record<string, number> = {};
     const taskList = metadataStore.tasks;
+    // Get prestige filtering data
+    const userPrestigeLevel = tarkovStore.getPrestigeLevel();
+    const prestigeTaskMap = metadataStore.prestigeTaskMap;
+    const prestigeTaskIds = metadataStore.prestigeTaskIds;
     for (const task of taskList) {
       // Skip excluded tasks
       if (EXCLUDED_SCAV_KARMA_TASKS.includes(task.id)) continue;
+      // Skip prestige tasks that don't match user's prestige level
+      if (prestigeTaskIds.includes(task.id)) {
+        const taskPrestigeLevel = prestigeTaskMap.get(task.id);
+        if (taskPrestigeLevel !== userPrestigeLevel) continue;
+      }
       const traderId = task.trader?.id;
       if (!traderId) continue;
       // Initialize count for this trader
@@ -458,27 +555,63 @@ export function useTaskFiltering() {
       // Filter by faction
       const taskFaction = task.factionName;
       if (userView === 'all') {
-        // For "all" view, check if available for any team member
-        const isAvailableForAny = Object.keys(progressStore.visibleTeamStores || {}).some(
-          (teamId) => {
-            const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[teamId] === true;
-            const isCompleted = progressStore.tasksCompletions?.[task.id]?.[teamId] === true;
-            const teamFaction = progressStore.playerFaction[teamId];
-            const factionMatch = taskFaction === 'Any' || taskFaction === teamFaction;
-            return isUnlocked && !isCompleted && factionMatch;
-          }
-        );
-        if (isAvailableForAny) counts[traderId]++;
+        // For "all" view, check task status across team members
+        const teamIds = Object.keys(progressStore.visibleTeamStores || {});
+        const relevantTeamIds = teamIds.filter((teamId) => {
+          const teamFaction = progressStore.playerFaction[teamId];
+          return taskFaction === 'Any' || taskFaction === teamFaction;
+        });
+        if (relevantTeamIds.length === 0) continue;
+        const taskStatuses = relevantTeamIds.map((teamId) => ({
+          isUnlocked: progressStore.unlockedTasks?.[task.id]?.[teamId] === true,
+          isCompleted: progressStore.tasksCompletions?.[task.id]?.[teamId] === true,
+          isFailed: progressStore.tasksFailed?.[task.id]?.[teamId] === true,
+        }));
+        let shouldCount = false;
+        if (secondaryView === 'all') {
+          shouldCount = true;
+        } else if (secondaryView === 'available') {
+          shouldCount = taskStatuses.some(
+            ({ isUnlocked, isCompleted, isFailed }) => isUnlocked && !isCompleted && !isFailed
+          );
+        } else if (secondaryView === 'locked') {
+          // Exclude permanently invalid/blocked tasks from locked count
+          if (isTaskInvalid(task.id, 'all')) continue;
+          const isAvailableForAny = taskStatuses.some(
+            ({ isUnlocked, isCompleted, isFailed }) => isUnlocked && !isCompleted && !isFailed
+          );
+          const isCompletedByAll = taskStatuses.every(({ isCompleted }) => isCompleted);
+          const isFailedForAny = taskStatuses.some(({ isFailed }) => isFailed);
+          shouldCount = !isAvailableForAny && !isCompletedByAll && !isFailedForAny;
+        } else if (secondaryView === 'completed') {
+          shouldCount = taskStatuses.every(({ isCompleted, isFailed }) => isCompleted && !isFailed);
+        } else if (secondaryView === 'failed') {
+          shouldCount = taskStatuses.some(({ isFailed }) => isFailed);
+        }
+        if (shouldCount) counts[traderId]++;
       } else {
-        // For single user view, only count available (unlocked but not completed)
+        // For single user view
         const userFaction = progressStore.playerFaction[userView];
         const factionMatch = taskFaction === 'Any' || taskFaction === userFaction;
         if (!factionMatch) continue;
         const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[userView] === true;
         const isCompleted = progressStore.tasksCompletions?.[task.id]?.[userView] === true;
-        if (isUnlocked && !isCompleted) {
-          counts[traderId]++;
+        const isFailed = progressStore.tasksFailed?.[task.id]?.[userView] === true;
+        let shouldCount = false;
+        if (secondaryView === 'all') {
+          shouldCount = true;
+        } else if (secondaryView === 'available') {
+          shouldCount = isUnlocked && !isCompleted && !isFailed;
+        } else if (secondaryView === 'locked') {
+          // Exclude permanently invalid/blocked tasks from locked count
+          if (isTaskInvalid(task.id, userView)) continue;
+          shouldCount = !isCompleted && !isFailed && !isUnlocked;
+        } else if (secondaryView === 'completed') {
+          shouldCount = isCompleted && !isFailed;
+        } else if (secondaryView === 'failed') {
+          shouldCount = isFailed;
         }
+        if (shouldCount) counts[traderId]++;
       }
     }
     return counts;

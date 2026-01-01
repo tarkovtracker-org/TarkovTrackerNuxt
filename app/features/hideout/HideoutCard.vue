@@ -387,9 +387,7 @@
       (nextLevel.value?.traderRequirements?.length ?? 0) > 0
     );
   });
-  const stationAvatar = computed(() => {
-    return `/img/hideout/${props.station.id}.avif`;
-  });
+  const stationAvatar = computed(() => props.station.imageLink);
   const getStashAdjustedDescription = (description: string | undefined) => {
     // Only modify description for stash station
     if (props.station.normalizedName !== SPECIAL_STATIONS.STASH) {

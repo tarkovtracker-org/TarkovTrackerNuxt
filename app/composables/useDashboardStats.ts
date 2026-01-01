@@ -8,6 +8,10 @@ export function useDashboardStats() {
   const progressStore = useProgressStore();
   const metadataStore = useMetadataStore();
   const tarkovStore = useTarkovStore();
+  const isTaskSuccessful = (taskId: string) =>
+    tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
+  // Check if a task is invalid (failed, blocked by failed prereqs, wrong faction, etc.)
+  const isTaskInvalid = (taskId: string) => progressStore.invalidTasks[taskId]?.self === true;
   // Memoize tasks filtered by faction to avoid repeated filtering
   const relevantTasks = computed(() => {
     if (!metadataStore.tasks) return [];
@@ -46,47 +50,73 @@ export function useDashboardStats() {
       (obj) => obj && obj.type && itemObjectiveTypes.includes(obj.type)
     );
   });
-  // Total tasks count
-  const totalTasks = computed(() => relevantTasks.value.length);
-  // Total objectives count
+  // Total tasks count - includes completed tasks, excludes failed and invalid tasks
+  const totalTasks = computed(() => {
+    return relevantTasks.value.filter((task) => {
+      // Completed tasks always count toward total
+      if (isTaskSuccessful(task.id)) return true;
+      // Failed tasks don't count (they failed as side effect of completing alternatives)
+      if (tarkovStore.isTaskFailed(task.id)) return false;
+      // Incomplete tasks only count if they can still be completed (not invalid)
+      return !isTaskInvalid(task.id);
+    }).length;
+  });
+  // Total objectives count - includes objectives from completed tasks, excludes from failed/invalid tasks
   const totalObjectives = computed(() => {
     return relevantTasks.value.reduce((total, task) => {
+      // Completed tasks' objectives always count
+      if (isTaskSuccessful(task.id)) return total + (task?.objectives?.length || 0);
+      // Failed tasks' objectives don't count
+      if (tarkovStore.isTaskFailed(task.id)) return total;
+      // Incomplete invalid tasks' objectives don't count
+      if (isTaskInvalid(task.id)) return total;
       return total + (task?.objectives?.length || 0);
     }, 0);
   });
-  // Completed objectives count
+  // Completed objectives count - from completed tasks or non-failed/non-invalid incomplete tasks
   const completedObjectives = computed(() => {
-    if (!metadataStore.objectives || !tarkovStore) {
+    if (!relevantTasks.value.length || !tarkovStore) {
       return 0;
     }
-    return metadataStore.objectives.filter(
-      (objective) => objective && objective.id && tarkovStore.isTaskObjectiveComplete(objective.id)
-    ).length;
+    let count = 0;
+    for (const task of relevantTasks.value) {
+      // Skip failed tasks
+      if (tarkovStore.isTaskFailed(task.id)) continue;
+      // Skip incomplete invalid tasks
+      if (!isTaskSuccessful(task.id) && isTaskInvalid(task.id)) continue;
+      for (const objective of task.objectives || []) {
+        if (objective?.id && tarkovStore.isTaskObjectiveComplete(objective.id)) {
+          count++;
+        }
+      }
+    }
+    return count;
   });
-  // Completed tasks count
+  // Completed tasks count (only faction-relevant tasks)
   const completedTasks = computed(() => {
-    if (!progressStore.tasksCompletions) {
-      return 0;
-    }
-    return Object.values(progressStore.tasksCompletions).filter(
-      (task) => task && task.self === true
-    ).length;
+    if (!relevantTasks.value.length) return 0;
+    return relevantTasks.value.filter((task) => isTaskSuccessful(task.id)).length;
   });
   // Helper to check if objective is relevant for current faction
   const isObjectiveRelevant = (objective: TaskObjective | null | undefined) => {
     if (!objective) return false;
+    const primaryItem = objective.item ?? objective.items?.[0];
     if (
-      objective.item &&
-      CURRENCY_ITEM_IDS.includes(objective.item.id as (typeof CURRENCY_ITEM_IDS)[number])
+      primaryItem &&
+      CURRENCY_ITEM_IDS.includes(primaryItem.id as (typeof CURRENCY_ITEM_IDS)[number])
     ) {
       return false;
     }
     const relatedTask = metadataStore.tasks?.find(
       (task) => task && objective.taskId && task.id === objective.taskId
     );
+    if (!relatedTask) return false;
+    // Exclude objectives from failed tasks
+    if (tarkovStore.isTaskFailed(relatedTask.id)) return false;
+    // Exclude objectives from incomplete invalid tasks (but include from completed tasks)
+    if (!isTaskSuccessful(relatedTask.id) && isTaskInvalid(relatedTask.id)) return false;
     const currentPMCFaction = tarkovStore.getPMCFaction();
     return !!(
-      relatedTask &&
       relatedTask.factionName &&
       currentPMCFaction !== undefined &&
       (relatedTask.factionName === 'Any' || relatedTask.factionName === currentPMCFaction)
@@ -107,10 +137,9 @@ export function useDashboardStats() {
     neededItemTaskObjectives.value.forEach((objective) => {
       if (!isObjectiveRelevant(objective)) return;
       if (!objective.id || !objective.taskId) return;
-      const taskCompletion = progressStore.tasksCompletions[objective.taskId];
       const objectiveCompletion = progressStore.objectiveCompletions[objective.id];
       if (
-        (taskCompletion && taskCompletion['self']) ||
+        isTaskSuccessful(objective.taskId) ||
         (objectiveCompletion && objectiveCompletion['self']) ||
         (objective.count &&
           objective.id &&
@@ -135,40 +164,55 @@ export function useDashboardStats() {
       return total + (objective.count || 1);
     }, 0);
   });
-  // Total Kappa tasks count
+  // Total Kappa tasks count - includes completed, excludes failed and invalid
   const totalKappaTasks = computed(() => {
-    return relevantTasks.value.filter((task) => task.kappaRequired === true).length;
+    return relevantTasks.value.filter((task) => {
+      if (!task.kappaRequired) return false;
+      // Completed kappa tasks always count
+      if (isTaskSuccessful(task.id)) return true;
+      // Failed kappa tasks don't count
+      if (tarkovStore.isTaskFailed(task.id)) return false;
+      // Incomplete kappa tasks only count if not invalid
+      return !isTaskInvalid(task.id);
+    }).length;
   });
   // Completed Kappa tasks count
   const completedKappaTasks = computed(() => {
-    if (!progressStore.tasksCompletions) return 0;
     return relevantTasks.value.filter(
-      (task) =>
-        task.kappaRequired === true && progressStore.tasksCompletions[task.id]?.self === true
+      (task) => task.kappaRequired === true && isTaskSuccessful(task.id)
     ).length;
   });
-  // Total Lightkeeper tasks count
+  // Total Lightkeeper tasks count - includes completed, excludes failed and invalid
   const totalLightkeeperTasks = computed(() => {
-    return relevantTasks.value.filter((task) => task.lightkeeperRequired === true).length;
+    return relevantTasks.value.filter((task) => {
+      if (!task.lightkeeperRequired) return false;
+      // Completed lightkeeper tasks always count
+      if (isTaskSuccessful(task.id)) return true;
+      // Failed lightkeeper tasks don't count
+      if (tarkovStore.isTaskFailed(task.id)) return false;
+      // Incomplete lightkeeper tasks only count if not invalid
+      return !isTaskInvalid(task.id);
+    }).length;
   });
   // Completed Lightkeeper tasks count
   const completedLightkeeperTasks = computed(() => {
-    if (!progressStore.tasksCompletions) return 0;
     return relevantTasks.value.filter(
-      (task) =>
-        task.lightkeeperRequired === true && progressStore.tasksCompletions[task.id]?.self === true
+      (task) => task.lightkeeperRequired === true && isTaskSuccessful(task.id)
     ).length;
   });
-  // Trader-specific stats
+  // Trader-specific stats - includes completed, excludes failed and invalid
   const traderStats = computed(() => {
-    if (!metadataStore.traders || !progressStore.tasksCompletions) return [];
+    if (!metadataStore.traders) return [];
     return metadataStore.sortedTraders
       .map((trader) => {
         const traderTasks = relevantTasks.value.filter((task) => task.trader?.id === trader.id);
-        const totalTasks = traderTasks.length;
-        const completedTasks = traderTasks.filter(
-          (task) => progressStore.tasksCompletions[task.id]?.self === true
-        ).length;
+        // Total includes completed tasks, excludes failed and invalid tasks
+        const totalTasks = traderTasks.filter((task) => {
+          if (isTaskSuccessful(task.id)) return true;
+          if (tarkovStore.isTaskFailed(task.id)) return false;
+          return !isTaskInvalid(task.id);
+        }).length;
+        const completedTasks = traderTasks.filter((task) => isTaskSuccessful(task.id)).length;
         return {
           id: trader.id,
           name: trader.name,

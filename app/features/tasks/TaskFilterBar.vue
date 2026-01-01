@@ -147,6 +147,24 @@
             {{ statusCounts.completed }}
           </span>
         </UButton>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          :aria-pressed="secondaryView === 'failed'"
+          :class="secondaryView === 'failed' ? 'bg-white/10 text-white' : 'text-gray-400'"
+          @click="setSecondaryView('failed')"
+        >
+          <UIcon name="i-mdi-close-circle" class="hidden h-4 w-4 sm:mr-1 sm:block" />
+          <span class="text-xs sm:text-sm">
+            {{ t('page.tasks.secondaryviews.failed', 'FAILED').toUpperCase() }}
+          </span>
+          <span
+            class="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"
+          >
+            {{ statusCounts.failed }}
+          </span>
+        </UButton>
       </div>
       <!-- Divider -->
       <div class="h-6 w-px shrink-0 bg-white/20" />
@@ -320,7 +338,8 @@
   });
   const traderCounts = computed(() => {
     const userView = preferencesStore.getTaskUserView;
-    return calculateTraderCounts(userView);
+    const secondaryView = preferencesStore.getTaskSecondaryView;
+    return calculateTraderCounts(userView, secondaryView);
   });
   const mergedMaps = computed(() => {
     return maps.value.map((map) => {

@@ -13,14 +13,22 @@ import { logger } from './logger';
 // Cache configuration
 export const CACHE_CONFIG = {
   DB_NAME: 'tarkov-tracker-cache',
-  DB_VERSION: 3, // Bumped to force cache clear and fetch fresh API data with extracts
+  DB_VERSION: 4, // Bumped to force cache clear after splitting task payloads
   STORE_NAME: 'tarkov-data',
   // 12 hours in milliseconds
   DEFAULT_TTL: 12 * 60 * 60 * 1000,
   // 24 hours max TTL
   MAX_TTL: 24 * 60 * 60 * 1000,
 } as const;
-export type CacheType = 'data' | 'hideout' | 'items' | 'prestige' | 'editions';
+export type CacheType =
+  | 'bootstrap'
+  | 'tasks-core'
+  | 'tasks-objectives'
+  | 'tasks-rewards'
+  | 'hideout'
+  | 'items'
+  | 'prestige'
+  | 'editions';
 export interface CachedData<T> {
   data: T;
   timestamp: number;

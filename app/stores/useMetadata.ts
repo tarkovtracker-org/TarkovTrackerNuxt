@@ -3,11 +3,13 @@ import { markRaw, ref } from 'vue';
 import { extractLanguageCode, useSafeLocale } from '@/composables/i18nHelpers';
 import { useGraphBuilder } from '@/composables/useGraphBuilder';
 import mapsData from '@/data/maps.json';
+import { useProgressStore } from '@/stores/useProgress';
 import { useTarkovStore } from '@/stores/useTarkov';
 import type {
+  FinishRewards,
+  GameEdition,
   HideoutModule,
   HideoutStation,
-  GameEdition,
   NeededItemHideoutModule,
   NeededItemTaskObjective,
   ObjectiveGPSInfo,
@@ -15,12 +17,16 @@ import type {
   PlayerLevel,
   PrestigeLevel,
   StaticMapData,
+  TarkovBootstrapQueryResult,
   TarkovDataQueryResult,
   TarkovHideoutQueryResult,
   TarkovItem,
   TarkovItemsQueryResult,
   TarkovMap,
   TarkovPrestigeQueryResult,
+  TarkovTaskObjectivesQueryResult,
+  TarkovTaskRewardsQueryResult,
+  TarkovTasksCoreQueryResult,
   Task,
   TaskObjective,
   Trader,
@@ -51,6 +57,19 @@ export type CraftSource = { stationId: string; stationName: string; stationLevel
 // Initialization guard to prevent race conditions
 let initPromise: Promise<void> | null = null;
 const isInitializing = ref(false);
+// Helper type to safely access item properties that might be missing in older type definitions
+type ObjectiveWithItems = TaskObjective & {
+  item?: TarkovItem;
+  items?: TarkovItem[];
+  markerItem?: TarkovItem;
+  questItem?: TarkovItem;
+  containsAll?: TarkovItem[];
+  useAny?: TarkovItem[];
+  usingWeapon?: TarkovItem;
+  usingWeaponMods?: TarkovItem[];
+  wearing?: TarkovItem[];
+  notWearing?: TarkovItem[];
+};
 interface MetadataState {
   // Initialization and loading states
   initialized: boolean;
@@ -166,26 +185,34 @@ export const useMetadataStore = defineStore('metadata', {
         }
         mapGroups[mapKey]!.push(map);
       });
-      const mergedMaps = Object.entries(mapGroups).map(([mapKey, maps]) => {
-        const primaryMap = maps.find((map) => map.name.toLowerCase() === 'ground zero') ?? maps[0];
-        const staticData = state.staticMapData?.[mapKey];
-        const mergedIds = maps.map((map) => map.id);
-        if (staticData) {
+      const mergedMaps = Object.entries(mapGroups)
+        .map(([mapKey, maps]) => {
+          const primaryMap =
+            maps.find((map) => map.name.toLowerCase() === 'ground zero') ?? maps[0];
+          if (!primaryMap) return null;
+          const staticData = state.staticMapData?.[mapKey];
+          const mergedIds = maps.map((map) => map.id);
+          // Check for unavailable before svg check (unavailable maps may not have svg)
+          const unavailable = staticData?.unavailable;
+          if (staticData?.svg) {
+            return {
+              ...primaryMap,
+              svg: staticData.svg,
+              unavailable,
+              mergedIds,
+            };
+          }
+          if (!staticData) {
+            logger.warn(
+              `[MetadataStore] Static SVG data not found for map: ${primaryMap.name} (lookup key: ${mapKey})`
+            );
+          }
           return {
             ...primaryMap,
-            svg: staticData.svg,
-            unavailable: staticData.unavailable,
             mergedIds,
           };
-        }
-        logger.warn(
-          `[MetadataStore] Static SVG data not found for map: ${primaryMap.name} (lookup key: ${mapKey})`
-        );
-        return {
-          ...primaryMap,
-          mergedIds,
-        };
-      });
+        })
+        .filter((map): map is NonNullable<typeof map> => map !== null);
       // Sort maps by task progression order using the mapKey for lookup
       return sortMapsByGameOrder(mergedMaps, (map) => {
         const lowerCaseName = map.name.toLowerCase();
@@ -263,6 +290,43 @@ export const useMetadataStore = defineStore('metadata', {
           (prestige: PrestigeLevel) => prestige.prestigeLevel === level
         );
       },
+    /**
+     * Build a mapping of task IDs to the user prestige level that should see them.
+     * This is derived from prestige conditions - if prestige N requires completing task X,
+     * then users at prestige (N-1) should see task X.
+     *
+     * Returns: Map<taskId, userPrestigeLevel>
+     * Example: { "6761f28a022f60bb320f3e95": 0 } means users at prestige 0 see this task
+     */
+    prestigeTaskMap: (state): Map<string, number> => {
+      const map = new Map<string, number>();
+      for (const prestige of state.prestigeLevels) {
+        const prestigeLevel = prestige.prestigeLevel ?? 0;
+        // Find TaskObjectiveTaskStatus conditions that reference tasks
+        for (const condition of prestige.conditions || []) {
+          // Check if this is a task status condition with a task reference
+          if (condition.task?.id && condition.task?.name === 'New Beginning') {
+            // User at prestige (N-1) needs to complete this task to reach prestige N
+            map.set(condition.task.id, prestigeLevel - 1);
+          }
+        }
+      }
+      return map;
+    },
+    /**
+     * Get all "New Beginning" task IDs that are prestige-gated
+     */
+    prestigeTaskIds: (state): string[] => {
+      const ids: string[] = [];
+      for (const prestige of state.prestigeLevels) {
+        for (const condition of prestige.conditions || []) {
+          if (condition.task?.id && condition.task?.name === 'New Beginning') {
+            ids.push(condition.task.id);
+          }
+        }
+      }
+      return ids;
+    },
   },
   actions: {
     async initialize() {
@@ -316,7 +380,7 @@ export const useMetadataStore = defineStore('metadata', {
      */
     async loadStaticMapData() {
       if (!this.staticMapData) {
-        this.staticMapData = mapsData as StaticMapData;
+        this.staticMapData = mapsData as unknown as StaticMapData;
       }
     },
     /**
@@ -330,18 +394,78 @@ export const useMetadataStore = defineStore('metadata', {
           logger.error('[MetadataStore] Error during cache cleanup:', err)
         );
       }
-      await Promise.all([
-        this.fetchTasksData(forceRefresh),
-        this.fetchHideoutData(forceRefresh),
-        this.fetchPrestigeData(forceRefresh),
-        this.fetchEditionsData(forceRefresh),
-      ]);
+      await this.fetchBootstrapData(forceRefresh);
+      const hideoutPromise = this.fetchHideoutData(forceRefresh);
+      const prestigePromise = this.fetchPrestigeData(forceRefresh);
+      const editionsPromise = this.fetchEditionsData(forceRefresh);
+      await this.fetchTasksCoreData(forceRefresh);
+      if (this.tasks.length) {
+        this.fetchTaskObjectivesData(forceRefresh).catch((err) =>
+          logger.error('[MetadataStore] Error fetching task objectives data:', err)
+        );
+        this.fetchTaskRewardsData(forceRefresh).catch((err) =>
+          logger.error('[MetadataStore] Error fetching task rewards data:', err)
+        );
+      }
+      // Items are heavy; load in background for hydration without blocking app init.
+      this.fetchItemsData(forceRefresh).catch((err) =>
+        logger.error('[MetadataStore] Error fetching items data:', err)
+      );
+      await Promise.all([hideoutPromise, prestigePromise, editionsPromise]);
     },
     /**
-     * Fetch tasks, maps, traders, and player levels data
+     * Fetch minimal bootstrap data (player levels) to enable early UI rendering
      * Uses IndexedDB cache for client-side persistence
      */
-    async fetchTasksData(forceRefresh = false) {
+    async fetchBootstrapData(forceRefresh = false) {
+      try {
+        // Step 1: Check IndexedDB cache (unless forcing refresh)
+        if (!forceRefresh && typeof window !== 'undefined') {
+          const cached = await getCachedData<TarkovBootstrapQueryResult>(
+            'bootstrap' as CacheType,
+            'all',
+            this.languageCode
+          );
+          if (cached) {
+            logger.debug(`[MetadataStore] Bootstrap loaded from cache: ${this.languageCode}`);
+            this.processBootstrapData(cached);
+            return;
+          }
+        }
+        // Step 2: Fetch from server API
+        logger.debug(`[MetadataStore] Fetching bootstrap from server: ${this.languageCode}`);
+        const response = (await $fetch<{
+          data: TarkovBootstrapQueryResult;
+        }>('/api/tarkov/bootstrap', {
+          query: {
+            lang: this.languageCode,
+          },
+        })) as { data: TarkovBootstrapQueryResult; error?: unknown };
+        if (response.error) {
+          throw new Error(response.error as string);
+        }
+        if (response?.data) {
+          this.processBootstrapData(response.data);
+          // Step 3: Store in IndexedDB for future visits
+          if (typeof window !== 'undefined') {
+            setCachedData(
+              'bootstrap' as CacheType,
+              'all',
+              this.languageCode,
+              response.data,
+              CACHE_CONFIG.DEFAULT_TTL
+            ).catch((err) => logger.error('[MetadataStore] Error caching bootstrap data:', err));
+          }
+        }
+      } catch (err) {
+        logger.error('[MetadataStore] Error fetching bootstrap data:', err);
+      }
+    },
+    /**
+     * Fetch core tasks, maps, and traders data (no objectives/rewards)
+     * Uses IndexedDB cache for client-side persistence
+     */
+    async fetchTasksCoreData(forceRefresh = false) {
       this.loading = true;
       this.error = null;
       try {
@@ -350,57 +474,189 @@ export const useMetadataStore = defineStore('metadata', {
           API_GAME_MODES[GAME_MODES.PVP];
         // Step 1: Check IndexedDB cache (unless forcing refresh)
         if (!forceRefresh && typeof window !== 'undefined') {
-          const cached = await getCachedData<TarkovDataQueryResult>(
-            'data' as CacheType,
+          const cached = await getCachedData<TarkovTasksCoreQueryResult>(
+            'tasks-core' as CacheType,
             apiGameMode,
             this.languageCode
           );
           if (cached) {
             logger.debug(
-              `[MetadataStore] Tasks loaded from cache: ${this.languageCode}-${apiGameMode}`
+              `[MetadataStore] Task core loaded from cache: ${this.languageCode}-${apiGameMode}`
             );
-            this.processTasksData(cached);
+            this.processTasksCoreData(cached);
             this.loading = false;
             return;
           }
         }
         // Step 2: Fetch from server API
         logger.debug(
-          `[MetadataStore] Fetching tasks from server: ${this.languageCode}-${apiGameMode}`
+          `[MetadataStore] Fetching task core from server: ${this.languageCode}-${apiGameMode}`
         );
         const response = (await $fetch<{
-          data: TarkovDataQueryResult;
-        }>('/api/tarkov/data', {
+          data: TarkovTasksCoreQueryResult;
+        }>('/api/tarkov/tasks-core', {
           query: {
             lang: this.languageCode,
             gameMode: apiGameMode,
           },
-        })) as { data: TarkovDataQueryResult; error?: unknown };
+        })) as { data: TarkovTasksCoreQueryResult; error?: unknown };
         if (response.error) {
           throw new Error(response.error as string);
         }
         if (response?.data) {
-          this.processTasksData(response.data);
+          this.processTasksCoreData(response.data);
           // Step 3: Store in IndexedDB for future visits
           if (typeof window !== 'undefined') {
             setCachedData(
-              'data' as CacheType,
+              'tasks-core' as CacheType,
               apiGameMode,
               this.languageCode,
               response.data,
               CACHE_CONFIG.DEFAULT_TTL
-            ).catch((err) => logger.error('[MetadataStore] Error caching tasks data:', err));
+            ).catch((err) => logger.error('[MetadataStore] Error caching task core data:', err));
           }
         } else {
           this.resetTasksData();
         }
       } catch (err) {
-        logger.error('[MetadataStore] Error fetching tasks data:', err);
+        logger.error('[MetadataStore] Error fetching task core data:', err);
         this.error = err as Error;
         this.resetTasksData();
       } finally {
         this.loading = false;
       }
+    },
+    /**
+     * Fetch task objectives and fail conditions data
+     * Uses IndexedDB cache for client-side persistence
+     */
+    async fetchTaskObjectivesData(forceRefresh = false) {
+      try {
+        const apiGameMode =
+          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+          API_GAME_MODES[GAME_MODES.PVP];
+        // Step 1: Check IndexedDB cache (unless forcing refresh)
+        if (!forceRefresh && typeof window !== 'undefined') {
+          const cached = await getCachedData<TarkovTaskObjectivesQueryResult>(
+            'tasks-objectives' as CacheType,
+            apiGameMode,
+            this.languageCode
+          );
+          if (cached) {
+            logger.debug(
+              `[MetadataStore] Task objectives loaded from cache: ${this.languageCode}-${apiGameMode}`
+            );
+            this.mergeTaskObjectives(cached.tasks);
+            this.hydrateTaskItems();
+            return;
+          }
+        }
+        // Step 2: Fetch from server API
+        logger.debug(
+          `[MetadataStore] Fetching task objectives from server: ${this.languageCode}-${apiGameMode}`
+        );
+        const response = (await $fetch<{
+          data: TarkovTaskObjectivesQueryResult;
+        }>('/api/tarkov/tasks-objectives', {
+          query: {
+            lang: this.languageCode,
+            gameMode: apiGameMode,
+          },
+        })) as { data: TarkovTaskObjectivesQueryResult; error?: unknown };
+        if (response.error) {
+          throw new Error(response.error as string);
+        }
+        if (response?.data?.tasks) {
+          this.mergeTaskObjectives(response.data.tasks);
+          this.hydrateTaskItems();
+          // Step 3: Store in IndexedDB for future visits
+          if (typeof window !== 'undefined') {
+            setCachedData(
+              'tasks-objectives' as CacheType,
+              apiGameMode,
+              this.languageCode,
+              response.data,
+              CACHE_CONFIG.DEFAULT_TTL
+            ).catch((err) =>
+              logger.error('[MetadataStore] Error caching task objectives data:', err)
+            );
+          }
+        }
+      } catch (err) {
+        logger.error('[MetadataStore] Error fetching task objectives data:', err);
+      }
+    },
+    /**
+     * Fetch task rewards data
+     * Uses IndexedDB cache for client-side persistence
+     */
+    async fetchTaskRewardsData(forceRefresh = false) {
+      try {
+        const apiGameMode =
+          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+          API_GAME_MODES[GAME_MODES.PVP];
+        // Step 1: Check IndexedDB cache (unless forcing refresh)
+        if (!forceRefresh && typeof window !== 'undefined') {
+          const cached = await getCachedData<TarkovTaskRewardsQueryResult>(
+            'tasks-rewards' as CacheType,
+            apiGameMode,
+            this.languageCode
+          );
+          if (cached) {
+            logger.debug(
+              `[MetadataStore] Task rewards loaded from cache: ${this.languageCode}-${apiGameMode}`
+            );
+            this.mergeTaskRewards(cached.tasks);
+            this.hydrateTaskItems();
+            return;
+          }
+        }
+        // Step 2: Fetch from server API
+        logger.debug(
+          `[MetadataStore] Fetching task rewards from server: ${this.languageCode}-${apiGameMode}`
+        );
+        const response = (await $fetch<{
+          data: TarkovTaskRewardsQueryResult;
+        }>('/api/tarkov/tasks-rewards', {
+          query: {
+            lang: this.languageCode,
+            gameMode: apiGameMode,
+          },
+        })) as { data: TarkovTaskRewardsQueryResult; error?: unknown };
+        if (response.error) {
+          throw new Error(response.error as string);
+        }
+        if (response?.data?.tasks) {
+          this.mergeTaskRewards(response.data.tasks);
+          this.hydrateTaskItems();
+          // Step 3: Store in IndexedDB for future visits
+          if (typeof window !== 'undefined') {
+            setCachedData(
+              'tasks-rewards' as CacheType,
+              apiGameMode,
+              this.languageCode,
+              response.data,
+              CACHE_CONFIG.DEFAULT_TTL
+            ).catch((err) => logger.error('[MetadataStore] Error caching task rewards data:', err));
+          }
+        }
+      } catch (err) {
+        logger.error('[MetadataStore] Error fetching task rewards data:', err);
+      }
+    },
+    /**
+     * Backwards-compatible wrapper for legacy callers
+     */
+    async fetchTasksData(forceRefresh = false) {
+      await this.fetchTasksCoreData(forceRefresh);
+      if (!this.tasks.length) return;
+      await Promise.all([
+        this.fetchTaskObjectivesData(forceRefresh),
+        this.fetchTaskRewardsData(forceRefresh),
+      ]);
+      this.fetchItemsData(forceRefresh).catch((err) =>
+        logger.error('[MetadataStore] Error fetching items data:', err)
+      );
     },
     /**
      * Fetch hideout data
@@ -487,6 +743,7 @@ export const useMetadataStore = defineStore('metadata', {
           if (cached) {
             logger.debug(`[MetadataStore] Items loaded from cache: ${this.languageCode}`);
             this.items = cached.items || [];
+            this.hydrateTaskItems();
             this.itemsLoading = false;
             return;
           }
@@ -505,6 +762,7 @@ export const useMetadataStore = defineStore('metadata', {
         }
         if (response?.data?.items) {
           this.items = response.data.items;
+          this.hydrateTaskItems();
           // Step 3: Store in IndexedDB for future visits (24 hour TTL for items)
           if (typeof window !== 'undefined') {
             setCachedData(
@@ -645,6 +903,208 @@ export const useMetadataStore = defineStore('metadata', {
       }
     },
     /**
+     * Process bootstrap data (player levels) for early UI rendering
+     */
+    processBootstrapData(data: TarkovBootstrapQueryResult) {
+      const levels = data.playerLevels || [];
+      this.playerLevels = this.convertToCumulativeXP(levels);
+    },
+    /**
+     * Process core task data without objectives/rewards
+     */
+    processTasksCoreData(data: TarkovTasksCoreQueryResult) {
+      this.processTasksData({
+        tasks: data.tasks || [],
+        maps: data.maps || [],
+        traders: data.traders || [],
+      });
+    },
+    dedupeObjectiveIds(tasks: Task[]) {
+      const objectiveCounts = new Map<string, number>();
+      tasks.forEach((task) => {
+        task.objectives?.forEach((objective) => {
+          if (!objective?.id) return;
+          objectiveCounts.set(objective.id, (objectiveCounts.get(objective.id) ?? 0) + 1);
+        });
+      });
+      const duplicateObjectiveIds = new Map<string, string[]>();
+      const updatedTasks = tasks.map((task) => {
+        if (!task.objectives?.length) return task;
+        let changed = false;
+        const objectives = task.objectives.map((objective) => {
+          if (!objective?.id) return objective;
+          const count = objectiveCounts.get(objective.id) ?? 0;
+          if (count <= 1) return objective;
+          const newId = `${objective.id}:${task.id}`;
+          const existing = duplicateObjectiveIds.get(objective.id);
+          if (existing) {
+            existing.push(newId);
+          } else {
+            duplicateObjectiveIds.set(objective.id, [newId]);
+          }
+          changed = true;
+          return { ...objective, id: newId };
+        });
+        return changed ? { ...task, objectives } : task;
+      });
+      return { tasks: updatedTasks, duplicateObjectiveIds };
+    },
+    /**
+     * Merge objective payloads into existing tasks
+     */
+    mergeTaskObjectives(tasks: TarkovTaskObjectivesQueryResult['tasks']) {
+      if (!tasks?.length || !this.tasks.length) return;
+      const updateMap = new Map(tasks.map((task) => [task.id, task]));
+      let changed = false;
+      const merged = this.tasks.map((task) => {
+        const update = updateMap.get(task.id);
+        if (!update) return task;
+        changed = true;
+        return {
+          ...task,
+          objectives:
+            update.objectives !== undefined
+              ? this.normalizeObjectiveItems(
+                  normalizeTaskObjectives<TaskObjective>(update.objectives)
+                )
+              : task.objectives,
+          failConditions:
+            update.failConditions !== undefined
+              ? this.normalizeObjectiveItems(
+                  normalizeTaskObjectives<TaskObjective>(update.failConditions)
+                )
+              : task.failConditions,
+        };
+      });
+      if (changed) {
+        const deduped = this.dedupeObjectiveIds(merged);
+        this.tasks = deduped.tasks;
+        if (deduped.duplicateObjectiveIds.size > 0) {
+          const progressStore = useProgressStore();
+          progressStore.migrateDuplicateObjectiveProgress(deduped.duplicateObjectiveIds);
+        }
+        const tarkovStore = useTarkovStore();
+        tarkovStore.repairCompletedTaskObjectives();
+        this.rebuildTaskDerivedData();
+        tarkovStore.repairFailedTaskStates();
+      }
+    },
+    /**
+     * Merge reward payloads into existing tasks
+     */
+    mergeTaskRewards(tasks: TarkovTaskRewardsQueryResult['tasks']) {
+      if (!tasks?.length || !this.tasks.length) return;
+      const updateMap = new Map(tasks.map((task) => [task.id, task]));
+      let changed = false;
+      const merged = this.tasks.map((task) => {
+        const update = updateMap.get(task.id);
+        if (!update) return task;
+        changed = true;
+        return {
+          ...task,
+          startRewards: update.startRewards !== undefined ? update.startRewards : task.startRewards,
+          finishRewards:
+            update.finishRewards !== undefined ? update.finishRewards : task.finishRewards,
+          failureOutcome:
+            update.failureOutcome !== undefined ? update.failureOutcome : task.failureOutcome,
+        };
+      });
+      if (changed) {
+        this.tasks = merged;
+        this.rebuildTaskDerivedData();
+      }
+    },
+    /**
+     * Rebuild derived task structures after incremental merges
+     */
+    rebuildTaskDerivedData() {
+      if (!this.tasks.length) {
+        this.resetTasksData();
+        return;
+      }
+      const graphBuilder = useGraphBuilder();
+      const processedData = graphBuilder.processTaskData(this.tasks);
+      this.tasks = processedData.tasks;
+      this.taskGraph = processedData.taskGraph;
+      this.mapTasks = processedData.mapTasks;
+      this.objectiveMaps = processedData.objectiveMaps;
+      this.objectiveGPS = processedData.objectiveGPS;
+      this.alternativeTasks = processedData.alternativeTasks;
+      this.neededItemTaskObjectives = processedData.neededItemTaskObjectives;
+    },
+    /**
+     * Hydrate task item references with full item data
+     */
+    hydrateTaskItems() {
+      if (!this.items.length || !this.tasks.length) return;
+      const itemsById = new Map(this.items.map((item) => [item.id, item]));
+      const mergeItem = (item?: TarkovItem | null): TarkovItem | undefined => {
+        if (!item?.id) return item ?? undefined;
+        const cached = itemsById.get(item.id);
+        const merged = cached ? { ...cached, ...item } : item;
+        if (merged?.properties?.defaultPreset) {
+          merged.properties = {
+            ...merged.properties,
+            defaultPreset: mergeItem(merged.properties.defaultPreset),
+          };
+        }
+        if (Array.isArray(merged?.containsItems)) {
+          merged.containsItems = merged.containsItems.map((entry) => ({
+            ...entry,
+            item: mergeItem(entry.item) ?? entry.item,
+          }));
+        }
+        return merged;
+      };
+      const mergeItemArray = (items?: TarkovItem[] | null): TarkovItem[] | undefined => {
+        if (!Array.isArray(items)) return items ?? undefined;
+        return items.map((item) => mergeItem(item) ?? item);
+      };
+      const hydrateObjective = (objective: TaskObjective): TaskObjective => {
+        const obj = objective as ObjectiveWithItems;
+        return {
+          ...obj,
+          item: mergeItem(obj.item),
+          items: mergeItemArray(obj.items),
+          markerItem: mergeItem(obj.markerItem),
+          questItem: mergeItem(obj.questItem),
+          containsAll: mergeItemArray(obj.containsAll),
+          useAny: mergeItemArray(obj.useAny),
+          usingWeapon: mergeItem(obj.usingWeapon),
+          usingWeaponMods: mergeItemArray(obj.usingWeaponMods),
+          wearing: mergeItemArray(obj.wearing),
+          notWearing: mergeItemArray(obj.notWearing),
+        } as TaskObjective;
+      };
+      const hydrateRewards = (rewards?: FinishRewards): FinishRewards | undefined => {
+        if (!rewards) return rewards;
+        return {
+          ...rewards,
+          items: rewards.items?.map((reward) => ({
+            ...reward,
+            item: mergeItem(reward.item) ?? reward.item,
+          })),
+          offerUnlock: rewards.offerUnlock?.map((unlock) => ({
+            ...unlock,
+            item: mergeItem(unlock.item) ?? unlock.item,
+          })),
+        };
+      };
+      this.tasks = this.tasks.map((task) => ({
+        ...task,
+        objectives: task.objectives?.map(hydrateObjective),
+        failConditions: task.failConditions?.map(hydrateObjective),
+        neededKeys: task.neededKeys?.map((needed) => ({
+          ...needed,
+          keys: needed.keys?.map((key) => mergeItem(key) ?? key) ?? needed.keys,
+        })),
+        startRewards: hydrateRewards(task.startRewards),
+        finishRewards: hydrateRewards(task.finishRewards),
+        failureOutcome: hydrateRewards(task.failureOutcome),
+      }));
+      this.rebuildTaskDerivedData();
+    },
+    /**
      * Process tasks data and build derived structures using the graph builder composable
      */
     processTasksData(data: TarkovDataQueryResult) {
@@ -655,12 +1115,29 @@ export const useMetadataStore = defineStore('metadata', {
         .filter((task): task is Task => Boolean(task))
         .map((task) => ({
           ...task,
-          objectives: normalizeTaskObjectives<TaskObjective>(task.objectives),
+          objectives: this.normalizeObjectiveItems(
+            normalizeTaskObjectives<TaskObjective>(task.objectives)
+          ),
+          failConditions: this.normalizeObjectiveItems(
+            normalizeTaskObjectives<TaskObjective>(task.failConditions)
+          ),
         }));
-      this.tasks = normalizedTasks.filter((task) => !EXCLUDED_SCAV_KARMA_TASKS.includes(task.id));
+      const filteredTasks = normalizedTasks.filter(
+        (task) => !EXCLUDED_SCAV_KARMA_TASKS.includes(task.id)
+      );
+      const deduped = this.dedupeObjectiveIds(filteredTasks);
+      this.tasks = deduped.tasks;
+      if (deduped.duplicateObjectiveIds.size > 0) {
+        const progressStore = useProgressStore();
+        progressStore.migrateDuplicateObjectiveProgress(deduped.duplicateObjectiveIds);
+      }
+      const tarkovStore = useTarkovStore();
+      tarkovStore.repairCompletedTaskObjectives();
       this.maps = data.maps || [];
       this.traders = data.traders || [];
-      this.playerLevels = this.convertToCumulativeXP(data.playerLevels || []);
+      if (Array.isArray(data.playerLevels)) {
+        this.playerLevels = this.convertToCumulativeXP(data.playerLevels);
+      }
       if (this.tasks.length > 0) {
         const graphBuilder = useGraphBuilder();
         const processedData = graphBuilder.processTaskData(this.tasks);
@@ -671,9 +1148,24 @@ export const useMetadataStore = defineStore('metadata', {
         this.objectiveGPS = processedData.objectiveGPS;
         this.alternativeTasks = processedData.alternativeTasks;
         this.neededItemTaskObjectives = processedData.neededItemTaskObjectives;
+        tarkovStore.repairFailedTaskStates();
       } else {
         this.resetTasksData();
       }
+    },
+    /**
+     * Ensure objective.item is populated from objective.items when using the new schema.
+     */
+    normalizeObjectiveItems(objectives: TaskObjective[]): TaskObjective[] {
+      if (!objectives?.length) return objectives;
+      return objectives.map((objective) => {
+        if (!objective) return objective;
+        const obj = objective as ObjectiveWithItems;
+        if (!obj.item && Array.isArray(obj.items) && obj.items.length > 0) {
+          return { ...objective, item: obj.items[0] };
+        }
+        return objective;
+      });
     },
     /**
      * Process hideout data and build derived structures using the graph builder composable
@@ -743,7 +1235,6 @@ export const useMetadataStore = defineStore('metadata', {
       this.tasks = [];
       this.maps = [];
       this.traders = [];
-      this.playerLevels = [];
       this.taskGraph = markRaw(createGraph());
       this.objectiveMaps = {};
       this.alternativeTasks = {};

@@ -247,7 +247,7 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
     const modeState = (tarkovStore.$state as unknown as Record<string, unknown>)[mode] as {
       displayName?: string | null;
       level?: number | null;
-      taskCompletions?: Record<string, { complete?: boolean }>;
+      taskCompletions?: Record<string, { complete?: boolean; failed?: boolean }>;
     } | null;
     const completed = modeState?.taskCompletions
       ? Object.values(modeState.taskCompletions).filter((t) => t?.complete).length

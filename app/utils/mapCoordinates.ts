@@ -126,9 +126,17 @@ export function getLeafletBounds(svgConfig?: MapSvgConfig): [[number, number], [
   // tarkov.dev swaps coordinates: [z, x] format
   // bounds[0] = [x1, z1], bounds[1] = [x2, z2]
   // Convert to [[z1, x1], [z2, x2]]
+  const b0 = svgConfig.bounds[0];
+  const b1 = svgConfig.bounds[1];
+  if (!b0 || !b1 || b0.length < 2 || b1.length < 2) {
+    return [
+      [0, 0],
+      [100, 100],
+    ];
+  }
   return [
-    [svgConfig.bounds[0][1], svgConfig.bounds[0][0]],
-    [svgConfig.bounds[1][1], svgConfig.bounds[1][0]],
+    [b0[1] ?? 0, b0[0] ?? 0],
+    [b1[1] ?? 0, b1[0] ?? 0],
   ];
 }
 /**
@@ -155,9 +163,17 @@ export function getSvgOverlayBounds(
     ];
   }
   // tarkov.dev swaps coordinates: [z, x] format
+  const b0 = boundsToUse[0];
+  const b1 = boundsToUse[1];
+  if (!b0 || !b1 || b0.length < 2 || b1.length < 2) {
+    return [
+      [0, 0],
+      [100, 100],
+    ];
+  }
   return [
-    [boundsToUse[0][1], boundsToUse[0][0]],
-    [boundsToUse[1][1], boundsToUse[1][0]],
+    [b0[1] ?? 0, b0[0] ?? 0],
+    [b1[1] ?? 0, b1[0] ?? 0],
   ];
 }
 /**
@@ -187,10 +203,9 @@ export function getLeafletMapOptions(
     zoomAnimation: true,
     zoomAnimationThreshold: 8,
     // Touch support for mobile
-    tap: true,
     touchZoom: true,
     bounceAtZoomLimits: true,
-  };
+  } as L.MapOptions;
 }
 /**
  * Validates map SVG configuration.

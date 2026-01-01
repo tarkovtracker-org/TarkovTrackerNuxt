@@ -54,7 +54,12 @@
     const giveTypes = new Set(['giveItem', 'giveQuestItem']);
     // Helper to get the item ID from an objective (handles item, markerItem, and questItem)
     const getItemId = (objective: TaskObjectiveType): string | undefined => {
-      return objective.item?.id || objective.markerItem?.id || objective.questItem?.id;
+      return (
+        objective.item?.id ||
+        objective.items?.[0]?.id ||
+        objective.markerItem?.id ||
+        objective.questItem?.id
+      );
     };
     // Helper to get group title based on category
     const getGroupTitle = (

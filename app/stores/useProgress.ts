@@ -5,9 +5,10 @@ import { useMetadataStore } from '@/stores/useMetadata';
 import { usePreferencesStore } from '@/stores/usePreferences';
 import { useTarkovStore } from '@/stores/useTarkov';
 import { useTeammateStores, useTeamStore } from '@/stores/useTeamStore';
-import type { GameEdition, Task } from '@/types/tarkov';
+import type { GameEdition, Task, TaskRequirement } from '@/types/tarkov';
 import { GAME_MODES, SPECIAL_STATIONS } from '@/utils/constants';
 import { logger } from '@/utils/logger';
+import { computeInvalidProgress } from '@/utils/progressInvalidation';
 import type { Store } from 'pinia';
 function getGameModeData(store: Store<string, UserState> | undefined): UserProgressData {
   if (!store) return {} as UserProgressData;
@@ -17,11 +18,14 @@ function getGameModeData(store: Store<string, UserState> | undefined): UserProgr
 }
 type TeamStoresMap = Record<string, Store<string, UserState>>;
 type CompletionsMap = Record<string, Record<string, boolean>>;
+type FailedTasksMap = Record<string, Record<string, boolean>>;
 type TraderLevelsMap = Record<string, Record<string, number>>;
 type FactionMap = Record<string, string>;
 type TaskAvailabilityMap = Record<string, Record<string, boolean>>;
 type ObjectiveCompletionsMap = Record<string, Record<string, boolean>>;
 type HideoutLevelMap = Record<string, Record<string, number>>;
+type InvalidTasksMap = Record<string, Record<string, boolean>>;
+type InvalidObjectivesMap = Record<string, Record<string, boolean>>;
 /*
 type ProgressGetters = {
   teamStores: TeamStoresMap;
@@ -87,6 +91,19 @@ export const useProgressStore = defineStore('progress', () => {
     }
     return completions;
   });
+  const tasksFailed = computed(() => {
+    const failures: FailedTasksMap = {};
+    if (!metadataStore.tasks.length || !visibleTeamStores.value) return {};
+    for (const task of metadataStore.tasks as Task[]) {
+      failures[task.id] = {};
+      for (const teamId of Object.keys(visibleTeamStores.value)) {
+        const store = visibleTeamStores.value[teamId];
+        const currentData = getGameModeData(store);
+        failures[task.id]![teamId] = currentData?.taskCompletions?.[task.id]?.failed ?? false;
+      }
+    }
+    return failures;
+  });
   const gameEditionData = computed<GameEdition[]>(() => metadataStore.editions);
   const traderLevelsAchieved = computed(() => {
     const levels: TraderLevelsMap = {};
@@ -107,7 +124,7 @@ export const useProgressStore = defineStore('progress', () => {
     for (const teamId of Object.keys(visibleTeamStores.value)) {
       const store = visibleTeamStores.value[teamId];
       const currentData = getGameModeData(store);
-      faction[teamId] = currentData?.pmcFaction ?? 'Unknown';
+      faction[teamId] = currentData?.pmcFaction ?? 'USEC';
     }
     return faction;
   });
@@ -141,67 +158,109 @@ export const useProgressStore = defineStore('progress', () => {
       }
       teamDataCache.set(teamId, {
         level: currentData?.level ?? 0,
-        faction: currentData?.pmcFaction ?? 'Unknown',
+        faction: currentData?.pmcFaction ?? 'USEC',
         completions: currentData?.taskCompletions ?? {},
         traderLevels,
       });
     }
-    // Now iterate tasks once with all data pre-cached
+    const tasksById = new Map(tasks.map((task) => [task.id, task]));
+    const normalizeStatuses = (statuses?: string[]) =>
+      (statuses ?? []).map((status) => status.toLowerCase());
+    const hasAnyStatus = (statuses: string[], values: string[]) =>
+      values.some((value) => statuses.includes(value));
+    const isTaskComplete = (completion?: { complete?: boolean; failed?: boolean }) =>
+      completion?.complete === true && completion?.failed !== true;
+    const isTaskFailed = (completion?: { complete?: boolean; failed?: boolean }) =>
+      completion?.failed === true;
+    const isTaskActiveRecord = (completion?: { complete?: boolean; failed?: boolean }) => {
+      if (!completion) return false;
+      return !isTaskComplete(completion) && !isTaskFailed(completion);
+    };
+    // Initialize availability map
     for (const task of tasks) {
       available[task.id] = {};
-      for (const teamId of teamIds) {
-        const teamData = teamDataCache.get(teamId)!;
-        // Early exit: already complete
-        if (teamData.completions[task.id]?.complete) {
-          available[task.id]![teamId] = false;
-          continue;
+    }
+    // Compute availability per team with memoization to keep status-aware chains consistent
+    for (const teamId of teamIds) {
+      const teamData = teamDataCache.get(teamId)!;
+      const availabilityMemo = new Map<string, boolean>();
+      const unlockableMemo = new Map<string, boolean>();
+      const visitingAvailable = new Set<string>();
+      const visitingUnlockable = new Set<string>();
+      const isRequirementSatisfied = (requirement: TaskRequirement): boolean => {
+        const reqTaskId = requirement?.task?.id;
+        if (!reqTaskId) return true;
+        const requirementStatus = normalizeStatuses(requirement.status);
+        const requiresComplete =
+          requirementStatus.length === 0 ||
+          hasAnyStatus(requirementStatus, ['complete', 'completed']);
+        const requiresActive = hasAnyStatus(requirementStatus, ['active', 'accept', 'accepted']);
+        const requiresFailed = hasAnyStatus(requirementStatus, ['failed']);
+        const completion = teamData.completions[reqTaskId];
+        const isComplete = isTaskComplete(completion);
+        const isFailed = isTaskFailed(completion);
+        const isActive = isTaskActiveRecord(completion);
+        if (requiresComplete && isComplete) return true;
+        if (requiresFailed && isFailed) return true;
+        if (requiresActive) {
+          if (isActive || isComplete) return true;
+          // Treat "available" as "accepted" when no explicit active state is stored.
+          if (isTaskUnlockable(reqTaskId)) return true;
+        }
+        return false;
+      };
+      const computeTaskAvailability = (
+        taskId: string,
+        allowCompleted: boolean,
+        memo: Map<string, boolean>,
+        visiting: Set<string>
+      ): boolean => {
+        if (memo.has(taskId)) return memo.get(taskId)!;
+        if (visiting.has(taskId)) return false;
+        const task = tasksById.get(taskId);
+        if (!task) return false;
+        visiting.add(taskId);
+        // Early exit: already complete (unless we allow completed tasks)
+        if (!allowCompleted && isTaskComplete(teamData.completions[taskId])) {
+          memo.set(taskId, false);
+          visiting.delete(taskId);
+          return false;
         }
         // Check failed requirements
-        let failedReqsMet = true;
         if (task.failedRequirements) {
           for (const req of task.failedRequirements) {
-            if (teamData.completions[req.task.id]?.failed) {
-              failedReqsMet = false;
-              break;
+            if (req?.task?.id && teamData.completions[req.task.id]?.failed) {
+              memo.set(taskId, false);
+              visiting.delete(taskId);
+              return false;
             }
           }
-        }
-        if (!failedReqsMet) {
-          available[task.id]![teamId] = false;
-          continue;
         }
         // Level check
         if (task.minPlayerLevel && teamData.level < task.minPlayerLevel) {
-          available[task.id]![teamId] = false;
-          continue;
+          memo.set(taskId, false);
+          visiting.delete(taskId);
+          return false;
         }
         // Trader levels check
-        let traderLevelsMet = true;
         if (task.traderLevelRequirements) {
           for (const req of task.traderLevelRequirements) {
             if ((teamData.traderLevels[req.trader.id] ?? 0) < req.level) {
-              traderLevelsMet = false;
-              break;
+              memo.set(taskId, false);
+              visiting.delete(taskId);
+              return false;
             }
           }
-        }
-        if (!traderLevelsMet) {
-          available[task.id]![teamId] = false;
-          continue;
         }
         // Prerequisites check
-        let prereqsMet = true;
         if (task.taskRequirements) {
           for (const req of task.taskRequirements) {
-            if (!teamData.completions[req.task.id]?.complete) {
-              prereqsMet = false;
-              break;
+            if (!isRequirementSatisfied(req)) {
+              memo.set(taskId, false);
+              visiting.delete(taskId);
+              return false;
             }
           }
-        }
-        if (!prereqsMet) {
-          available[task.id]![teamId] = false;
-          continue;
         }
         // Faction check
         if (
@@ -209,10 +268,20 @@ export const useProgressStore = defineStore('progress', () => {
           task.factionName !== 'Any' &&
           task.factionName !== teamData.faction
         ) {
-          available[task.id]![teamId] = false;
-          continue;
+          memo.set(taskId, false);
+          visiting.delete(taskId);
+          return false;
         }
-        available[task.id]![teamId] = true;
+        memo.set(taskId, true);
+        visiting.delete(taskId);
+        return true;
+      };
+      const isTaskUnlockable = (taskId: string): boolean =>
+        computeTaskAvailability(taskId, true, unlockableMemo, visitingUnlockable);
+      const isTaskAvailable = (taskId: string): boolean =>
+        computeTaskAvailability(taskId, false, availabilityMemo, visitingAvailable);
+      for (const task of tasks) {
+        available[task.id]![teamId] = isTaskAvailable(task.id);
       }
     }
     return available;
@@ -230,6 +299,51 @@ export const useProgressStore = defineStore('progress', () => {
       }
     }
     return completions;
+  });
+  const invalidProgressByTeam = computed(() => {
+    const invalidByTeam: Record<
+      string,
+      { invalidTasks: Record<string, boolean>; invalidObjectives: Record<string, boolean> }
+    > = {};
+    if (!metadataStore.tasks.length || !visibleTeamStores.value) return {};
+    const tasks = metadataStore.tasks as Task[];
+    for (const teamId of Object.keys(visibleTeamStores.value)) {
+      const store = visibleTeamStores.value[teamId];
+      const currentData = getGameModeData(store);
+      invalidByTeam[teamId] = computeInvalidProgress({
+        tasks,
+        taskCompletions: currentData?.taskCompletions ?? {},
+        pmcFaction: currentData?.pmcFaction ?? 'USEC',
+      });
+    }
+    return invalidByTeam;
+  });
+  const invalidTasks = computed(() => {
+    const invalids: InvalidTasksMap = {};
+    if (!metadataStore.tasks.length || !visibleTeamStores.value) return {};
+    const teamIds = Object.keys(visibleTeamStores.value);
+    const invalidByTeam = invalidProgressByTeam.value;
+    for (const task of metadataStore.tasks as Task[]) {
+      invalids[task.id] = {};
+      for (const teamId of teamIds) {
+        invalids[task.id]![teamId] = invalidByTeam[teamId]?.invalidTasks?.[task.id] ?? false;
+      }
+    }
+    return invalids;
+  });
+  const invalidObjectives = computed(() => {
+    const invalids: InvalidObjectivesMap = {};
+    if (!metadataStore.objectives.length || !visibleTeamStores.value) return {};
+    const teamIds = Object.keys(visibleTeamStores.value);
+    const invalidByTeam = invalidProgressByTeam.value;
+    for (const objective of metadataStore.objectives) {
+      invalids[objective.id] = {};
+      for (const teamId of teamIds) {
+        invalids[objective.id]![teamId] =
+          invalidByTeam[teamId]?.invalidObjectives?.[objective.id] ?? false;
+      }
+    }
+    return invalids;
   });
   const hideoutLevels = computed(() => {
     const levels: HideoutLevelMap = {};
@@ -424,7 +538,7 @@ export const useProgressStore = defineStore('progress', () => {
   const getFaction = (teamId: string): string => {
     const store = visibleTeamStores.value[teamId];
     const currentData = getGameModeData(store);
-    return currentData?.pmcFaction ?? 'Unknown';
+    return currentData?.pmcFaction ?? 'USEC';
   };
   const getTeammateStore = (teamId: string): Store<string, UserState> | null => {
     return teammateStores.value[teamId] || null;
@@ -434,15 +548,15 @@ export const useProgressStore = defineStore('progress', () => {
     const store = teamStores.value[storeKey];
     const currentData = getGameModeData(store);
     const taskCompletion = currentData?.taskCompletions?.[taskId];
-    return taskCompletion?.complete === true;
+    return taskCompletion?.complete === true && taskCompletion?.failed !== true;
   };
   const getTaskStatus = (teamId: string, taskId: string): 'completed' | 'failed' | 'incomplete' => {
     const storeKey = getTeamIndex(teamId);
     const store = teamStores.value[storeKey];
     const currentData = getGameModeData(store);
     const taskCompletion = currentData?.taskCompletions?.[taskId];
-    if (taskCompletion?.complete) return 'completed';
     if (taskCompletion?.failed) return 'failed';
+    if (taskCompletion?.complete) return 'completed';
     return 'incomplete';
   };
   const getProgressPercentage = (teamId: string, category: string): number => {
@@ -471,15 +585,52 @@ export const useProgressStore = defineStore('progress', () => {
         return 0;
     }
   };
+  const migrateDuplicateObjectiveProgress = (duplicateObjectiveIds: Map<string, string[]>) => {
+    if (!duplicateObjectiveIds.size) return;
+    const migrateObjectiveMap = (
+      objectiveMap?: Record<string, { complete?: boolean; count?: number; timestamp?: number }>
+    ) => {
+      if (!objectiveMap) return objectiveMap;
+      let updated = objectiveMap;
+      duplicateObjectiveIds.forEach((newIds, originalId) => {
+        const existing = updated[originalId];
+        if (!existing) return;
+        const merged = { ...updated };
+        newIds.forEach((newId) => {
+          if (!merged[newId]) {
+            merged[newId] = { ...existing };
+          }
+        });
+        const { [originalId]: _removed, ...rest } = merged;
+        updated = rest;
+      });
+      return updated;
+    };
+    Object.values(teamStores.value).forEach((store) => {
+      const pvpObjectives = store?.$state?.pvp?.taskObjectives;
+      const pveObjectives = store?.$state?.pve?.taskObjectives;
+      const nextPvpObjectives = migrateObjectiveMap(pvpObjectives);
+      const nextPveObjectives = migrateObjectiveMap(pveObjectives);
+      if (pvpObjectives && nextPvpObjectives && nextPvpObjectives !== pvpObjectives) {
+        store.$state.pvp.taskObjectives = nextPvpObjectives;
+      }
+      if (pveObjectives && nextPveObjectives && nextPveObjectives !== pveObjectives) {
+        store.$state.pve.taskObjectives = nextPveObjectives;
+      }
+    });
+  };
   return {
     teamStores,
     visibleTeamStores,
     tasksCompletions,
+    tasksFailed,
     gameEditionData,
     traderLevelsAchieved,
     playerFaction,
     unlockedTasks,
     objectiveCompletions,
+    invalidTasks,
+    invalidObjectives,
     hideoutLevels,
     moduleCompletions,
     modulePartCompletions,
@@ -491,5 +642,6 @@ export const useProgressStore = defineStore('progress', () => {
     hasCompletedTask,
     getTaskStatus,
     getProgressPercentage,
+    migrateDuplicateObjectiveProgress,
   };
 });

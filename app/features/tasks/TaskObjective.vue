@@ -1,7 +1,10 @@
 <template>
   <div
-    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full cursor-pointer items-start gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
-    :class="isComplete ? 'bg-success-500/10' : 'hover:bg-white/5'"
+    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full items-start gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
+    :class="[
+      isComplete ? 'bg-success-500/10' : 'hover:bg-white/5',
+      isParentTaskComplete ? 'cursor-not-allowed opacity-80' : 'cursor-pointer',
+    ]"
     @click="handleRowClick"
     @mouseenter="objectiveMouseEnter()"
     @mouseleave="objectiveMouseLeave()"
@@ -32,9 +35,11 @@
           v-if="neededCount > 1"
           :current-count="currentObjectiveCount"
           :needed-count="neededCount"
+          :disabled="isParentTaskComplete"
           @decrease="decreaseCount"
           @increase="increaseCount"
           @toggle="toggleCount"
+          @set-count="setCount"
         />
         <AppTooltip
           v-else
@@ -46,13 +51,14 @@
         >
           <button
             type="button"
-            class="focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            class="focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
             :aria-label="toggleObjectiveLabel"
             :aria-pressed="isComplete"
+            :disabled="isParentTaskComplete"
             :class="
               isComplete
-                ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
-                : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10'
+                ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white disabled:opacity-60'
+                : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 disabled:opacity-60'
             "
             @click="toggleObjectiveCompletion()"
           >
@@ -108,6 +114,14 @@
   const fullObjective = computed(() => {
     return objectives.value.find((o) => o.id == props.objective.id);
   });
+  const parentTaskId = computed(() => {
+    return fullObjective.value?.taskId ?? props.objective.taskId;
+  });
+  const isParentTaskComplete = computed(() => {
+    const taskId = parentTaskId.value;
+    if (!taskId) return false;
+    return tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
+  });
   const userNeeds = computed(() => {
     const needingUsers: string[] = [];
     if (fullObjective.value == undefined) {
@@ -135,6 +149,7 @@
   });
   const isHovered = ref(false);
   const objectiveMouseEnter = () => {
+    if (isParentTaskComplete.value) return;
     isHovered.value = true;
   };
   const objectiveMouseLeave = () => {
@@ -174,6 +189,7 @@
   });
   const neededCount = computed(() => fullObjective.value?.count ?? props.objective.count ?? 1);
   const handleRowClick = () => {
+    if (isParentTaskComplete.value) return;
     if (neededCount.value > 1) {
       toggleCount();
       return;
@@ -181,6 +197,7 @@
     toggleObjectiveCompletion();
   };
   const toggleObjectiveCompletion = () => {
+    if (isParentTaskComplete.value) return;
     if (isComplete.value) {
       const currentCount = currentObjectiveCount.value;
       const requiredCount = neededCount.value;
@@ -203,6 +220,7 @@
     }
   });
   const decreaseCount = () => {
+    if (isParentTaskComplete.value) return;
     const currentCount = currentObjectiveCount.value;
     if (currentCount > 0) {
       const newCount = currentCount - 1;
@@ -215,6 +233,7 @@
     }
   };
   const increaseCount = () => {
+    if (isParentTaskComplete.value) return;
     const currentCount = currentObjectiveCount.value;
     const requiredCount = neededCount.value;
     if (currentCount < requiredCount) {
@@ -226,6 +245,7 @@
     }
   };
   const toggleCount = () => {
+    if (isParentTaskComplete.value) return;
     const currentCount = currentObjectiveCount.value;
     const requiredCount = neededCount.value;
     if (currentCount >= requiredCount) {
@@ -238,6 +258,22 @@
       if (!isComplete.value) {
         tarkovStore.setTaskObjectiveComplete(props.objective.id);
       }
+    }
+  };
+  /**
+   * Set count to a specific value (from direct input)
+   */
+  const setCount = (newCount: number) => {
+    if (isParentTaskComplete.value) return;
+    const requiredCount = neededCount.value;
+    // Value is already clamped by the component, but ensure it's valid
+    const clampedCount = Math.max(0, Math.min(requiredCount, newCount));
+    tarkovStore.setObjectiveCount(props.objective.id, clampedCount);
+    // Update completion status based on new count
+    if (clampedCount >= requiredCount && !isComplete.value) {
+      tarkovStore.setTaskObjectiveComplete(props.objective.id);
+    } else if (clampedCount < requiredCount && isComplete.value) {
+      tarkovStore.setTaskObjectiveUncomplete(props.objective.id);
     }
   };
 </script>

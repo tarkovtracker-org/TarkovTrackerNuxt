@@ -25,9 +25,9 @@
   import { computed } from 'vue';
   import type { HideoutStation } from '@/types/tarkov';
   const props = defineProps<{
-    station: Pick<HideoutStation, 'id' | 'name'>;
+    station: Pick<HideoutStation, 'id' | 'name' | 'imageLink'>;
     compact?: boolean;
   }>();
-  const stationIcon = computed(() => `/img/hideout/${props.station.id}.avif`);
+  const stationIcon = computed(() => props.station.imageLink);
   const stationHref = computed(() => `/hideout?station=${props.station.id}`);
 </script>

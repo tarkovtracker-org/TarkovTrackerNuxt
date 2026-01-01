@@ -6,6 +6,7 @@ const TARKOV_HIDEOUT_QUERY = `
       id
       name
       normalizedName
+      imageLink
       levels {
         id
         level

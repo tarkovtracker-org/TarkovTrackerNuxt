@@ -133,7 +133,7 @@
           <DrawerItem
             avatar="/img/logos/ratscannerlogo.webp"
             locale-key="ratscanner"
-            href="https://ratscanner.com/"
+            href="https://github.com/RatScanner/RatScanner"
             ext-link
             :is-collapsed="isCollapsed"
           />

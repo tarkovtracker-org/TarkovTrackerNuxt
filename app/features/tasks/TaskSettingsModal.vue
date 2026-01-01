@@ -101,6 +101,60 @@
               :tooltip="tooltipShowPreviousQuests"
             />
           </section>
+          <!-- ADVANCED Section -->
+          <section class="space-y-2">
+            <div>
+              <p class="text-primary-400 text-xs font-semibold tracking-wide uppercase">
+                {{ t('page.tasks.settings.tabs.advanced', 'ADVANCED') }}
+              </p>
+              <p class="mt-1 text-xs text-gray-500">
+                {{
+                  t(
+                    'page.tasks.settings.advanced.hint',
+                    'Use with care. Manual overrides can make debugging harder.'
+                  )
+                }}
+              </p>
+            </div>
+            <SettingsToggle
+              v-model="enableManualTaskFail"
+              :label="labelEnableManualTaskFail"
+              :tooltip="tooltipEnableManualTaskFail"
+            />
+            <div
+              class="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p class="text-xs text-gray-300">
+                  {{
+                    t(
+                      'page.tasks.settings.advanced.repairFailedHint',
+                      'Clears failed flags that are not supported by current fail conditions.'
+                    )
+                  }}
+                </p>
+                <p class="text-[11px] text-gray-500">
+                  {{
+                    t(
+                      'page.tasks.settings.advanced.repairFailedCount',
+                      { count: failedTasksCount },
+                      'Failed tasks detected: {count}'
+                    )
+                  }}
+                </p>
+              </div>
+              <UButton
+                color="warning"
+                variant="soft"
+                size="sm"
+                :disabled="failedTasksCount === 0"
+                :title="tooltipRepairFailedTasks"
+                @click="repairFailedTasks"
+              >
+                {{ labelRepairFailedTasks }}
+              </UButton>
+            </div>
+          </section>
         </div>
       </UCard>
     </template>
@@ -110,9 +164,13 @@
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import SettingsToggle from '@/features/tasks/SettingsToggle.vue';
+  import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
+  import { useTarkovStore } from '@/stores/useTarkov';
   const { t } = useI18n({ useScope: 'global' });
   const preferencesStore = usePreferencesStore();
+  const metadataStore = useMetadataStore();
+  const tarkovStore = useTarkovStore();
   const isOpen = ref(false);
   // Labels and tooltips (defined in script to avoid template quoting issues)
   const labelShowNonSpecialTasks = computed(() =>
@@ -211,6 +269,24 @@
       'Display tasks that must be completed before this task'
     )
   );
+  const labelEnableManualTaskFail = computed(() =>
+    t('page.tasks.settings.advanced.manualFail', 'Enable manual task fail actions')
+  );
+  const tooltipEnableManualTaskFail = computed(() =>
+    t(
+      'page.tasks.settings.advanced.manualFailTooltip',
+      'Allows marking tasks as failed from the overflow menu (use for recovery only)'
+    )
+  );
+  const labelRepairFailedTasks = computed(() =>
+    t('page.tasks.settings.advanced.repairFailed', 'Repair failed tasks')
+  );
+  const tooltipRepairFailedTasks = computed(() =>
+    t(
+      'page.tasks.settings.advanced.repairFailedTooltip',
+      'Clears failed flags that no longer match fail conditions'
+    )
+  );
   // Task filter preferences (inverted for show/hide semantics)
   const showKappaTasks = computed(() => !preferencesStore.getHideNonKappaTasks);
   // New filter preferences with two-way binding
@@ -251,4 +327,56 @@
     get: () => preferencesStore.getShowPreviousQuests,
     set: (value) => preferencesStore.setShowPreviousQuests(value),
   });
+  const enableManualTaskFail = computed({
+    get: () => preferencesStore.getEnableManualTaskFail,
+    set: (value) => preferencesStore.setEnableManualTaskFail(value),
+  });
+  const failedTasksCount = computed(
+    () => metadataStore.tasks.filter((task) => tarkovStore.isTaskFailed(task.id)).length
+  );
+  const isTaskSuccessful = (taskId: string) =>
+    tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
+  const hasStatus = (status: string[] | undefined, statuses: string[]) => {
+    const normalized = (status ?? []).map((entry) => entry.toLowerCase());
+    return statuses.some((value) => normalized.includes(value));
+  };
+  const shouldTaskBeFailed = (task: {
+    failConditions?: Array<{ task?: { id?: string }; status?: string[] }>;
+  }) => {
+    const failConditions = task.failConditions ?? [];
+    return failConditions.some((objective) => {
+      if (!objective?.task?.id) return false;
+      if (!hasStatus(objective.status, ['complete', 'completed'])) return false;
+      return isTaskSuccessful(objective.task.id);
+    });
+  };
+  const repairFailedTasks = () => {
+    if (failedTasksCount.value === 0) return;
+    const confirmed = window.confirm(
+      t(
+        'page.tasks.settings.advanced.repairFailedConfirm',
+        'Repair failed tasks by clearing failed flags that are not supported by current fail conditions?'
+      )
+    );
+    if (!confirmed) return;
+    let repaired = 0;
+    metadataStore.tasks.forEach((task) => {
+      if (!tarkovStore.isTaskFailed(task.id)) return;
+      if (shouldTaskBeFailed(task)) return;
+      tarkovStore.setTaskUncompleted(task.id);
+      task.objectives?.forEach((objective) => {
+        if (objective?.id) {
+          tarkovStore.setTaskObjectiveUncomplete(objective.id);
+        }
+      });
+      repaired += 1;
+    });
+    window.alert(
+      t(
+        'page.tasks.settings.advanced.repairFailedDone',
+        { count: repaired },
+        'Cleared failed status for {count} tasks.'
+      )
+    );
+  };
 </script>

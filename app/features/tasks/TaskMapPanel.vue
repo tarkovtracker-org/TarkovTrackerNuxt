@@ -9,9 +9,7 @@
         >
           <span class="text-base font-medium text-gray-200">
             {{ item.label }}
-            <span class="font-normal text-gray-400">
-              &nbsp;-&nbsp;{{ displayTime }}
-            </span>
+            <span class="font-normal text-gray-400">&nbsp;-&nbsp;{{ displayTime }}</span>
           </span>
           <UIcon
             name="i-mdi-chevron-down"

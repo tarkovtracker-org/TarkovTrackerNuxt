@@ -47,11 +47,13 @@ export interface SkillMetadata {
 export function useSkillCalculation() {
   const tarkovStore = useTarkovStore();
   const metadataStore = useMetadataStore();
+  const isTaskSuccessful = (taskId: string) =>
+    tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
   // Computed: Skills from completed quest rewards
   const calculatedQuestSkills = computed(() => {
     const skills: { [skillName: string]: number } = {};
     metadataStore.tasks
-      .filter((task) => tarkovStore.isTaskComplete(task.id))
+      .filter((task) => isTaskSuccessful(task.id))
       .forEach((task) => {
         const skillRewards = task.finishRewards?.skillLevelReward || [];
         skillRewards.forEach((reward) => {
