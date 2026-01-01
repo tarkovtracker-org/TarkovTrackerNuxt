@@ -82,6 +82,7 @@ function createTooltip(el: HTMLElement, value: string | TooltipOptions) {
     const placement = options.placement || 'top';
     const config: ComputePositionConfig = {
       placement,
+      strategy: 'fixed',
       middleware: [
         offset(6),
         flip(),
