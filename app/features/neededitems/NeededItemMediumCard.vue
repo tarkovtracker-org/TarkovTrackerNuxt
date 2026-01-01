@@ -20,7 +20,7 @@
         {{ item.name }}
           <UIcon
             v-if="props.need.foundInRaid"
-            v-tooltip="'Found in Raid required'"
+            v-tooltip="$t('page.neededitems.fir_required')"
             name="i-mdi-checkbox-marked-circle-outline"
             class="ml-0.5 inline-block h-3.5 w-3.5"
           />

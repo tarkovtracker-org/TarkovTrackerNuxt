@@ -23,10 +23,10 @@
           id="loading-screen-title"
           class="focus-visible:ring-primary-500 rounded-sm text-xl font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 dark:text-gray-100"
         >
-          {{ hasErrors ? 'Loading Issue' : 'Loading Tarkov Tracker' }}
+          {{ hasErrors ? $t('loading.title_error') : $t('loading.title') }}
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          {{ hasErrors ? 'Some data failed to load' : 'Downloading required game data...' }}
+          {{ hasErrors ? $t('loading.subtitle_error') : $t('loading.subtitle') }}
         </p>
       </div>
       <!-- Loading Progress Details -->
@@ -36,42 +36,42 @@
             :name="getStatusIcon(metadataStore.loading, metadataStore.error)"
             :class="getStatusClass(metadataStore.loading, metadataStore.error)"
           />
-          <span>Tasks, Maps & Traders</span>
+          <span>{{ $t('loading.tasks_maps_traders') }}</span>
         </div>
         <div class="flex items-center gap-2">
           <UIcon
             :name="getStatusIcon(metadataStore.hideoutLoading, metadataStore.hideoutError)"
             :class="getStatusClass(metadataStore.hideoutLoading, metadataStore.hideoutError)"
           />
-          <span>Hideout Stations</span>
+          <span>{{ $t('loading.hideout_stations') }}</span>
         </div>
         <div class="flex items-center gap-2">
           <UIcon
             :name="getStatusIcon(metadataStore.prestigeLoading, metadataStore.prestigeError)"
             :class="getStatusClass(metadataStore.prestigeLoading, metadataStore.prestigeError)"
           />
-          <span>Prestige Data</span>
+          <span>{{ $t('loading.prestige_data') }}</span>
         </div>
         <div class="flex items-center gap-2">
           <UIcon
             :name="getStatusIcon(metadataStore.editionsLoading, metadataStore.editionsError)"
             :class="getStatusClass(metadataStore.editionsLoading, metadataStore.editionsError)"
           />
-          <span>Game Editions</span>
+          <span>{{ $t('loading.game_editions') }}</span>
         </div>
       </div>
       <!-- User Reassurance or Error Actions -->
       <div v-if="!hasErrors" class="mt-4 max-w-md text-center text-xs text-gray-600 dark:text-gray-400">
-        This may take a moment on first load. Data will be cached for future visits.
+        {{ $t('loading.first_load_note') }}
       </div>
       <div v-else class="mt-4 flex flex-col items-center gap-3">
         <p class="max-w-md text-center text-xs text-gray-500">
-          The app can still work with partial data. You can retry or continue anyway.
+          {{ $t('loading.partial_data_note') }}
         </p>
         <div class="flex gap-3">
-          <UButton color="primary" variant="solid" @click="handleRetry">Retry</UButton>
+          <UButton color="primary" variant="solid" @click="handleRetry">{{ $t('loading.retry') }}</UButton>
           <UButton color="neutral" variant="outline" @click="handleContinue">
-            Continue Anyway
+            {{ $t('loading.continue') }}
           </UButton>
         </div>
       </div>

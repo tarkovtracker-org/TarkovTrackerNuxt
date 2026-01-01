@@ -5,13 +5,12 @@
       class="flex items-center rounded-md border border-gray-300 bg-white dark:border-white/10 dark:bg-white/5"
     >
       <!-- Decrease button -->
-      <!-- Decrease button -->
       <button
         type="button"
-        v-tooltip="'Decrease count'"
+        v-tooltip="t('page.neededitems.decrease_count')"
         :disabled="currentCount <= 0"
         class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-l-md text-gray-500 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-white/10 dark:active:bg-white/15"
-        aria-label="Decrease count"
+        :aria-label="t('page.neededitems.decrease_count')"
         @click="$emit('decrease')"
       >
         <UIcon name="i-mdi-minus" aria-hidden="true" class="h-4 w-4" />
@@ -34,9 +33,9 @@
         </template>
         <template v-else>
           <button
-            v-tooltip="'Click to enter value'"
+            v-tooltip="t('page.neededitems.click_to_enter_value')"
             class="h-full w-full cursor-pointer px-0.5 text-[11px] font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-white/10"
-            aria-label="Click to enter value"
+            :aria-label="t('page.neededitems.click_to_enter_value')"
             @click="startEditing"
           >
             {{ formatNumber(currentCount) }}/{{ formatNumber(neededCount) }}
@@ -44,13 +43,12 @@
         </template>
       </div>
       <!-- Increase button -->
-      <!-- Increase button -->
       <button
         type="button"
-        v-tooltip="'Increase count'"
+        v-tooltip="t('page.neededitems.increase_count')"
         :disabled="currentCount >= neededCount"
         class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-r-md text-gray-500 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 active:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-white/10 dark:active:bg-white/15"
-        aria-label="Increase count"
+        :aria-label="t('page.neededitems.increase_count')"
         @click="$emit('increase')"
       >
         <UIcon name="i-mdi-plus" aria-hidden="true" class="h-4 w-4" />
@@ -61,10 +59,10 @@
     <button
       type="button"
       v-tooltip="
-        currentCount >= neededCount ? 'Mark as incomplete' : 'Mark as 100% complete'
+        currentCount >= neededCount ? t('page.neededitems.mark_as_incomplete') : t('page.neededitems.mark_as_complete_100')
       "
       class="cursor-pointer focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-      :aria-label="currentCount >= neededCount ? 'Mark as incomplete' : 'Mark as 100% complete'"
+      :aria-label="currentCount >= neededCount ? t('page.neededitems.mark_as_incomplete') : t('page.neededitems.mark_as_complete_100')"
       :class="
         currentCount >= neededCount
           ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
@@ -78,7 +76,9 @@
 </template>
 <script setup lang="ts">
   import { ref, nextTick, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
+  const { t } = useI18n();
   const formatNumber = useLocaleNumberFormatter();
   const props = defineProps<{
     currentCount: number;

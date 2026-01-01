@@ -57,7 +57,7 @@
                   <!-- Required Badge -->
                     <span
                       v-if="skill.requiredByTasks.length > 0"
-                      v-tooltip="`Required for: ${skill.requiredByTasks.join(', ')}`"
+                      v-tooltip="$t('settings.skills.required_for', { tasks: skill.requiredByTasks.join(', ') })"
                       class="shrink-0 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-400"
                     >
                       Req
@@ -65,7 +65,7 @@
                   <!-- Required Levels Badge -->
                     <span
                       v-if="skill.requiredLevels.length > 0"
-                      v-tooltip="`Required levels: ${skill.requiredLevels.join(', ')}`"
+                      v-tooltip="$t('settings.skills.required_levels', { levels: skill.requiredLevels.join(', ') })"
                       class="shrink-0 rounded bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-400"
                     >
                       Lv {{ formatRequiredLevels(skill.requiredLevels) }}

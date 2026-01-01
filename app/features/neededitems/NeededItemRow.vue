@@ -153,7 +153,7 @@
                       </template>
                       <template v-else>
                         <CollectedToggleButton
-                          v-tooltip="isCollected ? 'Collected' : 'Mark as collected'"
+                          v-tooltip="isCollected ? t('page.neededitems.collected') : t('page.neededitems.mark_as_collected')"
                           :is-collected="isCollected"
                           class="flex h-12 w-12 items-center justify-center rounded-lg border transition-colors"
                           :class="
@@ -161,7 +161,7 @@
                               ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
                               : 'bg-surface-elevated text-content-secondary hover:bg-surface-hover border-base hover:text-content-primary'
                           "
-                          :aria-label="isCollected ? 'Collected' : 'Mark as collected'"
+                          :aria-label="isCollected ? t('page.neededitems.collected') : t('page.neededitems.mark_as_collected')"
                           icon-class="h-8 w-8"
                           @toggle="$emit('toggleCount')"
                         />
@@ -221,7 +221,7 @@
                 </template>
                 <template v-else>
                   <CollectedToggleButton
-                    v-tooltip="isCollected ? 'Collected' : 'Mark as collected'"
+                    v-tooltip="isCollected ? t('page.neededitems.collected') : t('page.neededitems.mark_as_collected')"
                     :is-collected="isCollected"
                     class="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors"
                     :class="
@@ -229,7 +229,7 @@
                         ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
                         : 'bg-surface-elevated text-content-secondary hover:bg-surface-hover border-base hover:text-content-primary'
                     "
-                    :aria-label="isCollected ? 'Collected' : 'Mark as collected'"
+                    :aria-label="isCollected ? t('page.neededitems.collected') : t('page.neededitems.mark_as_collected')"
                     icon-class="h-6 w-6"
                     @toggle="$emit('toggleCount')"
                   />
@@ -256,6 +256,7 @@
 </template>
 <script setup>
   import { computed, defineAsyncComponent, inject, ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import { useItemRowIntersection } from '@/composables/useItemRowIntersection';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
   import {
@@ -278,6 +279,7 @@
   // Use shared breakpoints to avoid duplicate listeners
   const { belowMd, mdAndUp } = useSharedBreakpoints();
   const tarkovStore = useTarkovStore();
+  const { t } = useI18n();
   const formatNumber = useLocaleNumberFormatter();
   const smallDialog = ref(false);
   const {

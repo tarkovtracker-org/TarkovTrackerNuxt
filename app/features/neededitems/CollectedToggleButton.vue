@@ -11,6 +11,8 @@
 </template>
 <script setup lang="ts">
   defineOptions({ inheritAttrs: false });
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
       iconName?: string;
@@ -39,10 +41,9 @@
     if (typeof ariaLabel === 'string' && ariaLabel.length > 0) {
       return ariaLabel;
     }
-    const title = attrs.title;
     if (typeof title === 'string' && title.length > 0) {
       return title;
     }
-    return 'Toggle collected';
+    return t('common.toggle_collected');
   });
 </script>

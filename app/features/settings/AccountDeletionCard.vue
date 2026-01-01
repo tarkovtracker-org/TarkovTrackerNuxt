@@ -108,7 +108,7 @@
                       <span class="ml-1 font-mono font-medium">{{ maskedUsername }}</span>
                     </span>
                     <UButton
-                      v-tooltip="showUsername ? 'Hide' : 'Show'"
+                      v-tooltip="showUsername ? $t('common.hide') : $t('common.show')"
                       size="xs"
                       variant="ghost"
                       :icon="showUsername ? 'i-mdi-eye-off' : 'i-mdi-eye'"
@@ -124,7 +124,7 @@
                       <span class="ml-1 font-mono font-medium">{{ maskedEmail }}</span>
                     </span>
                     <UButton
-                      v-tooltip="showEmail ? 'Hide' : 'Show'"
+                      v-tooltip="showEmail ? $t('common.hide') : $t('common.show')"
                       size="xs"
                       variant="ghost"
                       :icon="showEmail ? 'i-mdi-eye-off' : 'i-mdi-eye'"
@@ -162,7 +162,7 @@
                 <span class="mr-2 text-sm text-content-secondary">Account ID:</span>
                 <code class="rounded bg-surface-200 px-2 py-1 text-xs dark:bg-surface-700">{{ maskedAccountId }}</code>
                 <UButton
-                  v-tooltip="showAccountId ? 'Hide' : 'Show'"
+                  v-tooltip="showAccountId ? $t('common.hide') : $t('common.show')"
                   size="xs"
                   variant="ghost"
                   :icon="showAccountId ? 'i-mdi-eye-off' : 'i-mdi-eye'"
@@ -171,7 +171,7 @@
                   @click="showAccountId = !showAccountId"
                 />
                 <UButton
-                  v-tooltip="accountIdCopied ? 'Copied!' : 'Copy Account ID'"
+                  v-tooltip="accountIdCopied ? $t('common.copied') : $t('settings.account.copy_account_id')"
                   size="xs"
                   variant="ghost"
                   :icon="accountIdCopied ? 'i-mdi-check' : 'i-mdi-content-copy'"

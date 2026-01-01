@@ -41,7 +41,7 @@
             <span
               class="rounded bg-black/60 px-2 py-1 text-sm font-bold tracking-wide text-white backdrop-blur-sm"
             >
-              {{ currentCount >= neededCount ? 'Uncollect' : 'Collect' }}
+              {{ currentCount >= neededCount ? t('page.neededitems.uncollect') : t('page.neededitems.collect') }}
             </span>
           </div>
           <GameItem
@@ -100,11 +100,11 @@
               class="flex items-center gap-1"
             >
               <UIcon name="i-mdi-account" class="h-3.5 w-3.5" />
-              Lvl {{ levelRequired }}
+              {{ t('page.neededitems.lvl_required', { level: levelRequired }) }}
             </span>
             <span v-if="lockedBefore > 0" class="flex items-center gap-1">
               <UIcon name="i-mdi-lock-outline" class="h-3.5 w-3.5" />
-              {{ lockedBefore }} before
+              {{ t('page.neededitems.locked_before', { count: lockedBefore }) }}
             </span>
           </div>
         </div>
@@ -153,6 +153,7 @@
 </template>
 <script setup lang="ts">
   import { computed, defineAsyncComponent, inject } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import {
     createDefaultNeededItemContext,
     neededItemKey,
@@ -162,6 +163,7 @@
   import GameItem from '@/components/ui/GameItem.vue';
   const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink.vue'));
   const StationLink = defineAsyncComponent(() => import('@/features/hideout/StationLink.vue'));
+  const { t } = useI18n();
   const emit = defineEmits(['decreaseCount', 'increaseCount', 'toggleCount', 'setCount']);
   const props = defineProps({
     need: {

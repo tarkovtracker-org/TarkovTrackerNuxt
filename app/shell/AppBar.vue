@@ -5,12 +5,12 @@
     <div class="flex h-full items-center gap-1 px-2 sm:gap-3 sm:px-3">
       <!-- Left: Toggle Button -->
         <UButton
-          v-tooltip="'Toggle Menu Drawer'"
+          v-tooltip="t('app_bar.toggle_drawer')"
           :icon="navBarIcon"
           variant="ghost"
           color="neutral"
           size="xl"
-          aria-label="Toggle Menu Drawer"
+          :aria-label="t('app_bar.toggle_drawer')"
           @click.stop="changeNavigationDrawer"
         />
       <!-- Center: Page Title -->
@@ -21,14 +21,14 @@
       <div class="ml-auto flex items-center gap-1 sm:gap-2">
         <span
           v-if="dataError"
-          v-tooltip="'Error Loading Tarkov Data'"
+          v-tooltip="t('app_bar.error_loading')"
           class="inline-flex rounded"
         >
           <UIcon name="i-mdi-database-alert" class="text-error-500 h-6 w-6" />
         </span>
         <span
           v-if="dataLoading || hideoutLoading"
-          v-tooltip="'Loading Tarkov Data'"
+          v-tooltip="t('app_bar.loading_data')"
           class="inline-flex rounded"
         >
           <UIcon name="i-heroicons-arrow-path" class="text-primary-500 h-6 w-6 animate-spin" />
@@ -281,12 +281,7 @@
   });
 
   const nextThemeLabel = computed(() => {
-    const labels: Record<ThemeMode, string> = {
-      system: 'Switch to System Theme',
-      light: 'Switch to Light Mode',
-      dark: 'Switch to Dark Mode',
-    };
-    return labels[nextTheme.value];
+    return t(`app_bar.themes.${nextTheme.value}`);
   });
 
   function cycleTheme() {
