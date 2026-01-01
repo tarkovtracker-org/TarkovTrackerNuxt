@@ -20,24 +20,16 @@
             <div class="group relative h-12 w-12 overflow-hidden">
               <template v-if="isDataReady && groupIcon">
                 <NuxtImg
-                  v-if="!factionImageLoadFailed"
-                  :src="pmcFactionIcon"
-                  class="absolute top-0 left-0 z-20 mt-1 max-w-[48px] px-1 opacity-0 invert dark:invert-0 transition-opacity duration-1000 ease-in-out group-hover:opacity-100"
-                  width="48"
-                  height="48"
-                  @error="handleFactionImageError"
-                />
-                <NuxtImg
                   v-if="!groupImageLoadFailed"
                   :src="groupIcon"
-                  class="absolute top-0 left-0 z-10 max-w-[48px] opacity-100 transition-opacity duration-1000 ease-in-out group-hover:opacity-0"
+                  class="absolute top-0 left-0 z-10 max-w-[48px] invert dark:invert-0"
                   width="48"
                   height="48"
                   @error="handleGroupImageError"
                 />
-                <!-- Final fallback if both fail -->
+                <!-- Final fallback -->
                 <div
-                  v-if="factionImageLoadFailed && groupImageLoadFailed"
+                  v-if="groupImageLoadFailed"
                   class="flex h-12 w-12 items-center justify-center rounded bg-surface-200 dark:bg-surface-700"
                 >
                   <UIcon name="i-heroicons-photo" class="h-6 w-6 text-content-tertiary" />
@@ -211,15 +203,12 @@
       !metadataStore.loading && metadataStore.playerLevels.length > 0 && tarkovStore.getPMCFaction()
     );
   });
-  const pmcFactionIcon = computed(() => {
-    return `/img/factions/${tarkovStore.getPMCFaction()}.webp`;
-  });
+
   const groupIcon = computed(() => {
     const level = displayedLevel.value;
     const entry = playerLevels.value.find((pl) => pl.level === level);
     return entry?.levelBadgeImageLink ?? '';
   });
-  const factionImageLoadFailed = ref(false);
   const groupImageLoadFailed = ref(false);
   // Manual level editing logic
   const editingLevel = ref(false);
@@ -260,9 +249,7 @@
     router.push('/settings');
   }
   // Reset failure flags if icons change (retry)
-  watch(pmcFactionIcon, () => {
-    factionImageLoadFailed.value = false;
-  });
+
   watch(groupIcon, () => {
     groupImageLoadFailed.value = false;
   });
@@ -270,10 +257,7 @@
    * Log image load failure and flip a flag to hide the specific failing image.
    * This is a fallback in case an image file is missing from the server or assets.
    */
-  function handleFactionImageError(event) {
-    console.warn('Failed to load faction image:', event.target?.src);
-    factionImageLoadFailed.value = true;
-  }
+
   function handleGroupImageError(event) {
     console.warn('Failed to load group image:', event.target?.src);
     groupImageLoadFailed.value = true;

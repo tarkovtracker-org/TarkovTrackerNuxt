@@ -3,7 +3,7 @@
     v-if="hasRewardsSummary || hasExpandableDetails"
     class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
     :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': hasExpandableDetails }"
-    @click="onAreaClick"
+    @click.stop="onAreaClick"
   >
     <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-300">
       <!-- Rewards title -->

@@ -96,7 +96,7 @@
           <button
             v-for="faction in factions"
             :key="faction"
-            class="flex-1 px-2 py-1 text-xs font-semibold uppercase transition-colors"
+            class="flex flex-1 items-center justify-center gap-1.5 px-2 py-1 text-xs font-semibold uppercase transition-colors"
             :class="
               faction === currentFaction
                 ? 'bg-primary-600 text-white dark:bg-primary-700'
@@ -104,7 +104,14 @@
             "
             @click="setFaction(faction)"
           >
-            {{ faction }}
+            <NuxtImg
+              :src="`/img/factions/${faction}.webp`"
+              class="h-4 w-4 object-contain"
+              :class="faction === currentFaction ? 'invert' : 'invert-0 dark:invert'"
+              width="16"
+              height="16"
+            />
+            <span>{{ faction }}</span>
           </button>
         </div>
       </div>

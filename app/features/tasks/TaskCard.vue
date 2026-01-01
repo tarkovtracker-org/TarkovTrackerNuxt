@@ -16,7 +16,7 @@
         class="h-24 w-24"
       />
     </div>
-    <div class="relative z-10 flex h-full flex-col" :class="isCompact ? 'gap-3' : 'gap-4'">
+    <div class="relative z-10 flex h-full flex-col" :class="isCompact ? 'gap-2' : 'gap-3'">
       <!--1) Header: identity + state -->
       <div class="flex flex-nowrap items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-2">
@@ -24,6 +24,7 @@
               v-tooltip="task?.name"
               :to="`/tasks?task=${task.id}`"
               class="text-primary-700 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 flex min-w-0 items-center gap-2 no-underline"
+              @click.stop
             >
               <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-800">
                 <img
@@ -202,38 +203,17 @@
               variant="ghost"
               class="shrink-0"
               :aria-label="t('page.tasks.questcard.more', 'More')"
-              @click="openOverflowMenu"
+              @click.stop="openOverflowMenu"
             >
               <UIcon name="i-mdi-dots-horizontal" aria-hidden="true" class="h-5 w-5" />
             </UButton>
         </div>
       </div>
-      <!-- 2) Metadata Row: Requires -->
-      <div
+      <TaskRequiresRow
         v-if="isLocked && pendingParentTasks.length > 0"
-        class="flex flex-nowrap items-center gap-4 text-xs text-content-secondary"
-      >
-        <!-- Requires strip (Left) -->
-        <div class="flex min-w-0 items-center">
-          <span class="shrink-0 text-gray-700 dark:text-gray-200">
-            {{ t('page.tasks.questcard.requires', 'Requires') }}:
-          </span>
-          <span class="ml-2 inline-flex flex-nowrap items-center rounded-md gap-1.5 overflow-hidden">
-              <router-link
-                v-for="parent in displayedPendingParents"
-                :key="parent.id"
-                v-tooltip="parent.name"
-                :to="`/tasks?task=${parent.id}`"
-                class="inline-flex max-w-[12rem] items-center rounded-md border border-base bg-surface-200 px-2 py-0.5 text-[11px] text-content-secondary hover:bg-surface-300 dark:bg-white/5 dark:hover:bg-white/10"
-              >
-                <span class="truncate">{{ parent.name }}</span>
-              </router-link>
-            <span v-if="extraPendingParentsCount > 0" class="shrink-0 text-gray-500">
-              +{{ extraPendingParentsCount }}
-            </span>
-          </span>
-        </div>
-      </div>
+        :parents="pendingParentTasks"
+        class="mt-1"
+      />
       <!-- 3) Body: objectives -->
       <div :class="isCompact ? 'space-y-3' : 'space-y-4'">
         <QuestKeys v-if="task?.neededKeys?.length" :needed-keys="task.neededKeys" />
@@ -260,93 +240,87 @@
         @item-context-menu="openItemContextMenu"
       />
 
-      <!-- 6) Progress Footer: Previous & Next Quests Links -->
-
-      <div v-if="(!isNested) && (parentTasks.length > 0 || childTasks.length > 0)" class="mt-2 flex flex-col gap-1">
-        
-        <!-- Next Quests Toggle -->
-        <div 
-          v-if="childTasks.length > 0"
-          class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
-          :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
-          @click.stop="toggleExpanded('children')"
-        >
-          <div class="flex items-center justify-between">
-             <div class="flex items-center gap-1.5">
-                 <UIcon 
-                  :name="expandedTasks.has('children') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
-                   class="h-4 w-4 text-gray-400 dark:text-gray-500"
-                 />
-                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
-                 </span>
-                 <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
-                    {{ childTasks.length }}
-                  </UBadge>
-            </div>
-            <!-- Stats: Remaining -->
-            <div 
-              v-if="impactCount > 0" 
-              v-tooltip="{ content: t('page.tasks.questcard.remainingTooltip', 'Tasks blocked by this task, but not unlocked by completing it'), placement: 'top-end' }"
-              class="flex cursor-help items-center text-xs text-content-tertiary"
-            >
-               <span>
-                 {{ t('page.tasks.questcard.remainingLabel', 'Remaining') }}: {{ impactCount }}
-               </span>
-            </div>
-          </div>
-           <div 
-             v-if="expandedTasks.has('children')" 
-             class="mt-2 flex flex-col gap-2"
-           >
-             <TaskCard
-                v-for="child in childTasks"
-                :key="`nested-child-${child.id}`"
-                :task="child"
-                class="!border-l-4 !border-l-primary-500"
-                :is-nested="true"
-                @on-task-action="$emit('on-task-action', $event)"
-             />
-          </div>
-        </div>
-
-        <!-- Previous Quests Toggle -->
-        <div 
-          v-if="parentTasks.length > 0"
-          class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
-          :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
-          @click.stop="toggleExpanded('parents')"
-        >
-          <div class="flex items-center justify-between">
+      <!-- Next Quests Toggle -->
+      <div 
+        v-if="!isNested && childTasks.length > 0"
+        class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
+        :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
+        @click.stop="toggleExpanded('children')"
+      >
+        <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5">
                 <UIcon 
-                  :name="expandedTasks.has('parents') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
+                :name="expandedTasks.has('children') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
                   class="h-4 w-4 text-gray-400 dark:text-gray-500"
                 />
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                   {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
+                {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
                 </span>
-                 <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
-                  {{ parentTasks.length }}
+                <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
+                  {{ childTasks.length }}
                 </UBadge>
-            </div>
           </div>
+          <!-- Stats: Remaining -->
           <div 
-            v-if="expandedTasks.has('parents')" 
+            v-if="impactCount > 0" 
+            v-tooltip="{ content: t('page.tasks.questcard.remainingTooltip', 'Tasks blocked by this task, but not unlocked by completing it'), placement: 'top-end' }"
+            class="flex cursor-help items-center text-xs text-content-tertiary"
+          >
+              <span>
+                {{ t('page.tasks.questcard.remainingLabel', 'Remaining') }}: {{ impactCount }}
+              </span>
+          </div>
+        </div>
+          <div 
+            v-if="expandedTasks.has('children')" 
             class="mt-2 flex flex-col gap-2"
           >
-             <TaskCard
-                v-for="parent in parentTasks"
-                :key="`nested-parent-${parent.id}`"
-                :task="parent"
-                class="!border-l-4 !border-l-gray-400 dark:!border-l-gray-500"
-                :is-nested="true"
-                @on-task-action="$emit('on-task-action', $event)"
-             />
+            <TaskCard
+              v-for="child in childTasks"
+              :key="`nested-child-${child.id}`"
+              :task="child"
+              :is-nested="true"
+              @on-task-action="$emit('on-task-action', $event)"
+            />
+        </div>
+      </div>
+
+      <!-- Previous Quests Toggle -->
+      <div 
+        v-if="!isNested && parentTasks.length > 0"
+        class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
+        :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
+        @click.stop="toggleExpanded('parents')"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+              <UIcon 
+                :name="expandedTasks.has('parents') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
+                class="h-4 w-4 text-gray-400 dark:text-gray-500"
+              />
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
+              </span>
+                <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
+                {{ parentTasks.length }}
+              </UBadge>
           </div>
+        </div>
+        <div 
+          v-if="expandedTasks.has('parents')" 
+          class="mt-2 flex flex-col gap-2"
+        >
+            <TaskCard
+              v-for="parent in parentTasks"
+              :key="`nested-parent-${parent.id}`"
+              :task="parent"
+              :is-nested="true"
+              @on-task-action="$emit('on-task-action', $event)"
+            />
         </div>
       </div>
     </div>
+
     <ContextMenu ref="taskContextMenu">
       <template #default="{ close }">
         <ContextMenuItem
@@ -421,6 +395,9 @@
   const TaskCardRewards = defineAsyncComponent(
     () => import('@/features/tasks/TaskCardRewards.vue')
   );
+  const TaskRequiresRow = defineAsyncComponent(
+    () => import('@/features/tasks/TaskRequiresRow.vue')
+  );
   const props = defineProps<{
     task: Task;
     isNested?: boolean;
@@ -486,10 +463,6 @@
   });
   const pendingParentTasks = computed(() => {
     return parentTasks.value.filter((parent) => !tarkovStore.isTaskComplete(parent.id));
-  });
-  const displayedPendingParents = computed(() => pendingParentTasks.value.slice(0, 2));
-  const extraPendingParentsCount = computed(() => {
-    return Math.max(0, pendingParentTasks.value.length - displayedPendingParents.value.length);
   });
   const childTasks = computed(() => {
     if (!props.task.children?.length) return [];
