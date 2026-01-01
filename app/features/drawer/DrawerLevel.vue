@@ -129,29 +129,24 @@
                 <UIcon name="i-mdi-chevron-up" class="h-5 w-5" />
               </button>
             </AppTooltip>
-            <template v-if="displayedLevel > minPlayerLevel">
-              <AppTooltip
-                :text="
-                  useAutomaticLevel
-                    ? t(
-                        'navigation_drawer.manual_disabled',
-                        'Manual level editing is disabled when automatic calculation is enabled'
-                      )
-                    : ''
-                "
+            <AppTooltip
+              :text="
+                useAutomaticLevel
+                  ? t(
+                      'navigation_drawer.manual_disabled',
+                      'Manual level editing is disabled when automatic calculation is enabled'
+                    )
+                  : ''
+              "
+            >
+              <button
+                class="flex h-6 w-6 cursor-pointer items-center justify-center p-0 text-white/70 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="useAutomaticLevel || displayedLevel <= minPlayerLevel"
+                @click="decrementLevel"
               >
-                <button
-                  class="flex h-6 w-6 cursor-pointer items-center justify-center p-0 text-white/70 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="useAutomaticLevel"
-                  @click="decrementLevel"
-                >
-                  <UIcon name="i-mdi-chevron-down" class="h-5 w-5" />
-                </button>
-              </AppTooltip>
-            </template>
-            <template v-else>
-              <div class="h-6 w-6" aria-hidden="true"></div>
-            </template>
+                <UIcon name="i-mdi-chevron-down" class="h-5 w-5" />
+              </button>
+            </AppTooltip>
           </span>
         </div>
         <!-- XP Progress Display -->
