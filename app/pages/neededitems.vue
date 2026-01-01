@@ -9,6 +9,7 @@
       v-model:group-by-item="groupByItem"
       v-model:hide-non-fir-special-equipment="hideNonFirSpecialEquipment"
       v-model:hide-team-items="hideTeamItems"
+      v-model:kappa-only="kappaOnly"
       :filter-tabs="filterTabsWithCounts"
       :total-count="displayItems.length"
       :ungrouped-count="filteredItems.length"
@@ -67,6 +68,7 @@
             v-for="(group, index) in visibleGroupedItems"
             :key="group.itemId"
             :grouped-item="group"
+            :active-filter="activeFilter"
             :data-index="index"
           />
         </div>
@@ -113,6 +115,7 @@
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useProgressStore } from '@/stores/useProgress';
+  import { useTarkovStore } from '@/stores/useTarkov';
   import type { NeededItemHideoutModule, NeededItemTaskObjective } from '@/types/tarkov';
   import { logger } from '@/utils/logger';
   // Page metadata
@@ -125,6 +128,7 @@
   const metadataStore = useMetadataStore();
   const progressStore = useProgressStore();
   const preferencesStore = usePreferencesStore();
+  const tarkovStore = useTarkovStore();
   const { neededItemTaskObjectives, neededItemHideoutModules } = storeToRefs(metadataStore);
   // View mode state: 'list' or 'grid'
   const viewMode = ref<'list' | 'grid'>('grid');
@@ -136,6 +140,7 @@
   const firFilter = ref<FirFilter>('all');
   const groupByItem = ref(false);
   const hideNonFirSpecialEquipment = ref(false);
+  const kappaOnly = ref(false);
   // Team filter preferences (two-way binding with preferences store)
   const hideTeamItems = computed({
     get: () => preferencesStore.itemsTeamAllHidden,
@@ -154,10 +159,15 @@
       backgroundColor?: string;
     };
     taskFir: number;
+    taskFirCurrent: number;
     taskNonFir: number;
+    taskNonFirCurrent: number;
     hideoutFir: number;
+    hideoutFirCurrent: number;
     hideoutNonFir: number;
+    hideoutNonFirCurrent: number;
     total: number;
+    currentCount: number;
   }
   // Get user's faction for filtering task objectives
   const userFaction = computed(() => progressStore.playerFaction['self'] ?? 'USEC');
@@ -291,13 +301,28 @@
         !hideNonFirSpecialEquipment.value ||
         !isNonFirSpecialEquipment(need as NeededItemTaskObjective)
     );
+    // Filter task items to only show Kappa-required quests (hideout items remain visible)
+    if (kappaOnly.value) {
+      items = items.filter((need) => {
+        if (need.needType !== 'taskObjective') {
+          return true;
+        }
+        const task = metadataStore.getTaskById(need.taskId);
+        return task?.kappaRequired === true;
+      });
+    }
     // Filter by search - searches item name, task name, and hideout station name
     if (search.value) {
       const searchLower = search.value.toLowerCase();
       items = items.filter((item) => {
         // Some task objectives use markerItem instead of item; guard against missing objects
-        const itemName = item.item?.name || (item as NeededItemTaskObjective).markerItem?.name;
-        if (itemName?.toLowerCase().includes(searchLower)) {
+        const itemObj = item.item || (item as NeededItemTaskObjective).markerItem;
+        const itemName = itemObj?.name;
+        const itemShortName = itemObj?.shortName;
+        if (
+          itemName?.toLowerCase()?.includes(searchLower) ||
+          itemShortName?.toLowerCase()?.includes(searchLower)
+        ) {
           return true;
         }
         // Search by task name for task objectives
@@ -355,27 +380,43 @@
             backgroundColor: itemData.backgroundColor,
           },
           taskFir: 0,
+          taskFirCurrent: 0,
           taskNonFir: 0,
+          taskNonFirCurrent: 0,
           hideoutFir: 0,
+          hideoutFirCurrent: 0,
           hideoutNonFir: 0,
+          hideoutNonFirCurrent: 0,
           total: 0,
+          currentCount: 0,
         });
       }
       const group = groups.get(itemId)!;
       const count = need.count || 1;
+      // Get current count for this specific need (capped at needed)
+      let needCurrentCount = 0;
       if (need.needType === 'taskObjective') {
+        const objectiveCount = tarkovStore.getObjectiveCount(need.id);
+        needCurrentCount = Math.min(objectiveCount ?? 0, count);
         if (need.foundInRaid) {
           group.taskFir += count;
+          group.taskFirCurrent += needCurrentCount;
         } else {
           group.taskNonFir += count;
+          group.taskNonFirCurrent += needCurrentCount;
         }
       } else {
+        const hideoutPartCount = tarkovStore.getHideoutPartCount(need.id);
+        needCurrentCount = Math.min(hideoutPartCount ?? 0, count);
         if (need.foundInRaid) {
           group.hideoutFir += count;
+          group.hideoutFirCurrent += needCurrentCount;
         } else {
           group.hideoutNonFir += count;
+          group.hideoutNonFirCurrent += needCurrentCount;
         }
       }
+      group.currentCount += needCurrentCount;
       group.total += count;
     }
     return Array.from(groups.values()).sort((a, b) => b.total - a.total);
@@ -430,7 +471,7 @@
     visibleCount.value = initialVisibleCount.value;
   };
   watch(
-    [search, activeFilter, firFilter, groupByItem, hideNonFirSpecialEquipment, viewMode],
+    [search, activeFilter, firFilter, groupByItem, hideNonFirSpecialEquipment, kappaOnly, viewMode],
     () => {
       resetVisibleCount();
     }

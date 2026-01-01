@@ -94,10 +94,11 @@
         </div>
       </template>
     </GenericCard>
-    <!-- Section 1.5: Display Name -->
-    <DisplayNameCard />
-    <!-- Section 2: Experience -->
-    <ExperienceCard />
+    <!-- Section 1.5: Display Name & Experience (side by side) -->
+    <div class="grid gap-4 md:grid-cols-2">
+      <DisplayNameCard />
+      <ExperienceCard />
+    </div>
     <!-- Section 3: Skills (Full Width) -->
     <SkillsCard />
     <!-- Section 3: Data Management -->

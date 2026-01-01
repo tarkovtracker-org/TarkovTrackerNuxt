@@ -161,6 +161,10 @@
   const showMapDisplay = computed(() => {
     return getTaskPrimaryView.value === 'maps' && getTaskMapView.value !== 'all';
   });
+  // Determines if completed objectives should be rendered on the component map
+  const shouldShowCompletedObjectives = computed(() => {
+    return ['completed', 'all'].includes(getTaskSecondaryView.value);
+  });
   const selectedMapData = computed(() => {
     const mapId = getTaskMapView.value;
     if (!mapId || mapId === 'all') return null;
@@ -184,8 +188,9 @@
       const objectiveMaps = metadataStore.objectiveMaps?.[task.id] ?? [];
       const objectiveGps = metadataStore.objectiveGPS?.[task.id] ?? [];
       task.objectives.forEach((obj) => {
-        // Skip objectives that are already marked as complete
-        if (tarkovStore.isTaskObjectiveComplete(obj.id)) return;
+        // Skip objectives that are already marked as complete, unless the current filter allows them
+        if (tarkovStore.isTaskObjectiveComplete(obj.id) && !shouldShowCompletedObjectives.value)
+          return;
         const zones: MapObjectiveZone[] = [];
         const possibleLocations: MapObjectiveLocation[] = [];
         const objectiveWithLocations = obj as TaskObjective & {

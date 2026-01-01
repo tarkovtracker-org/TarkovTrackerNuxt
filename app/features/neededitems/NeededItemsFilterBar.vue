@@ -104,13 +104,48 @@
                     $emit('update:hideNonFirSpecialEquipment', !hideNonFirSpecialEquipment)
                   "
                 >
-                  <UIcon name="i-mdi-briefcase-outline" class="mr-1 h-4 w-4" />
-                  {{
-                    hideNonFirSpecialEquipment
-                      ? $t('page.neededitems.filters.no_special', 'NO-SPECIAL')
-                      : $t('page.neededitems.filters.special', 'SPECIAL')
-                  }}
-                </UButton>
+                  <UButton
+                    v-tooltip="
+                      $t(
+                        'page.neededitems.filters.hide_non_fir_special_equipment_title',
+                        'Hide non-FIR special equipment (e.g., MS2000 Markers, Wi-Fi Cameras)'
+                      )
+                    "
+                    :variant="hideNonFirSpecialEquipment ? 'soft' : 'ghost'"
+                    :color="hideNonFirSpecialEquipment ? 'primary' : 'neutral'"
+                    size="sm"
+                    @click="
+                      $emit('update:hideNonFirSpecialEquipment', !hideNonFirSpecialEquipment)
+                    "
+                  >
+                    <UIcon name="i-mdi-briefcase-outline" class="mr-1 h-4 w-4" />
+                    {{
+                      hideNonFirSpecialEquipment
+                        ? $t('page.neededitems.filters.no_special', 'NO-SPECIAL')
+                        : $t('page.neededitems.filters.special', 'SPECIAL')
+                    }}
+                  </UButton>
+                  <UButton
+                    v-tooltip="
+                      isKappaDisabled
+                        ? $t(
+                            'page.neededitems.filters.kappa_only_disabled_tooltip',
+                            'Kappa filter applies to tasks only.'
+                          )
+                        : $t(
+                            'page.neededitems.filters.kappa_only_tooltip',
+                            'Show only items required for Kappa quests'
+                          )
+                    "
+                    :variant="kappaOnly ? 'soft' : 'ghost'"
+                    :color="kappaOnly ? 'warning' : 'neutral'"
+                    size="sm"
+                    :disabled="isKappaDisabled"
+                    @click="$emit('update:kappaOnly', !kappaOnly)"
+                  >
+                    <UIcon name="i-mdi-trophy" class="mr-1 h-4 w-4" />
+                    {{ $t('page.neededitems.filters.kappa_only', 'KAPPA') }}
+                  </UButton>
               </div>
               <div class="border-t border-base pt-3">
                 <div class="mb-2 text-xs font-medium text-content-tertiary">
@@ -194,6 +229,7 @@
     groupByItem: boolean;
     hideTeamItems: boolean;
     hideNonFirSpecialEquipment: boolean;
+    kappaOnly: boolean;
   }>();
   const emit = defineEmits<{
     'update:modelValue': [value: FilterType];
@@ -203,6 +239,7 @@
     'update:groupByItem': [value: boolean];
     'update:hideTeamItems': [value: boolean];
     'update:hideNonFirSpecialEquipment': [value: boolean];
+    'update:kappaOnly': [value: boolean];
   }>();
   const activeFiltersCount = computed(() => {
     let count = 0;
@@ -215,7 +252,13 @@
     if (props.hideTeamItems) {
       count += 1;
     }
+    if (props.kappaOnly) {
+      count += 1;
+    }
     return count;
+  });
+  const isKappaDisabled = computed(() => {
+    return props.modelValue === 'hideout';
   });
   const setViewMode = (mode: ViewMode) => {
     emit('update:groupByItem', false);

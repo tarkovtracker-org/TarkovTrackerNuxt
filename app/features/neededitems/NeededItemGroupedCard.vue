@@ -39,28 +39,71 @@
         </div>
         <div class="mt-1 flex items-center gap-1">
           <span class="text-xs text-content-tertiary">Total:</span>
-          <span class="text-primary-400 text-lg font-bold">
-            {{ formatCompactNumber(groupedItem.total) }}
+          <span
+            class="text-lg font-bold"
+            :class="isComplete ? 'text-success-400 dark:text-success-400' : 'text-primary-400 dark:text-primary-400'"
+          >
+            {{ formatCompactNumber(groupedItem.currentCount) }}/{{
+              formatCompactNumber(groupedItem.total)
+            }}
           </span>
         </div>
       </div>
     </div>
     <!-- Breakdown grid -->
-    <div class="grid grid-cols-2 divide-x divide-base border-t border-base text-xs">
+    <div
+      class="gap-px border-t border-base text-xs"
+      :class="activeFilter === 'tasks' || activeFilter === 'hideout' ? '' : 'grid grid-cols-2 divide-x divide-base'"
+    >
       <!-- Tasks section -->
-      <div class="p-2">
-        <div class="mb-1.5 flex items-center gap-1 text-content-tertiary">
+      <div v-if="activeFilter !== 'hideout'" class="p-2">
+        <div v-if="activeFilter === 'all' || activeFilter === 'completed'" class="mb-1.5 flex items-center gap-1 text-content-tertiary">
           <UIcon name="i-mdi-clipboard-list" class="h-3.5 w-3.5" />
           <span class="font-medium">Tasks</span>
         </div>
         <div class="flex gap-3">
           <div v-if="groupedItem.taskFir > 0" class="flex items-center gap-1">
-            <UIcon name="i-mdi-checkbox-marked-circle" class="text-success-400 h-3 w-3" />
-            <span class="text-success-400 font-semibold">{{ groupedItem.taskFir }}</span>
+              <UIcon
+                v-tooltip="'Found in Raid required'"
+                name="i-mdi-checkbox-marked-circle-outline"
+                class="h-3 w-3"
+                :class="
+                  groupedItem.taskFirCurrent >= groupedItem.taskFir
+                    ? 'text-success-400 dark:text-success-400'
+                    : 'text-content-primary'
+                "
+              />
+            <span
+              class="font-semibold"
+              :class="
+                groupedItem.taskFirCurrent >= groupedItem.taskFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-primary'
+              "
+            >
+              {{ groupedItem.taskFirCurrent }}/{{ groupedItem.taskFir }}
+            </span>
           </div>
           <div v-if="groupedItem.taskNonFir > 0" class="flex items-center gap-1">
-            <UIcon name="i-mdi-checkbox-blank-circle-outline" class="h-3 w-3 text-content-tertiary" />
-            <span class="font-semibold text-content-primary">{{ groupedItem.taskNonFir }}</span>
+            <UIcon
+              name="i-mdi-checkbox-blank-circle-outline"
+              class="h-3 w-3"
+              :class="
+                groupedItem.taskNonFirCurrent >= groupedItem.taskNonFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-tertiary'
+              "
+            />
+            <span
+              class="font-semibold"
+              :class="
+                groupedItem.taskNonFirCurrent >= groupedItem.taskNonFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-primary'
+              "
+            >
+              {{ groupedItem.taskNonFirCurrent }}/{{ groupedItem.taskNonFir }}
+            </span>
           </div>
           <span
             v-if="groupedItem.taskFir === 0 && groupedItem.taskNonFir === 0"
@@ -71,19 +114,54 @@
         </div>
       </div>
       <!-- Hideout section -->
-      <div class="p-2">
-        <div class="mb-1.5 flex items-center gap-1 text-content-tertiary">
+      <div v-if="activeFilter !== 'tasks'" class="p-2">
+        <div v-if="activeFilter === 'all' || activeFilter === 'completed'" class="mb-1.5 flex items-center gap-1 text-content-tertiary">
           <UIcon name="i-mdi-home" class="h-3.5 w-3.5" />
           <span class="font-medium">Hideout</span>
         </div>
         <div class="flex gap-3">
           <div v-if="groupedItem.hideoutFir > 0" class="flex items-center gap-1">
-            <UIcon name="i-mdi-checkbox-marked-circle" class="text-success-400 h-3 w-3" />
-            <span class="text-success-400 font-semibold">{{ groupedItem.hideoutFir }}</span>
+              <UIcon
+                v-tooltip="'Found in Raid required'"
+                name="i-mdi-checkbox-marked-circle-outline"
+                class="h-3 w-3"
+                :class="
+                  groupedItem.hideoutFirCurrent >= groupedItem.hideoutFir
+                    ? 'text-success-400 dark:text-success-400'
+                    : 'text-content-primary'
+                "
+              />
+            <span
+              class="font-semibold"
+              :class="
+                groupedItem.hideoutFirCurrent >= groupedItem.hideoutFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-primary'
+              "
+            >
+              {{ groupedItem.hideoutFirCurrent }}/{{ groupedItem.hideoutFir }}
+            </span>
           </div>
           <div v-if="groupedItem.hideoutNonFir > 0" class="flex items-center gap-1">
-            <UIcon name="i-mdi-checkbox-blank-circle-outline" class="h-3 w-3 text-content-tertiary" />
-            <span class="font-semibold text-content-primary">{{ groupedItem.hideoutNonFir }}</span>
+            <UIcon
+              name="i-mdi-checkbox-blank-circle-outline"
+              class="h-3 w-3"
+              :class="
+                groupedItem.hideoutNonFirCurrent >= groupedItem.hideoutNonFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-tertiary'
+              "
+            />
+            <span
+              class="font-semibold"
+              :class="
+                groupedItem.hideoutNonFirCurrent >= groupedItem.hideoutNonFir
+                  ? 'text-success-400 dark:text-success-400'
+                  : 'text-content-primary'
+              "
+            >
+              {{ groupedItem.hideoutNonFirCurrent }}/{{ groupedItem.hideoutNonFir }}
+            </span>
           </div>
           <span
             v-if="groupedItem.hideoutFir === 0 && groupedItem.hideoutNonFir === 0"
@@ -111,15 +189,24 @@
       backgroundColor?: string;
     };
     taskFir: number;
+    taskFirCurrent: number;
     taskNonFir: number;
+    taskNonFirCurrent: number;
     hideoutFir: number;
+    hideoutFirCurrent: number;
     hideoutNonFir: number;
+    hideoutNonFirCurrent: number;
     total: number;
+    currentCount: number;
   }
   const props = defineProps<{
     groupedItem: GroupedItem;
+    activeFilter?: 'all' | 'tasks' | 'hideout' | 'completed';
   }>();
   const itemId = computed(() => props.groupedItem.itemId);
+  const isComplete = computed(() => {
+    return props.groupedItem.currentCount >= props.groupedItem.total;
+  });
   const { isCraftable, craftableIconClass, craftableTitle, goToCraftStation } =
     useCraftableItem(itemId);
 </script>

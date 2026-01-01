@@ -1,9 +1,14 @@
-<template>
   <UIcon
     v-if="foundInRaid"
     v-tooltip="foundInRaidTitle"
     name="i-mdi-checkbox-marked-circle-outline"
     :class="firIconClass"
+  />
+  <UIcon
+    v-if="kappaRequired"
+    v-tooltip="kappaTitleText"
+    name="i-mdi-trophy"
+    :class="kappaIconClass"
   />
   <button
     v-if="isCraftable"
@@ -15,7 +20,6 @@
   >
     <UIcon name="i-mdi-hammer-wrench" :class="[craftableIconBaseClass, craftableIconClass]" />
   </button>
-</template>
 <script setup lang="ts">
   const props = withDefaults(
     defineProps<{
@@ -26,6 +30,9 @@
       foundInRaid: boolean;
       foundInRaidTitle?: string;
       isCraftable: boolean;
+      kappaIconClass?: string;
+      kappaRequired?: boolean;
+      kappaTitle?: string;
     }>(),
     {
       craftableIconBaseClass: 'ml-1 h-5 w-5',
@@ -33,6 +40,9 @@
       craftableTitle: 'Craftable',
       firIconClass: 'ml-1 h-5 w-5',
       foundInRaidTitle: 'Found in Raid required',
+      kappaIconClass: 'ml-1 h-5 w-5 text-warning-400',
+      kappaRequired: false,
+      kappaTitle: 'Required for Kappa quest',
     }
   );
   const emit = defineEmits<{
@@ -42,5 +52,9 @@
   const craftableTitleText = computed(() => {
     const title = props.craftableTitle?.trim();
     return title && title.length > 0 ? title : 'Craftable';
+  });
+  const kappaTitleText = computed(() => {
+    const title = props.kappaTitle?.trim();
+    return title && title.length > 0 ? title : 'Required for Kappa quest';
   });
 </script>

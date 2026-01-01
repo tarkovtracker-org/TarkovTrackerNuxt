@@ -26,7 +26,7 @@
     <!-- Main content area -->
     <main
       id="main-content"
-      class="flex flex-1 flex-col pt-16 transition-all duration-300 ease-in-out"
+      class="relative z-0 flex flex-1 flex-col pt-16 transition-all duration-300 ease-in-out"
       :style="{
         marginLeft: mainMarginLeft,
       }"
