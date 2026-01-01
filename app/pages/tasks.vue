@@ -7,11 +7,11 @@
         <TaskFilterBar v-model:search-query="searchQuery" />
         <!-- Map Display (shown when MAPS view is selected) -->
         <div v-if="showMapDisplay" class="mb-6">
-          <div class="rounded-lg bg-gray-100 p-4 dark:bg-surface-800/50">
+          <div class="rounded-lg bg-surface-base p-4 dark:bg-surface-800/50">
             <div class="mb-3 flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200">
+              <h3 class="text-lg font-medium text-content-primary">
                 {{ selectedMapData?.name || 'Map' }}
-                <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span class="ml-2 text-sm font-normal text-content-tertiary">
                   {{ displayTime }}
                 </span>
               </h3>

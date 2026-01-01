@@ -1,13 +1,14 @@
 <template>
   <footer
-    class="relative w-full border-t border-base bg-surface-elevated px-6 py-5 dark:border-white/10 dark:bg-transparent dark:bg-linear-to-t dark:from-black/60 dark:via-black/30 dark:to-black/20"
+  <footer
+    class="relative w-full border-t border-base bg-surface-elevated px-6 py-5"
   >
     <div class="mx-auto w-full max-w-6xl">
       <!-- Top Row: Community & Support -->
       <div class="grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
         <!-- Community Links -->
         <div class="flex flex-col gap-2 text-center lg:items-start lg:text-left">
-          <div class="text-[0.6875rem] font-semibold tracking-[0.08em] text-content-tertiary uppercase dark:text-white/55">
+          <div class="text-[0.6875rem] font-semibold tracking-[0.08em] text-content-tertiary uppercase">
             {{ t('footer.community_label') }}
           </div>
           <div class="flex flex-col items-center gap-2.5 lg:items-start">
@@ -60,7 +61,7 @@
                 class="group flex items-center gap-2.5 transition-all duration-150 hover:-translate-y-0.5"
               >
                 <span
-                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-200 text-content-primary transition-all duration-150 group-hover:bg-surface-300 group-hover:dark:bg-white/20 group-hover:text-black group-hover:dark:text-white dark:bg-white/10 dark:text-gray-200 group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-combined-soft text-content-primary transition-all duration-150 group-hover:bg-surface-combined-highlight group-hover:text-black group-hover:dark:text-white group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
                 >
                   <UIcon name="i-mdi-github" class="h-5 w-5" />
                 </span>
@@ -95,13 +96,13 @@
             </svg>
             <span>{{ t('footer.support_button') }}</span>
           </a>
-          <p class="mt-1 text-xs text-content-tertiary italic dark:text-white/65 text-white/65">
+          <p class="mt-1 text-xs text-content-tertiary italic">
             {{ t('footer.support_tagline') }}
           </p>
         </div>
         <!-- Legal Links -->
         <div class="flex flex-col gap-2 text-center lg:items-end lg:text-right">
-          <div class="text-[0.6875rem] font-semibold tracking-[0.08em] text-content-tertiary uppercase dark:text-white/55">
+          <div class="text-[0.6875rem] font-semibold tracking-[0.08em] text-content-tertiary uppercase">
             {{ t('footer.legal_label') }}
           </div>
           <div class="flex flex-col items-center gap-2 lg:items-end">
@@ -121,12 +122,12 @@
         </div>
       </div>
       <!-- Divider -->
-      <div class="my-4 h-px bg-divider dark:bg-transparent dark:bg-linear-to-r dark:from-transparent dark:via-white/10 dark:to-transparent" />
+      <div class="my-4 h-px bg-divider" />
       <!-- Bottom Row: Copyright & Attribution -->
       <div class="flex flex-col items-center gap-1.5 text-center">
         <div class="flex items-center justify-center gap-2 text-sm font-semibold text-content-secondary">
           <span>TarkovTracker &copy; 2020–{{ new Date().getFullYear() }}</span>
-          <span class="text-sm text-content-tertiary dark:text-white/40">·</span>
+          <span class="text-sm text-content-tertiary">·</span>
           <router-link
             to="/credits"
             class="text-primary-400 decoration-primary-400/40 hover:text-primary-300 hover:decoration-primary-300 underline underline-offset-2 transition-colors duration-150"
@@ -134,7 +135,7 @@
             {{ t('footer.credits') }}
           </router-link>
         </div>
-        <p class="m-0 text-xs leading-snug text-content-tertiary dark:text-white/45">
+        <p class="m-0 text-xs leading-snug text-content-tertiary">
           {{ t('footer.game_attribution') }}
         </p>
       </div>

@@ -11,7 +11,11 @@
         :icon="tab.icon"
         :label="tab.label.toUpperCase()"
         :count="tab.count"
-        :count-color="modelValue === tab.value ? 'bg-primary-500' : 'bg-surface-400'"
+        :count-color="
+          modelValue === tab.value
+            ? tab.activeColor || 'bg-primary-500'
+            : tab.inactiveColor || 'bg-surface-400'
+        "
         class="shrink-0"
         label-class="hidden sm:inline text-[clamp(0.625rem,2vw,0.875rem)]"
         @click="$emit('update:modelValue', tab.value)"
@@ -181,6 +185,8 @@
     value: FilterType;
     icon: string;
     count: number;
+    activeColor?: string;
+    inactiveColor?: string;
   }
   const props = defineProps<{
     modelValue: FilterType;

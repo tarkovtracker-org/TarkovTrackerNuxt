@@ -77,8 +77,8 @@ export function useCraftableItem(
       return '';
     }
     return isCraftableAvailable.value
-      ? 'text-success-400'
-      : 'text-surface-400 dark:text-surface-500';
+      ? 'text-success-600 dark:text-success-400'
+      : 'text-surface-400';
   });
   const craftableTitle = computed(() => {
     if (!isCraftable.value) {

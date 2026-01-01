@@ -73,6 +73,13 @@
     useHideoutFiltering();
   const primaryViews = computed(() => [
     {
+      title: t('page.hideout.primaryviews.all'),
+      icon: 'mdi-clipboard-check',
+      view: 'all',
+      count: stationCounts.value.all,
+      badgeColor: 'bg-secondary-600',
+    },
+    {
       title: t('page.hideout.primaryviews.available'),
       icon: 'mdi-tag-arrow-up-outline',
       view: 'available',
@@ -84,21 +91,14 @@
       icon: 'mdi-arrow-collapse-up',
       view: 'maxed',
       count: stationCounts.value.maxed,
-      badgeColor: 'bg-green-600',
+      badgeColor: 'bg-success-600',
     },
     {
       title: t('page.hideout.primaryviews.locked'),
       icon: 'mdi-lock',
       view: 'locked',
       count: stationCounts.value.locked,
-      badgeColor: 'bg-gray-600',
-    },
-    {
-      title: t('page.hideout.primaryviews.all'),
-      icon: 'mdi-clipboard-check',
-      view: 'all',
-      count: stationCounts.value.all,
-      badgeColor: 'bg-blue-600',
+      badgeColor: 'bg-surface-600',
     },
   ]);
   // Handle deep linking to a specific station via ?station=stationId query param

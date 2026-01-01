@@ -197,24 +197,28 @@
         value: 'all' as FilterType,
         icon: 'i-mdi-clipboard-list',
         count: allIncomplete.length,
+        activeColor: 'bg-secondary-600',
       },
       {
         label: t('page.neededitems.filters.tasks', 'Tasks'),
         value: 'tasks' as FilterType,
         icon: 'i-mdi-checkbox-marked-circle-outline',
         count: taskItems.length,
+        activeColor: 'bg-primary-500',
       },
       {
         label: t('page.neededitems.filters.hideout', 'Hideout'),
         value: 'hideout' as FilterType,
         icon: 'i-mdi-home',
         count: hideoutItems.length,
+        activeColor: 'bg-primary-500',
       },
       {
         label: t('page.neededitems.filters.completed', 'Completed'),
         value: 'completed' as FilterType,
         icon: 'i-mdi-check-all',
         count: completedItems.length,
+        activeColor: 'bg-success-600',
       },
     ];
   });

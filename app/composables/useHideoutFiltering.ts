@@ -12,8 +12,8 @@ export function useHideoutFiltering() {
   const preferencesStore = usePreferencesStore();
   // Active primary view (available, maxed, locked, all)
   const activePrimaryView = computed({
-    get: () => preferencesStore.getTaskPrimaryView,
-    set: (value) => preferencesStore.setTaskPrimaryView(value),
+    get: () => preferencesStore.getHideoutPrimaryView,
+    set: (value) => preferencesStore.setHideoutPrimaryView(value),
   });
   // Helper to determine if a station is available for upgrade
   const isStationAvailable = (station: HideoutStation): boolean => {

@@ -171,7 +171,9 @@ export const usePreferencesStore = defineStore('preferences', {
       return state.taskUserView ?? 'self';
     },
     getNeededTypeView: (state) => {
-      return state.neededTypeView ?? 'all';
+      const valid = ['all', 'tasks', 'hideout', 'completed'];
+      const val = state.neededTypeView;
+      return val && valid.includes(val) ? val : 'all';
     },
     itemsNeededHideNonFIR: (state) => {
       return state.itemsHideNonFIR ?? false;
@@ -186,7 +188,9 @@ export const usePreferencesStore = defineStore('preferences', {
       return state.neededitemsStyle ?? 'mediumCard';
     },
     getHideoutPrimaryView: (state) => {
-      return state.hideoutPrimaryView ?? 'available';
+      const valid = ['all', 'available', 'maxed', 'locked'];
+      const val = state.hideoutPrimaryView;
+      return val && valid.includes(val) ? val : 'all';
     },
     getLocaleOverride: (state) => {
       return state.localeOverride ?? null;

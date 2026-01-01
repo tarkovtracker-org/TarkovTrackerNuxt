@@ -184,14 +184,14 @@
         >
           <!-- Trader avatar with count badge -->
           <div class="relative">
-            <div class="h-8 w-8 overflow-hidden rounded-full bg-gray-800">
+            <div class="h-8 w-8 overflow-hidden rounded-full bg-surface-base">
               <img
                 v-if="trader.imageLink"
                 :src="trader.imageLink"
                 :alt="trader.name"
                 class="h-full w-full object-cover"
               />
-              <UIcon v-else name="i-mdi-account-circle" class="h-full w-full text-gray-400" />
+              <UIcon v-else name="i-mdi-account-circle" class="h-full w-full text-content-tertiary" />
             </div>
             <span
               :class="[
