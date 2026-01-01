@@ -2,6 +2,7 @@
  * Composable for managing Leaflet map instances for Tarkov maps.
  * Handles map initialization, SVG overlay loading, floor switching, and layer management.
  */
+import { useDebounceFn } from '@vueuse/core';
 import {
   ref,
   shallowRef,
@@ -144,6 +145,8 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
   const crsKey = ref('');
   // Idle detection timer
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  // Resize observer
+  let resizeObserver: ResizeObserver | null = null;
   // Computed
   const floors = computed<string[]>(() => {
     const svgConfig = map.value?.svg;
@@ -215,7 +218,7 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     }
     // Create new SVG overlay using svgBounds if available
     const bounds = getSvgOverlayBounds(svgConfig);
-    svgLayer.value = L.svgOverlay(svgElement, bounds);
+    svgLayer.value = L.svgOverlay(svgElement, bounds, { pane: 'mapBackground' });
     if (mapInstance.value) {
       svgLayer.value.addTo(mapInstance.value);
       // Apply floor visibility if there are multiple floors in a single SVG
@@ -338,6 +341,9 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
       // Create map instance with custom CRS
       const mapOptions = getLeafletMapOptions(leaflet.value, validSvgConfig);
       mapInstance.value = leaflet.value.map(containerRef.value, mapOptions);
+      // Create a custom pane for the map background to ensure it stays behind markers
+      const backgroundPane = mapInstance.value.createPane('mapBackground');
+      backgroundPane.style.zIndex = '200'; // Below overlayPane (400) and markerPane (600)
       // Set initial view using map bounds
       const bounds = getLeafletBounds(validSvgConfig);
       mapInstance.value.fitBounds(bounds);
@@ -349,9 +355,9 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
           validSvgConfig.floors[validSvgConfig.floors.length - 1] ||
           '';
       }
-      // Load SVG overlay FIRST so it's below markers
+      // Load SVG overlay
       await loadMapSvg();
-      // Create layer groups for markers AFTER SVG so they appear on top
+      // Create layer groups for markers
       objectiveLayer.value = leaflet.value.layerGroup().addTo(mapInstance.value);
       extractLayer.value = leaflet.value.layerGroup().addTo(mapInstance.value);
       // Setup idle detection
@@ -365,6 +371,22 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
       logger.error('Failed to initialize Leaflet map:', error);
     } finally {
       isLoading.value = false;
+    }
+    // Setup resize observer
+    if (containerRef.value) {
+      const handleResize = useDebounceFn(() => {
+        if (mapInstance.value) {
+          mapInstance.value.invalidateSize({ animate: false });
+          // Optional: re-fit bounds if needed, or just invalidate size
+          // refreshView(); // calling refreshView would re-fit bounds
+        }
+      }, 100);
+      try {
+        resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(containerRef.value);
+      } catch (error) {
+        logger.error('Failed to initialize ResizeObserver:', error);
+      }
     }
   }
   /**
@@ -407,6 +429,10 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
   function destroy(): void {
     if (idleTimer) {
       clearTimeout(idleTimer);
+    }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
     }
     if (mapInstance.value) {
       mapInstance.value.remove();
