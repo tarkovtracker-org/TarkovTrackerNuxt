@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full items-start gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
+    class="group focus-within:ring-primary-500 focus-within:ring-offset-surface-900 flex w-full items-center gap-4 rounded-md px-2 py-2 transition-colors focus-within:ring-2 focus-within:ring-offset-2"
     :class="[
       isComplete ? 'bg-success-500/10' : 'hover:bg-surface-200 dark:hover:bg-white/5',
       isParentTaskLocked ? 'cursor-not-allowed opacity-80' : 'cursor-pointer',

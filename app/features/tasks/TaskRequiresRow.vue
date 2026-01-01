@@ -158,6 +158,7 @@ const calculateVisibleItems = () => {
 // Re-calculate when width changes
 useResizeObserver(container, (entries) => {
   const entry = entries[0];
+  if (!entry) return;
   containerWidth.value = entry.contentRect.width;
   calculateVisibleItems();
 });

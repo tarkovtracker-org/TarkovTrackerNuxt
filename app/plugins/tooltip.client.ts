@@ -101,7 +101,7 @@ function createTooltip(el: HTMLElement, value: string | TooltipOptions) {
         right: 'left',
         bottom: 'top',
         left: 'right',
-      }[placement.split('-')[0]]!;
+      }[placement.split('-')[0] as 'top' | 'right' | 'bottom' | 'left']!;
 
       Object.assign(arrowElement.style, {
         left: arrowX != null ? `${arrowX}px` : '',

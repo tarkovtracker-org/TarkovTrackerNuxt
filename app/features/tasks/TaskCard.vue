@@ -78,102 +78,100 @@
               </a>
           </div>
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-1.5">
-          <AppTooltip
-            v-if="(task.minPlayerLevel ?? 0) > 0"
-            :text="
-              t(
-                'page.tasks.questcard.levelBadgeTooltip',
-                { level: task.minPlayerLevel },
-                `Minimum player level ${task.minPlayerLevel} required to unlock this quest`
-              )
-            "
-            <UBadge
-              size="xs"
-              color="gray"
-              variant="solid"
-              class="cursor-help text-xs !bg-gray-400 !text-white"
-            >
-              {{ t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel }) }}
-            </UBadge>
-          </AppTooltip>
-          <AppTooltip :text="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')">
+        <div class="flex shrink-0 flex-nowrap items-center justify-end gap-2.5">
+          <div class="flex items-center gap-1.5">
+              <UBadge
+                v-if="(task.minPlayerLevel ?? 0) > 0"
+                v-tooltip="
+                  t(
+                    'page.tasks.questcard.levelBadgeTooltip',
+                    { level: task.minPlayerLevel },
+                    `Minimum player level ${task.minPlayerLevel} required to unlock this quest`
+                  )
+                "
+                size="xs"
+                :color="'gray' as any"
+                variant="solid"
+                class="cursor-help text-xs !text-white"
+                :class="meetsLevelRequirement ? '!bg-green-600' : '!bg-red-600'"
+              >
+                {{ t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel }) }}
+              </UBadge>
+              <UBadge
+                v-tooltip="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')"
+                size="xs"
+                :color="'gray' as any"
+                variant="solid"
+                class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-gray-400 !text-white"
+              >
+                <UIcon
+                  :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"
+                  aria-hidden="true"
+                  class="h-3 w-3"
+                />
+                <span class="truncate">
+                  {{ task?.map?.name || t('page.tasks.questcard.anyMap', 'Any') }}
+                </span>
+              </UBadge>
             <UBadge
               v-if="objectiveProgress.total > 0"
               size="xs"
-              color="neutral"
+              :color="'gray' as any"
               variant="solid"
-              class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-gray-400 !text-white"
+              class="inline-flex items-center gap-1 text-xs !bg-gray-400 !text-white"
             >
               <UIcon name="i-mdi-progress-check" aria-hidden="true" class="h-3 w-3" />
               {{ t('page.tasks.questcard.progress', objectiveProgress) }}
             </UBadge>
-          </AppTooltip>
-
-          <UBadge v-if="isFailed" size="xs" color="error" variant="soft" class="text-[11px]">
-            {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
-          </UBadge>
-          <AppTooltip
-            v-if="isInvalid && !isFailed"
-            :text="
-              t(
-                'page.tasks.questcard.blockedTooltip',
-                'This quest is permanently blocked and can never be completed due to choices made in other quests'
-              )
-            "
-          >
+            <UBadge v-if="isFailed" size="xs" color="error" variant="soft" class="text-[11px]">
+               {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
+            </UBadge>
             <UBadge
+              v-if="isInvalid && !isFailed"
+              v-tooltip="
+                t(
+                  'page.tasks.questcard.blockedTooltip',
+                  'This quest is permanently blocked and can never be completed due to choices made in other quests'
+                )
+              "
               size="xs"
-              color="gray"
+              :color="'gray' as any"
               variant="solid"
               class="cursor-help text-xs !bg-gray-400 !text-white"
             >
               {{ t('page.tasks.questcard.blocked', 'Blocked') }}
             </UBadge>
-          </AppTooltip>
-          <AppTooltip
-            v-if="preferencesStore.getShowRequiredLabels && task.kappaRequired"
-            :text="
-              t(
-                'page.tasks.questcard.kappaTooltip',
-                'This quest is required to obtain the Kappa Secure Container'
-              )
-            "
-          >
-            <UBadge
-              size="xs"
-              color="red"
-              variant="solid"
-              class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
-            >
-              {{ t('page.tasks.questcard.kappa', 'Kappa') }}
-            </UBadge>
-          </AppTooltip>
-          <AppTooltip
-            v-if="preferencesStore.getShowRequiredLabels && task.lightkeeperRequired"
-            :text="
-              t(
-                'page.tasks.questcard.lightkeeperTooltip',
-                'This quest is required to unlock the Lightkeeper trader'
-              )
-            "
-          >
-            <UBadge
-              size="xs"
-              color="amber"
-              variant="solid"
-              class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
-            >
-              {{ t('page.tasks.questcard.lightkeeper', 'Lightkeeper') }}
-            </UBadge>
-          </AppTooltip>
-          <!-- XP display - shown for all task statuses when setting is enabled -->
-          <div
-            v-if="preferencesStore.getShowExperienceRewards && task.experience"
-            class="flex items-center gap-1 text-xs text-gray-400"
-          >
-            <UIcon name="i-mdi-star" aria-hidden="true" class="h-4 w-4 shrink-0 text-yellow-500" />
-            <span>{{ formatNumber(task.experience) }} XP</span>
+              <UBadge
+                v-if="preferencesStore.getShowRequiredLabels && task.kappaRequired"
+                v-tooltip="
+                  t(
+                    'page.tasks.questcard.kappaTooltip',
+                    'This quest is required to obtain the Kappa Secure Container'
+                  )
+                "
+                size="xs"
+                color="error"
+                variant="solid"
+                class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
+              >
+                {{ t('page.tasks.questcard.kappa', 'Kappa') }}
+              </UBadge>
+              <UBadge
+                v-if="preferencesStore.getShowRequiredLabels && task.lightkeeperRequired"
+                v-tooltip="
+                  t(
+                    'page.tasks.questcard.lightkeeperTooltip',
+                    'This quest is required to unlock the Lightkeeper trader'
+                  )
+                "
+                size="xs"
+                color="warning"
+                variant="solid"
+                class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
+              >
+                {{ t('page.tasks.questcard.lightkeeper', 'Lightkeeper') }}
+              </UBadge>
+            <!-- XP display - moved to TaskCardRewards -->
           </div>
           <!-- Action buttons in header for consistent positioning -->
           <template v-if="isOurFaction">
@@ -192,62 +190,28 @@
 
             <!-- 2) Available state: Green "COMPLETE" button -->
             <UButton
-              v-if="isComplete"
-              :size="actionButtonSize"
-              color="primary"
-              variant="soft"
-              class="shrink-0"
-              @click.stop="markTaskUncomplete()"
-            >
-              {{
-                isFailed
-                  ? t('page.tasks.questcard.resetfailed', 'Reset Failed')
-                  : t('page.tasks.questcard.uncompletebutton', 'Mark Uncompleted')
-              }}
-            </UButton>
-            <div v-if="showHotWheelsFail" class="flex shrink-0 flex-col gap-1">
-              <UButton
-                :size="actionButtonSize"
-                color="success"
-                :ui="completeButtonUi"
-                class="cursor-pointer"
-                @click.stop="markTaskComplete()"
-              >
-                {{ t('page.tasks.questcard.completebutton', 'Complete').toUpperCase() }}
-              </UButton>
-              <UButton
-                :size="actionButtonSize"
-                color="error"
-                variant="soft"
-                class="cursor-pointer"
-                @click.stop="markTaskFailed()"
-              >
-                {{ t('page.tasks.questcard.failbutton', 'Fail') }}
-              </UButton>
-            </div>
-            <UButton
-              v-else-if="!isComplete && !isLocked"
+              v-else-if="!isComplete"
               :size="actionButtonSize"
               icon="i-mdi-check-circle"
               color="success"
               :ui="completeButtonUi"
-              class="shrink-0 cursor-pointer"
+              class="shrink-0"
               @click.stop="markTaskComplete()"
             >
               {{ t('page.tasks.questcard.completebutton', 'Complete').toUpperCase() }}
             </UButton>
 
-            <!-- 3) Completed state: Red "UNCOMPLETE" button -->
+            <!-- 3) Completed state: Primary "AVAILABLE" button -->
             <UButton
               v-else
               :size="actionButtonSize"
               icon="i-mdi-clipboard-text"
-              color="error"
+              color="primary"
               variant="solid"
-              class="shrink-0 !bg-error-600 hover:!bg-error-700 !text-white shadow-sm"
+              class="shrink-0 shadow-sm"
               @click.stop="markTaskUncomplete()"
             >
-              {{ t('page.tasks.questcard.incompletebutton', 'Incomplete').toUpperCase() }}
+              {{ t('page.tasks.questcard.availablebutton', 'Available').toUpperCase() }}
             </UButton>
           </template>
           <!-- Menu button -->
@@ -333,7 +297,7 @@
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
                 {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
                 </span>
-                <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
+                <UBadge size="xs" color="neutral" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
                   {{ childTasks.length }}
                 </UBadge>
           </div>
@@ -378,7 +342,7 @@
               <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
                   {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
               </span>
-                <UBadge size="xs" color="gray" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
+                <UBadge size="xs" :color="'gray' as any" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
                 {{ parentTasks.length }}
               </UBadge>
           </div>
@@ -474,7 +438,12 @@
   import type { Task } from '@/types/tarkov';
   import { HOT_WHEELS_TASK_ID } from '@/utils/constants';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
-  type ContextMenuRef = { open: (event: MouseEvent) => void };
+  type ContextMenuRef = {
+    open: (
+      event: MouseEvent,
+      options?: { align?: 'left' | 'right'; trigger?: HTMLElement }
+    ) => void;
+  };
   const QuestKeys = defineAsyncComponent(() => import('@/features/tasks/QuestKeys.vue'));
   const QuestObjectives = defineAsyncComponent(
     () => import('@/features/tasks/QuestObjectives.vue')

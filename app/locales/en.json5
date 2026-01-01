@@ -257,7 +257,7 @@
         completebutton: 'Complete',
         unlockbutton: 'Unlock',
         incompletebutton: 'Incomplete',
-        availablebutton: 'Mark as Available',
+        availablebutton: 'Available',
         uncompletebutton: 'Mark Uncompleted',
         resetfailed: 'Reset Failed',
         statuscomplete: 'Marked {name} as complete',

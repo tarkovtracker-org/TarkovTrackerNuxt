@@ -4,7 +4,7 @@
       <div class="px-3 py-2">
         <div class="mx-0 flex flex-nowrap items-center">
           <div class="flex min-w-0 flex-1 items-center p-0">
-            <div class="relative h-12 w-12 shrink-0 md:h-16 md:w-16">
+            <div class="relative h-18 w-18 shrink-0">
               <GameItem
                 v-if="isVisible"
                 :image-item="imageItem"
