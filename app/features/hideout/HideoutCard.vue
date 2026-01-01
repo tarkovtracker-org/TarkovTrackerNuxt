@@ -27,12 +27,11 @@
           :class="
             prerequisitesMet
               ? 'bg-success-500/10 border-success-500/30'
-              : 'border-red-500/30 bg-red-500/10'
+              : 'border-error-500/30 bg-error-500/10'
           "
         >
           <span
-            class="text-[11px] font-bold uppercase tracking-tight leading-none"
-            :class="prerequisitesMet ? 'text-success-600 dark:text-success-400' : 'text-red-600 dark:text-red-400'"
+            :class="prerequisitesMet ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'"
           >
             <template v-if="prerequisitesMet">
               <i18n-t
@@ -79,7 +78,7 @@
         <!-- Item Requirements Section -->
         <div v-if="hasItemRequirements" class="border-t border-b border-base bg-surface-elevated p-3">
           <div class="mb-3 flex items-center text-base font-medium text-content-primary">
-            <UIcon name="i-mdi-package-variant-closed-check" class="mr-2 h-5 w-5 text-green-600 dark:text-green-500" />
+            <UIcon name="i-mdi-package-variant-closed-check" class="mr-2 h-5 w-5 text-success-600 dark:text-success-500" />
             {{ $t('page.hideout.stationcard.nextlevel') }}
           </div>
           <!-- Item Requirements Grid -->
@@ -109,7 +108,7 @@
               <UIcon
                 name="i-mdi-home"
                 class="h-4 w-4"
-                :class="isStationReqMet(requirement) ? 'text-blue-500' : 'text-red-500'"
+                :class="isStationReqMet(requirement) ? 'text-blue-500' : 'text-error-500'"
               />
               <i18n-t keypath="page.hideout.stationcard.requirements.station" scope="global">
                 <template #level>
@@ -130,7 +129,7 @@
               <UIcon
                 name="i-mdi-star"
                 class="h-4 w-4"
-                :class="isSkillReqMet(requirement) ? 'text-yellow-500' : 'text-red-500'"
+                :class="isSkillReqMet(requirement) ? 'text-warning-500' : 'text-error-500'"
               />
               <i18n-t keypath="page.hideout.stationcard.requirements.skill" scope="global">
                 <template #level>
@@ -151,7 +150,7 @@
               <UIcon
                 name="i-mdi-account-tie"
                 class="h-4 w-4"
-                :class="isTraderReqMet(requirement) ? 'text-purple-500' : 'text-red-500'"
+                :class="isTraderReqMet(requirement) ? 'text-purple-500' : 'text-error-500'"
               />
               <i18n-t keypath="page.hideout.stationcard.requirements.trader" scope="global">
                 <template #loyaltylevel>
@@ -168,7 +167,7 @@
       <!-- Max level indicator -->
       <div v-if="!nextLevel" class="border-t border-b border-base bg-gray-100 p-3 dark:bg-gray-800">
         <div
-          class="flex items-center justify-center text-center text-base font-medium text-yellow-600 dark:text-yellow-500"
+          class="flex items-center justify-center text-center text-base font-medium text-warning-600 dark:text-warning-500"
         >
           <UIcon name="i-mdi-star-check" class="mr-2 h-6 w-6" />
           {{ $t('page.hideout.stationcard.maxlevel') }}

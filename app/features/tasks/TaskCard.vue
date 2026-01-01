@@ -93,7 +93,7 @@
                 :color="'gray' as any"
                 variant="solid"
                 class="cursor-help text-xs !text-white"
-                :class="meetsLevelRequirement ? '!bg-green-600' : '!bg-red-600'"
+                :class="meetsLevelRequirement ? '!bg-success-600' : '!bg-error-600'"
               >
                 {{ t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel }) }}
               </UBadge>
@@ -123,9 +123,7 @@
               <UIcon name="i-mdi-progress-check" aria-hidden="true" class="h-3 w-3" />
               {{ t('page.tasks.questcard.progress', objectiveProgress) }}
             </UBadge>
-            <UBadge v-if="isFailed" size="xs" color="error" variant="soft" class="text-[11px]">
-               {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
-            </UBadge>
+
             <UBadge
               v-if="isInvalid && !isFailed"
               v-tooltip="
@@ -171,6 +169,15 @@
               >
                 {{ t('page.tasks.questcard.lightkeeper', 'Lightkeeper') }}
               </UBadge>
+            <UBadge
+              v-if="isFailed"
+              size="xs"
+              :color="'gray' as any"
+              variant="solid"
+              class="text-[11px] !bg-[var(--color-task-failed)] !text-white"
+            >
+               {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
+            </UBadge>
             <!-- XP display - moved to TaskCardRewards -->
           </div>
           <!-- Action buttons in header for consistent positioning -->
@@ -235,8 +242,8 @@
         class="mt-1"
       />
       <!-- Failed because section -->
-      <div v-if="isFailed" class="text-xs text-red-300">
-        <span class="text-red-200/70">
+      <div v-if="isFailed" class="text-xs text-error-700 dark:text-error-300">
+        <span class="text-error-600/90 dark:text-error-200/70">
           {{ t('page.tasks.questcard.failedbecause', 'Failed because') }}:
         </span>
         <template v-if="failureSources.length > 0">
@@ -245,13 +252,13 @@
               v-for="source in failureSources"
               :key="source.id"
               :to="`/tasks?task=${source.id}`"
-              class="inline-flex max-w-[16rem] items-center rounded-md border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] text-red-200 hover:bg-red-500/20"
+              class="inline-flex max-w-[16rem] items-center rounded-md border border-error-500/30 bg-error-500/10 px-2 py-0.5 text-[11px] text-error-800 hover:bg-error-500/20 dark:text-error-200"
             >
               {{ source.name }}
             </router-link>
           </span>
         </template>
-        <span v-else class="ml-2 text-red-200/80">
+        <span v-else class="ml-2 text-error-700/80 dark:text-error-200/80">
           {{ t('page.tasks.questcard.failedbecauseunknown', 'Failed manually or data missing') }}
         </span>
       </div>
@@ -506,7 +513,7 @@
     if (isComplete.value && !isFailed.value) return 'border-success-500/25 bg-success-500/10';
     if (isFailed.value) return 'border-error-500/25 bg-error-500/10'; // Red for failed
     if (isInvalid.value) return 'border-neutral-500/25 bg-neutral-500/10 opacity-60'; // Gray for blocked
-    if (isLocked.value) return 'border-amber-500/25 bg-amber-500/10'; // Amber/orange for locked
+    if (isLocked.value) return 'border-warning-500/25 bg-warning-500/10'; // Amber/orange for locked
     return 'border-base';
   });
   const isCompact = computed(() => preferencesStore.getTaskCardDensity === 'compact');
@@ -527,7 +534,7 @@
     if (isFailed.value) return 'text-error-400';
     if (isComplete.value) return 'text-success-400';
     if (isInvalid.value) return 'text-neutral-400';
-    if (isLocked.value) return 'text-amber-400';
+    if (isLocked.value) return 'text-warning-400';
     return 'text-brand-200';
   });
   const lockedBehind = computed(() => {

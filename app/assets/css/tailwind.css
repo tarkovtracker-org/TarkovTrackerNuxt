@@ -298,12 +298,12 @@ select:disabled,
   /* --- Entities --- */
   /* Lightkeeper: Amber/Gold. Adaptive for contrast. */
   --color-entity-lightkeeper: var(--color-warning-600); 
-  --color-entity-kappa: var(--color-error-600);
+  --color-entity-kappa: hsl(335 80% 48%);
   --color-entity-discord: #5865f2;                    
   --color-entity-twitch: #9146ff;
   
   /* --- Task Status --- */
-  --color-task-locked: var(--color-surface-500);
+  --color-task-locked: var(--color-warning-600);
   --color-task-available: var(--color-primary-600);
   --color-task-complete: var(--color-success-600);
   --color-task-failed: var(--color-error-600);

@@ -92,19 +92,19 @@
           class="flex flex-wrap items-center gap-4 text-xs text-gray-600 dark:text-gray-300"
         >
           <div class="flex items-center gap-1">
-            <div class="h-3 w-3 rounded-full bg-red-500" />
+            <div class="h-3 w-3 rounded-full bg-[var(--color-map-marker-self)]" />
             <span>Your Objectives</span>
           </div>
           <div class="flex items-center gap-1">
-            <div class="h-3 w-3 rounded-full bg-orange-500" />
+            <div class="h-3 w-3 rounded-full bg-[var(--color-map-marker-team)]" />
             <span>Team Objectives</span>
           </div>
           <div v-if="showPmcExtracts" class="flex items-center gap-1">
-            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-green-500" />
+            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-[var(--color-map-extract-pmc)]" />
             <span>PMC Extract</span>
           </div>
           <div v-if="showScavExtracts" class="flex items-center gap-1">
-            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-amber-400" />
+            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-[var(--color-map-extract-scav)]" />
             <span>Scav Extract</span>
           </div>
           <div
@@ -118,7 +118,7 @@
             v-if="(showPmcExtracts || showScavExtracts) && hasCoopExtracts"
             class="flex items-center gap-1"
           >
-            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-sky-600" />
+            <UIcon name="i-mdi-exit-run" class="h-3 w-3 text-[var(--color-map-extract-coop)]" />
             <span>Co-op Extract (PMC + Scav)</span>
           </div>
         </div>

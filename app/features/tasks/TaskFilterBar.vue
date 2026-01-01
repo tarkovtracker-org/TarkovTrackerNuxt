@@ -89,7 +89,7 @@
           :label="t('page.tasks.secondaryviews.locked').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.locked"
-          count-color="bg-surface-600"
+          count-color="bg-[var(--color-task-locked)]"
           @click="setSecondaryView('locked')"
         >
             <template #icon>
@@ -102,7 +102,7 @@
           :label="t('page.tasks.secondaryviews.completed').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.completed"
-          count-color="bg-success-600"
+          count-color="bg-[var(--color-task-complete)]"
           @click="setSecondaryView('completed')"
         >
             <template #icon>
@@ -115,7 +115,7 @@
           :label="t('page.tasks.secondaryviews.failed', 'FAILED').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.failed"
-          count-color="bg-red-600"
+          count-color="bg-[var(--color-task-failed)]"
           @click="setSecondaryView('failed')"
         >
             <template #icon>

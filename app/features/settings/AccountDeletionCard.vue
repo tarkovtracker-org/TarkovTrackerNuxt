@@ -3,7 +3,7 @@
     <GenericCard
       icon="mdi-account-cog"
       icon-color="error-400"
-      highlight-color="red"
+      highlight-color="error"
       :title="$t('settings.account.title', 'Account Management')"
       title-classes="text-lg font-semibold"
     >
@@ -243,8 +243,8 @@
   </div>
   <UModal v-model:open="showConfirmationDialog" prevent-close>
     <template #header>
-      <div class="flex items-center text-xl font-medium text-red-500">
-        <UIcon name="i-mdi-alert-circle" class="mr-2 h-6 w-6 text-red-500" />
+      <div class="flex items-center text-xl font-medium text-error-500">
+        <UIcon name="i-mdi-alert-circle" class="mr-2 h-6 w-6 text-error-500" />
         Confirm Account Deletion
       </div>
     </template>
@@ -271,7 +271,7 @@
             :color="confirmationError ? 'error' : 'neutral'"
             @input="confirmationError = false"
           />
-          <div v-if="confirmationError" class="mt-1 text-xs text-red-500">
+          <div v-if="confirmationError" class="mt-1 text-xs text-error-500">
             Please type exactly: DELETE MY ACCOUNT
           </div>
         </div>
@@ -298,8 +298,8 @@
   </UModal>
   <UModal v-model:open="showSuccessDialog" prevent-close>
     <template #header>
-      <div class="flex items-center text-xl font-medium text-green-500">
-        <UIcon name="i-mdi-check-circle" class="mr-2 h-6 w-6 text-green-500" />
+      <div class="flex items-center text-xl font-medium text-success-500">
+        <UIcon name="i-mdi-check-circle" class="mr-2 h-6 w-6 text-success-500" />
         Account Deleted Successfully
       </div>
     </template>
