@@ -31,9 +31,8 @@
         >
           <UIcon name="i-mdi-check-circle" class="text-success-500/50 h-10 w-10 sm:h-12 sm:w-12" />
         </div>
-        <!-- FiR Badge -->
         <AppTooltip v-if="isFoundInRaid" text="Found in Raid required">
-          <div class="absolute top-0 right-2 z-10 rounded bg-warning-500/90 p-0.5 shadow-sm">
+          <div class="absolute bottom-1 right-1 z-30 rounded bg-warning-500/90 p-px shadow-sm flex items-center justify-center">
             <UIcon name="i-mdi-checkbox-marked-circle-outline" class="h-3 w-3 text-warning-950" />
           </div>
         </AppTooltip>
@@ -79,7 +78,7 @@
       <ContextMenuItem
         v-if="isComplete"
         icon="i-mdi-close-circle"
-        label="Mark Incomplete"
+        label="Incomplete"
         @click="
           markIncomplete();
           close();

@@ -1,7 +1,7 @@
 <template>
   <template v-if="props.itemStyle == 'card'">
     <div class="h-full">
-      <LazyNeededItemSmallCard
+      <NeededItemSmallCard
         :need="props.need"
         @decrease-count="decreaseCount()"
         @toggle-count="toggleCount()"
@@ -12,7 +12,7 @@
   </template>
   <template v-else-if="props.itemStyle == 'row'">
     <div class="w-full pt-1">
-      <LazyNeededItemRow
+      <NeededItemRow
         :need="props.need"
         @decrease-count="decreaseCount()"
         @toggle-count="toggleCount()"

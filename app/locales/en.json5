@@ -177,7 +177,7 @@
         item: 'Item',
         completebutton: 'Complete',
         unlockbutton: 'Unlock',
-        incompletebutton: 'Mark Incomplete',
+        incompletebutton: 'Incomplete',
         availablebutton: 'Mark Available',
         statuscomplete: 'Marked {name} as complete',
         statusuncomplete: 'Marked {name} as uncompleted',

@@ -77,7 +77,7 @@
       icon: 'mdi-clipboard-check',
       view: 'all',
       count: stationCounts.value.all,
-      badgeColor: 'bg-secondary-600',
+      badgeColor: 'bg-secondary-400',
     },
     {
       title: t('page.hideout.primaryviews.available'),

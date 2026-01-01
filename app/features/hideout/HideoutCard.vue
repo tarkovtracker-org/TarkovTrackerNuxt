@@ -31,7 +31,7 @@
           "
         >
           <span
-            class="text-[11px] font-bold uppercase tracking-tight"
+            class="text-[11px] font-bold uppercase tracking-tight leading-none"
             :class="prerequisitesMet ? 'text-success-600 dark:text-success-400' : 'text-red-600 dark:text-red-400'"
           >
             <template v-if="prerequisitesMet">
@@ -70,7 +70,7 @@
         <div class="mb-2 text-sm">
           {{ $t('page.hideout.stationcard.gameeditiondescription') }}
         </div>
-        <UButton variant="soft" to="/settings" color="neutral">
+        <UButton variant="soft" to="/settings" color="neutral" size="lg" block>
           {{ $t('page.hideout.stationcard.settingsbutton') }}
         </UButton>
       </div>
@@ -199,7 +199,7 @@
           </UButton>
           <UButton
             v-if="currentLevel && !downgradeDisabled"
-            size="sm"
+            size="lg"
             block
             :ui="downgradeButtonUi"
             @click="downgradeStation()"
@@ -218,7 +218,7 @@
         <div v-if="upgradeDisabled" class="flex flex-wrap items-center justify-center gap-2">
           <UButton
             v-if="currentLevel && !downgradeDisabled"
-            size="sm"
+            size="lg"
             :ui="downgradeButtonUi"
             @click="downgradeStation()"
           >

@@ -15,7 +15,47 @@
     />
     <!-- Items Container -->
     <UCard class="border border-base bg-surface-base">
-      <div v-if="displayItems.length === 0" class="p-8 text-center text-content-tertiary">
+      <!-- Loading State -->
+      <div v-if="metadataStore.loading || !metadataStore.isDataLoaded" class="p-2">
+        <div
+          v-if="viewMode === 'list'"
+          class="divide-y divide-base"
+        >
+          <div
+            v-for="n in 10"
+            :key="n"
+            class="flex items-center gap-3 py-2 animate-pulse"
+          >
+            <div class="h-12 w-12 rounded bg-surface-elevated shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-1/4 rounded bg-surface-elevated"></div>
+              <div class="h-3 w-1/3 rounded bg-surface-elevated"></div>
+            </div>
+            <div class="h-8 w-24 rounded bg-surface-elevated shrink-0"></div>
+          </div>
+        </div>
+        <div
+          v-else
+          class="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        >
+          <div
+            v-for="n in 12"
+            :key="n"
+            class="flex flex-col rounded-lg border border-base bg-surface-elevated h-64 animate-pulse relative overflow-hidden"
+          >
+           <div class="aspect-[4/3] w-full bg-surface-active/50"></div>
+           <div class="p-2 space-y-3 flex-1">
+             <div class="h-4 w-3/4 bg-surface-active/50 rounded mx-auto mt-2"></div>
+             <div class="h-3 w-1/2 bg-surface-active/50 rounded mx-auto"></div>
+             <div class="flex gap-2 justify-center mt-4">
+               <div class="h-3 w-8 bg-surface-active/50 rounded"></div>
+               <div class="h-3 w-8 bg-surface-active/50 rounded"></div>
+             </div>
+           </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="displayItems.length === 0" class="p-8 text-center text-content-tertiary">
         {{ $t('page.neededitems.empty', 'No items match your search.') }}
       </div>
       <!-- Grouped View -->
@@ -197,7 +237,7 @@
         value: 'all' as FilterType,
         icon: 'i-mdi-clipboard-list',
         count: allIncomplete.length,
-        activeColor: 'bg-secondary-600',
+        activeColor: 'bg-secondary-400',
       },
       {
         label: t('page.neededitems.filters.tasks', 'Tasks'),

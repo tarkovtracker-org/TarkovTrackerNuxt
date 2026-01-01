@@ -1,7 +1,7 @@
 <template>
   <KeepAlive>
     <div
-      class="flex h-full flex-col rounded-lg border shadow-sm transition-all duration-200"
+      class="group flex h-full flex-col rounded-lg border shadow-sm transition-all duration-200"
       :class="[
         itemCardClasses,
         {
@@ -15,7 +15,7 @@
         <div class="flex flex-1 flex-col">
           <!-- Item image with count badge -->
           <div :class="imageContainerClasses">
-            <div class="absolute top-0 left-0 z-20">
+            <div class="absolute top-0 left-0 z-40">
               <div
                 class="flex items-center gap-1 rounded-br-lg px-2 py-1 text-sm font-bold shadow-lg"
                 :class="itemCountTagClasses"
@@ -208,7 +208,7 @@
     const transitionClasses = 'transition-transform duration-150 ease-out will-change-transform';
     const hoverClasses =
       'hover:z-20 hover:-translate-y-1 hover:scale-[1.08] hover:shadow-2xl hover:ring-1 hover:ring-black/5 dark:hover:ring-white/10';
-    return [baseLayoutClasses, transitionClasses, hoverClasses, 'group'];
+    return [baseLayoutClasses, transitionClasses, hoverClasses];
   });
   const itemCountTagClasses = computed(() => {
     const isCompleted = selfCompletedNeed.value || currentCount.value >= neededCount.value;
