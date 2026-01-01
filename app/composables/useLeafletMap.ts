@@ -143,6 +143,43 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
   const objectiveLayer = shallowRef<L.LayerGroup | null>(null);
   const extractLayer = shallowRef<L.LayerGroup | null>(null);
   const crsKey = ref('');
+  // Map event handlers
+  const onWheel = (e: WheelEvent) => {
+    if (!mapInstance.value) return;
+
+    // Shift + Scroll: Zoom
+    if (e.shiftKey) {
+      e.preventDefault();
+      const options = mapInstance.value.options;
+      const zoomDelta = options?.zoomDelta ?? 1;
+      const zoomSnap = options?.zoomSnap ?? 1;
+      
+      const delta = e.deltaY > 0 ? -zoomDelta : zoomDelta;
+      let newZoom = mapInstance.value.getZoom() + delta;
+
+      if (zoomSnap > 0) {
+        newZoom = Math.round(newZoom / zoomSnap) * zoomSnap;
+      }
+
+      mapInstance.value.setZoom(newZoom);
+    }
+    // Ctrl + Scroll: Cycle Floors
+    else if (e.ctrlKey && hasMultipleFloors.value) {
+      e.preventDefault();
+      const currentIndex = floors.value.indexOf(selectedFloor.value);
+      if (currentIndex === -1) return;
+      
+      // Scroll UP (negative delta) -> Go UP a floor (next index)
+      // Scroll DOWN (positive delta) -> Go DOWN a floor (previous index)
+      // Assuming floors are ordered lowest to highest in array
+      const direction = e.deltaY < 0 ? 1 : -1;
+      const nextIndex = currentIndex + direction;
+
+      if (nextIndex >= 0 && nextIndex < floors.value.length) {
+        setFloor(floors.value[nextIndex]);
+      }
+    }
+  };
   // Idle detection timer
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
   // Resize observer
@@ -178,7 +215,6 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
       // Re-enable interactions when coming out of idle
       if (mapInstance.value) {
         mapInstance.value.dragging.enable();
-        mapInstance.value.scrollWheelZoom.enable();
       }
     }
     idleTimer = setTimeout(() => {
@@ -355,7 +391,7 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
           validSvgConfig.floors[validSvgConfig.floors.length - 1] ||
           '';
       }
-      // Load SVG overlay
+      // Load SVG overlay FIRST so it's below markers
       await loadMapSvg();
       // Create layer groups for markers
       objectiveLayer.value = leaflet.value.layerGroup().addTo(mapInstance.value);
@@ -366,6 +402,11 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
         mapInstance.value.on('zoomstart', resetIdleTimer);
         mapInstance.value.on('click', resetIdleTimer);
         resetIdleTimer();
+      }
+      
+      // Attach custom wheel handler
+      if (containerRef.value) {
+        containerRef.value.addEventListener('wheel', onWheel, { passive: false });
       }
     } catch (error) {
       logger.error('Failed to initialize Leaflet map:', error);
@@ -437,6 +478,10 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     if (mapInstance.value) {
       mapInstance.value.remove();
       mapInstance.value = null;
+    }
+    // Remove custom wheel handler
+    if (containerRef.value) {
+      containerRef.value.removeEventListener('wheel', onWheel);
     }
     svgLayer.value = null;
     objectiveLayer.value = null;
