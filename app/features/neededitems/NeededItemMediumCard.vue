@@ -28,7 +28,7 @@
             v-if="isKappaRequired"
             v-tooltip="$t('task.kappa_req', 'Required for Kappa quest')"
             name="i-mdi-trophy"
-            class="text-warning-400 dark:text-warning-400 ml-0.5 inline-block h-3.5 w-3.5"
+            class="text-entity-kappa ml-0.5 inline-block h-3.5 w-3.5"
           />
           <button
             v-if="isCraftable"

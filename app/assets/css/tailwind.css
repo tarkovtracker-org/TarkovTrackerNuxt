@@ -298,12 +298,12 @@ select:disabled,
   /* --- Entities --- */
   /* Lightkeeper: Amber/Gold. Adaptive for contrast. */
   --color-entity-lightkeeper: var(--color-warning-600); 
-  --color-entity-kappa: hsl(335 80% 48%);
+  --color-entity-kappa: var(--color-amber-400);
   --color-entity-discord: #5865f2;                    
   --color-entity-twitch: #9146ff;
   
   /* --- Task Status --- */
-  --color-task-locked: var(--color-warning-600);
+  --color-task-locked: var(--color-gray-600);
   --color-task-available: var(--color-primary-600);
   --color-task-complete: var(--color-success-600);
   --color-task-failed: var(--color-error-600);
@@ -592,6 +592,23 @@ select:disabled,
       transparent 100%
     ); /* Adaptive sheen */
     box-shadow: var(--stash-shadow); /* Adaptive shadow */
+  }
+
+  /* Semantic Task Status Backgrounds */
+  .bg-task-complete {
+    background-color: var(--color-task-complete);
+  }
+  .bg-task-failed {
+    background-color: var(--color-task-failed);
+  }
+  .bg-task-locked {
+    background-color: var(--color-task-locked);
+  }
+  .bg-task-available {
+    background-color: var(--color-task-available);
+  }
+  .bg-task-blocked {
+    background-color: var(--color-gray-400);
   }
 
   /* Overlay utility */

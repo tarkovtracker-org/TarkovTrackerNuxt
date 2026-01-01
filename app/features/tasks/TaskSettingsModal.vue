@@ -9,7 +9,14 @@
       <span class="hidden text-xs sm:inline">SETTINGS</span>
     </UButton>
     <template #content>
-      <UCard class="bg-white dark:bg-contentbackground">
+      <UCard
+        class="bg-white dark:bg-contentbackground"
+        :ui="{
+          body: {
+            base: 'overflow-y-auto max-h-[75vh] block',
+          },
+        }"
+      >
         <template #header>
           <div class="flex items-center justify-between">
             <div>

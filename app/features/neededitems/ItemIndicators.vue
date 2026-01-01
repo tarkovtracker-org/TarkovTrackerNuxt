@@ -42,7 +42,7 @@
       craftableTitle: 'Craftable',
       firIconClass: 'ml-1 h-5 w-5',
       foundInRaidTitle: 'Found in Raid required',
-      kappaIconClass: 'ml-1 h-5 w-5 text-warning-400',
+      kappaIconClass: 'ml-1 h-5 w-5 text-entity-kappa',
       kappaRequired: false,
       kappaTitle: 'Required for Kappa quest',
     }

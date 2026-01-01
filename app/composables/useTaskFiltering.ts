@@ -119,47 +119,7 @@ export function useTaskFiltering() {
     return { isUnlocked, isCompleted, isFailed };
   };
 
-  /**
-   * Helper to determine sort status priority
-   * 0: Available (Unlocked & Not Completed)
-   * 1: Locked (Not Unlocked & Not Completed)
-   * 2: Completed (Completed)
-   */
-  const getSortStatus = (task: Task, userView: string, teamIds: string[]): number => {
-    // For single user view
-    if (userView !== 'all') {
-      const isCompleted = progressStore.tasksCompletions?.[task.id]?.[userView] === true;
-      if (isCompleted) return 2; // Completed
 
-      const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[userView] === true;
-      if (isUnlocked) return 0; // Available
-
-      return 1; // Locked
-    }
-
-    // For "all" view (team view)
-    // Get status for all relevant team members
-    const relevantIds = getRelevantTeamIds(task, teamIds);
-    if (relevantIds.length === 0) return 1; // Should not happen for visible tasks, treat as locked
-
-    // Check if any user has it available (Unlocked & !Completed)
-    const isAvailableForAny = relevantIds.some((teamId) => {
-      const isUnlocked = progressStore.unlockedTasks?.[task.id]?.[teamId] === true;
-      const isCompleted = progressStore.tasksCompletions?.[task.id]?.[teamId] === true;
-      return isUnlocked && !isCompleted;
-    });
-
-    if (isAvailableForAny) return 0; // Available group (green)
-
-    // Check if completed by ALL relevant users
-    const isCompletedByAll = relevantIds.every(
-      (teamId) => progressStore.tasksCompletions?.[task.id]?.[teamId] === true
-    );
-
-    if (isCompletedByAll) return 2; // Completed group (gray)
-
-    return 1; // Locked group (standard)
-  };
   /**
    * Filter tasks for all team members view
    */
@@ -447,23 +407,12 @@ export function useTaskFiltering() {
 
   /**
    * Sort tasks by:
-   * 1. Status Group (Available -> Locked -> Completed)
-   * 2. Impact (Descending)
-   * 3. ID (Ascending - for stability)
+   * 1. Impact (Descending)
+   * 2. ID (Ascending - for stability)
    */
   const sortTasks = (taskList: Task[], userView: string): Task[] => {
-    const teamIds = Object.keys(progressStore.visibleTeamStores || {});
-
     return [...taskList].sort((a, b) => {
-      // 1. Status Grouping
-      const statusA = getSortStatus(a, userView, teamIds);
-      const statusB = getSortStatus(b, userView, teamIds);
-
-      if (statusA !== statusB) {
-        return statusA - statusB; // Ascending: 0 (Avail) -> 1 (Locked) -> 2 (Comp)
-      }
-
-      // 2. Impact Sorting (within same status group)
+      // 1. Impact Sorting (within same status group)
       const impactA = calculateTaskImpact(a, userView);
       const impactB = calculateTaskImpact(b, userView);
 
@@ -471,7 +420,7 @@ export function useTaskFiltering() {
         return impactB - impactA; // Descending impact
       }
 
-      // 3. ID fallback for stability
+      // 2. ID fallback for stability
       return a.id.localeCompare(b.id);
     });
   };

@@ -31,7 +31,7 @@
                 :craftable-icon-class="craftableIconClass"
                 :kappa-required="isKappaRequired"
                 :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
-                kappa-icon-class="h-4 w-4 text-warning-400 dark:text-warning-400"
+                kappa-icon-class="h-4 w-4 text-entity-kappa"
                 @craft="goToCraftStation"
               />
             </div>

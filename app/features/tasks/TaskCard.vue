@@ -102,7 +102,7 @@
                 size="xs"
                 :color="'gray' as any"
                 variant="solid"
-                class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-gray-400 !text-white"
+                class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-green-800 !text-white"
               >
                 <UIcon
                   :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"
@@ -118,7 +118,7 @@
               size="xs"
               :color="'gray' as any"
               variant="solid"
-              class="inline-flex items-center gap-1 text-xs !bg-gray-400 !text-white"
+              class="inline-flex items-center gap-1 text-xs border dark:text-gray-100 dark:border-gray-100"
             >
               <UIcon name="i-mdi-progress-check" aria-hidden="true" class="h-3 w-3" />
               {{ t('page.tasks.questcard.progress', objectiveProgress) }}
@@ -184,7 +184,7 @@
           <template v-if="isOurFaction">
             <!-- 1) Locked state: Green "UNLOCK" button -->
             <UButton
-              v-if="isLocked"
+              v-if="isLocked && !isInvalid"
               :size="actionButtonSize"
               icon="i-mdi-lock-open-variant"
               color="success"
@@ -236,34 +236,62 @@
             </UButton>
         </div>
       </div>
-      <TaskRequiresRow
+      <RelatedTasksRow
         v-if="isLocked && pendingParentTasks.length > 0"
-        :parents="pendingParentTasks"
+        :tasks="pendingParentTasks"
+        :label="$t('page.tasks.questcard.requires', 'Requires')"
         class="mt-1"
-      />
+        expandable
+        :expanded="expandedTasks.has('requires')"
+        intent="warning"
+        @toggle="toggleExpanded('requires')"
+      >
+        <div class="flex flex-col gap-2">
+          <TaskCard
+            v-for="req in pendingParentTasks"
+            :key="`nested-req-${req.id}`"
+            :task="req"
+            :is-nested="true"
+            @on-task-action="$emit('on-task-action', $event)"
+          />
+        </div>
+      </RelatedTasksRow>
       <!-- Failed because section -->
-      <div v-if="isFailed" class="text-xs text-error-700 dark:text-error-300">
-        <span class="text-error-600/90 dark:text-error-200/70">
-          {{ t('page.tasks.questcard.failedbecause', 'Failed because') }}:
-        </span>
-        <template v-if="failureSources.length > 0">
-          <span class="ml-2 inline-flex flex-wrap items-center gap-1.5">
-            <router-link
-              v-for="source in failureSources"
-              :key="source.id"
-              :to="`/tasks?task=${source.id}`"
-              class="inline-flex max-w-[16rem] items-center rounded-md border border-error-500/30 bg-error-500/10 px-2 py-0.5 text-[11px] text-error-800 hover:bg-error-500/20 dark:text-error-200"
-            >
-              {{ source.name }}
-            </router-link>
-          </span>
-        </template>
-        <span v-else class="ml-2 text-error-700/80 dark:text-error-200/80">
-          {{ t('page.tasks.questcard.failedbecauseunknown', 'Failed manually or data missing') }}
-        </span>
+      <RelatedTasksRow
+        v-if="isFailed && failureSources.length > 0"
+        :tasks="failureSources"
+        :label="$t('page.tasks.questcard.failedbecause', 'Failed because')"
+        intent="error"
+        class="mt-1"
+        expandable
+        :expanded="expandedTasks.has('failed')"
+        @toggle="toggleExpanded('failed')"
+      >
+        <div class="flex flex-col gap-2">
+          <TaskCard
+            v-for="fail in failureSources"
+            :key="`nested-fail-${fail.id}`"
+            :task="fail"
+            :is-nested="true"
+            @on-task-action="$emit('on-task-action', $event)"
+          />
+        </div>
+      </RelatedTasksRow>
+      <div v-else-if="isFailed" class="mt-1 text-xs text-error-700 dark:text-error-300">
+         <span class="text-error-600/90 dark:text-error-200/70">
+           {{ t('page.tasks.questcard.failedbecause', 'Failed because') }}:
+         </span>
+         <span class="ml-2 text-error-700/80 dark:text-error-200/80">
+           {{ t('page.tasks.questcard.failedbecauseunknown', 'Failed manually or data missing') }}
+         </span>
       </div>
       <!-- 3) Body: objectives -->
-      <div :class="isCompact ? 'space-y-3' : 'space-y-4'">
+      <div 
+        :class="[
+          isCompact ? 'space-y-3' : 'space-y-4',
+          !isInteractive ? 'pointer-events-none cursor-not-allowed opacity-60' : ''
+        ]"
+      >
         <QuestKeys v-if="task?.neededKeys?.length" :needed-keys="task.neededKeys" />
         <QuestObjectives
           :objectives="relevantViewObjectives"
@@ -289,40 +317,29 @@
       />
 
       <!-- Next Quests Toggle -->
-      <div 
-        v-if="!isNested && childTasks.length > 0"
-        class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
-        :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
-        @click.stop="toggleExpanded('children')"
-      >
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-                <UIcon 
-                :name="expandedTasks.has('children') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
-                  class="h-4 w-4 text-gray-400 dark:text-gray-500"
-                />
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                {{ t('page.tasks.questcard.nextQuests', 'Next Quests') }}:
+      <div v-if="!isNested && childTasks.length > 0">
+        <RelatedTasksRow
+          :tasks="childTasks"
+          :label="t('page.tasks.questcard.nextQuests', 'Next Quests')"
+          expandable
+          :expanded="expandedTasks.has('children')"
+          intent="gray"
+          @toggle="toggleExpanded('children')"
+        >
+          <template #suffix>
+            <!-- Stats: Remaining -->
+            <div 
+              v-if="impactCount > 0" 
+              v-tooltip="{ content: t('page.tasks.questcard.remainingTooltip', 'Tasks blocked by this task, but not unlocked by completing it'), placement: 'top-end' }"
+              class="flex cursor-help items-center text-xs text-content-tertiary"
+            >
+                <span>
+                  {{ t('page.tasks.questcard.remainingLabel', 'Remaining') }}: {{ impactCount }}
                 </span>
-                <UBadge size="xs" color="neutral" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
-                  {{ childTasks.length }}
-                </UBadge>
-          </div>
-          <!-- Stats: Remaining -->
-          <div 
-            v-if="impactCount > 0" 
-            v-tooltip="{ content: t('page.tasks.questcard.remainingTooltip', 'Tasks blocked by this task, but not unlocked by completing it'), placement: 'top-end' }"
-            class="flex cursor-help items-center text-xs text-content-tertiary"
-          >
-              <span>
-                {{ t('page.tasks.questcard.remainingLabel', 'Remaining') }}: {{ impactCount }}
-              </span>
-          </div>
-        </div>
-          <div 
-            v-if="expandedTasks.has('children')" 
-            class="mt-2 flex flex-col gap-2"
-          >
+            </div>
+          </template>
+          
+          <div class="flex flex-col gap-2">
             <TaskCard
               v-for="child in childTasks"
               :key="`nested-child-${child.id}`"
@@ -330,42 +347,30 @@
               :is-nested="true"
               @on-task-action="$emit('on-task-action', $event)"
             />
-        </div>
+          </div>
+        </RelatedTasksRow>
       </div>
 
       <!-- Previous Quests Toggle -->
-      <div 
-        v-if="!isNested && parentTasks.length > 0"
-        class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
-        :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': true }"
-        @click.stop="toggleExpanded('parents')"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-              <UIcon 
-                :name="expandedTasks.has('parents') ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'" 
-                class="h-4 w-4 text-gray-400 dark:text-gray-500"
-              />
-              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('page.tasks.questcard.previousQuests', 'Previous Quests') }}:
-              </span>
-                <UBadge size="xs" :color="'gray' as any" variant="soft" class="flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-xs font-medium !text-gray-700 dark:!text-gray-300">
-                {{ parentTasks.length }}
-              </UBadge>
-          </div>
-        </div>
-        <div 
-          v-if="expandedTasks.has('parents')" 
-          class="mt-2 flex flex-col gap-2"
+      <div v-if="!isNested && filteredPreviousTasks.length > 0">
+        <RelatedTasksRow
+          :tasks="filteredPreviousTasks"
+          :label="t('page.tasks.questcard.previousQuests', 'Previous Quests')"
+          expandable
+          :expanded="expandedTasks.has('parents')"
+          intent="gray"
+          @toggle="toggleExpanded('parents')"
         >
+          <div class="flex flex-col gap-2">
             <TaskCard
-              v-for="parent in parentTasks"
+              v-for="parent in filteredPreviousTasks"
               :key="`nested-parent-${parent.id}`"
               :task="parent"
               :is-nested="true"
               @on-task-action="$emit('on-task-action', $event)"
             />
-        </div>
+          </div>
+        </RelatedTasksRow>
       </div>
     </div>
 
@@ -458,8 +463,8 @@
   const TaskCardRewards = defineAsyncComponent(
     () => import('@/features/tasks/TaskCardRewards.vue')
   );
-  const TaskRequiresRow = defineAsyncComponent(
-    () => import('@/features/tasks/TaskRequiresRow.vue')
+  const RelatedTasksRow = defineAsyncComponent(
+    () => import('@/features/tasks/RelatedTasksRow.vue')
   );
   const props = defineProps<{
     task: Task;
@@ -488,6 +493,9 @@
     );
   const isComplete = computed(() => tarkovStore.isTaskComplete(props.task.id));
   const isFailed = computed(() => tarkovStore.isTaskFailed(props.task.id));
+  const isInteractive = computed(
+    () => !isLocked.value && !isComplete.value && !isFailed.value && !isInvalid.value
+  );
   const isTaskSuccessful = (taskId: string) =>
     tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
   const hasStatus = (status: string[] | undefined, statuses: string[]) => {
@@ -553,25 +561,38 @@
   });
   const failureSources = computed(() => {
     if (!isFailed.value) return [];
-    const sources = new Map<string, { id: string; name: string }>();
+    const sourceIds = new Set<string>();
+    
     (props.task.failConditions ?? [])
       .filter(
         (objective) => objective?.task?.id && hasStatus(objective.status, ['complete', 'completed'])
       )
       .filter((objective) => isTaskSuccessful(objective.task!.id))
       .forEach((objective) => {
-        const id = objective.task!.id;
-        sources.set(id, { id, name: objective.task!.name ?? id });
+        sourceIds.add(objective.task!.id);
       });
+
     tasks.value.forEach((task) => {
       if (!task.alternatives?.includes(props.task.id)) return;
       if (!isTaskSuccessful(task.id)) return;
-      sources.set(task.id, { id: task.id, name: task.name ?? task.id });
+      sourceIds.add(task.id);
     });
-    return Array.from(sources.values());
+
+    return Array.from(sourceIds)
+      .map(id => tasks.value.find(t => t.id === id))
+      .filter((t): t is Task => t !== undefined);
   });
   const pendingParentTasks = computed(() => {
     return parentTasks.value.filter((parent) => !isTaskSuccessful(parent.id));
+  });
+  const filteredPreviousTasks = computed(() => {
+    // If the "Requires" row is visible (isLocked and has pending requirements),
+    // exclude those requirements from the "Previous Quests" list to avoid duplication.
+    if (isLocked.value && pendingParentTasks.value.length > 0) {
+      const requiredIds = new Set(pendingParentTasks.value.map((t) => t.id));
+      return parentTasks.value.filter((t) => !requiredIds.has(t.id));
+    }
+    return parentTasks.value;
   });
   const childTasks = computed(() => {
     if (!props.task.children?.length) return [];
@@ -718,7 +739,7 @@
   // Expanded state for recursive cards
   const expandedTasks = ref<Set<string>>(new Set());
   
-  const toggleExpanded = (section: 'parents' | 'children') => {
+  const toggleExpanded = (section: 'parents' | 'children' | 'requires' | 'failed') => {
     if (expandedTasks.value.has(section)) {
       expandedTasks.value.delete(section);
     } else {

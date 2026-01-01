@@ -1,18 +1,19 @@
 <template>
   <div
     v-if="hasRewardsSummary || hasExpandableDetails"
-    class="rounded-md border border-gray-200 p-2 transition-colors dark:border-white/5"
+    class="rounded-md border border-gray-300 p-2 transition-colors dark:border-white/20"
     :class="{ 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-white/5': hasExpandableDetails }"
     @click.stop="onAreaClick"
   >
-    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-300">
+    <div class="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-300">
       <!-- Rewards title -->
-      <div class="flex items-center">
+      <div class="flex items-center text-sm">
         <UIcon
           v-if="hasExpandableDetails"
-          :name="showDetails ? 'i-mdi-chevron-down' : 'i-mdi-chevron-right'"
+          name="i-mdi-chevron-right"
           aria-hidden="true"
-          class="mr-1 h-4 w-4 text-gray-400 dark:text-gray-500"
+          class="mr-1 h-4 w-4 shrink-0 text-gray-500 transition-transform duration-200"
+          :class="showDetails ? 'rotate-90' : ''"
         />
         <span class="font-medium text-gray-700 dark:text-gray-300">
           <UIcon name="i-mdi-gift" aria-hidden="true" class="mr-1 inline h-3.5 w-3.5" />
@@ -22,7 +23,7 @@
       <!-- XP Badge -->
       <span
         v-if="preferencesStore.getShowExperienceRewards && experience > 0"
-        class="inline-flex items-center gap-1 rounded bg-primary-600! px-2 py-0.5 text-white!"
+        class="inline-flex items-center gap-1 rounded bg-primary-600! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
         <span>{{ formatNumber(experience) }} XP</span>
@@ -30,14 +31,14 @@
       <!-- Trader Unlock -->
       <span
         v-if="displayedTraderUnlock?.name"
-        class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-trader)]! px-2 py-0.5 text-white!"
+        class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-trader)]! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
         <span>{{ displayedTraderUnlock.name }}</span>
       </span>
       <!-- Trader Standing Rewards -->
       <template v-for="standing in traderStandingRewards" :key="`standing-${standing.trader.id}`">
-        <span class="inline-flex items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-white!">
+        <span class="inline-flex items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!">
           <UIcon
             name="i-mdi-handshake"
             aria-hidden="true"
@@ -53,7 +54,7 @@
       </template>
       <!-- Skill Rewards -->
       <template v-for="skill in skillRewards" :key="`skill-${skill.name}`">
-        <span class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-skill)]! px-2 py-0.5 text-white!">
+        <span class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-skill)]! px-2 py-0.5 text-xs text-white!">
           <UIcon name="i-mdi-arm-flex" aria-hidden="true" class="h-3.5 w-3.5 text-white!" />
           <span>+{{ skill.level }}</span>
           <span>{{ skill.name }}</span>
@@ -63,7 +64,7 @@
         <span
           v-if="itemRewards.length > 0"
           v-tooltip="itemRewardsSummaryTooltip"
-          class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-white!"
+          class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
         >
           <UIcon name="i-mdi-package-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
           <span>
@@ -80,7 +81,7 @@
       <span
         v-if="offerUnlockRewards.length > 0"
         v-tooltip="offerUnlockSummaryTooltip"
-        class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-white!"
+        class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-cart-check" aria-hidden="true" class="h-4 w-4 !text-white" />
         <span>
