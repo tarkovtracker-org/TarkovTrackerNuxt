@@ -1,5 +1,4 @@
 <template>
-<<<<<<< HEAD
   <div
     class="group flex h-full flex-col rounded-lg border shadow-sm transition-all duration-200"
     :class="itemCardClasses"
@@ -18,105 +17,10 @@
           @click="handleCardClick"
         >
           <div class="absolute top-0 left-0 z-40 peer/indicators">
-=======
-  <KeepAlive>
-    <AppTooltip
-      :text="
-        isSingleItem && !selfCompletedNeed
-          ? currentCount >= neededCount
-            ? 'Click to uncollect'
-            : 'Click to collect'
-          : ''
-      "
-    >
-      <div
-        class="flex h-full flex-col rounded-lg"
-        :class="[
-          itemCardClasses,
-          {
-            'hover:ring-primary-400 hover:ring-opacity-50 cursor-pointer transition-all hover:ring-2 active:scale-[0.98]':
-              hasItem && isSingleItem && !selfCompletedNeed,
-          },
-        ]"
-        @click="handleCardClick"
-      >
-        <template v-if="hasItem">
-          <!-- Item image with count badge -->
-          <div :class="imageContainerClasses">
-            <div class="absolute top-0 left-0 z-10">
-              <div
-                class="flex items-center gap-1 rounded-br-lg px-2 py-1 text-sm font-bold shadow-lg"
-                :class="itemCountTagClasses"
-              >
-                {{ formatNumber(currentCount) }}/{{ formatNumber(neededCount) }}
-                <ItemIndicators
-                  :found-in-raid="props.need.foundInRaid"
-                  fir-icon-class="h-4 w-4"
-                  :is-craftable="isCraftable"
-                  :craftable-title="craftableTitle"
-                  craftable-icon-base-class="h-4 w-4 opacity-90"
-                  :craftable-icon-class="craftableIconClass"
-                  :kappa-required="isKappaRequired"
-                  :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
-                  kappa-icon-class="h-4 w-4 text-warning-400"
-                  @craft="goToCraftStation"
-                />
-              </div>
-            </div>
-            <GameItem
-              v-if="imageItem"
-              :image-item="imageItem"
-              :src="imageItem.image512pxLink"
-              :is-visible="true"
-              :item-name="item?.name ?? null"
-              :wiki-link="item?.wikiLink ?? null"
-              :dev-link="item?.link ?? null"
-              :task-wiki-link="relatedTask?.wikiLink"
-              :background-color="imageItem.backgroundColor || 'grey'"
-              size="small"
-              simple-mode
-              fill
-              class="h-full w-full"
-            />
-          </div>
-          <!-- Card content -->
-          <div class="flex flex-1 flex-col p-2">
-            <!-- Item name -->
-            <div class="flex min-h-10 items-start justify-center">
-              <span
-                class="line-clamp-2 text-center text-[clamp(0.7rem,2.5vw,0.875rem)] leading-snug font-medium"
-              >
-                {{ item?.name ?? '' }}
-              </span>
-            </div>
-            <!-- Task/Station link -->
-            <div class="flex min-h-7 w-full items-center justify-center overflow-hidden">
-              <template v-if="props.need.needType == 'taskObjective' && relatedTask">
-                <TaskLink
-                  :task="relatedTask"
-                  compact
-                  class="max-w-full text-[clamp(0.625rem,2vw,0.75rem)]"
-                />
-              </template>
-              <template v-else-if="props.need.needType == 'hideoutModule'">
-                <StationLink
-                  v-if="relatedStation"
-                  :station="relatedStation"
-                  compact
-                  class="max-w-full text-[clamp(0.625rem,2vw,0.75rem)]"
-                />
-                <span class="ml-1 text-[clamp(0.625rem,2vw,0.75rem)] text-gray-400">
-                  {{ props.need.hideoutModule.level }}
-                </span>
-              </template>
-            </div>
-            <!-- Requirements (Level & Tasks Before) -->
->>>>>>> main
             <div
               class="flex items-center gap-1 rounded-br-lg px-2 py-1 text-sm font-bold shadow-lg"
               :class="itemCountTagClasses"
             >
-<<<<<<< HEAD
               {{ currentCount }}/{{ neededCount }}
               <ItemIndicators
                 :found-in-raid="props.need.foundInRaid"
@@ -125,37 +29,11 @@
                 :craftable-title="craftableTitle"
                 craftable-icon-base-class="h-4 w-4 opacity-90"
                 :craftable-icon-class="craftableIconClass"
+                :kappa-required="isKappaRequired"
+                :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
+                kappa-icon-class="h-4 w-4 text-warning-400 dark:text-warning-400"
                 @craft="goToCraftStation"
               />
-=======
-              <span
-                v-if="levelRequired > 0 && levelRequired > playerLevel"
-                class="flex items-center gap-1"
-              >
-                <UIcon name="i-mdi-account" class="h-3.5 w-3.5" />
-                Lvl {{ levelRequired }}
-              </span>
-              <span v-if="lockedBefore > 0" class="flex items-center gap-1">
-                <UIcon name="i-mdi-lock-outline" class="h-3.5 w-3.5" />
-                {{ lockedBefore }} before
-              </span>
-            </div>
-            <!-- Controls - hide for single items since clicking image toggles -->
-            <div v-if="!isSingleItem" class="mt-auto flex items-center justify-center pt-2">
-              <template v-if="!selfCompletedNeed">
-                <ItemCountControls
-                  :current-count="currentCount"
-                  :needed-count="neededCount"
-                  @decrease="$emit('decreaseCount')"
-                  @increase="$emit('increaseCount')"
-                  @toggle="$emit('toggleCount')"
-                  @set-count="(count) => $emit('setCount', count)"
-                />
-              </template>
-              <span v-else class="text-success-400 text-sm font-bold">
-                {{ formatNumber(currentCount) }}/{{ formatNumber(neededCount) }} ✓
-              </span>
->>>>>>> main
             </div>
           </div>
           <!-- Click to complete overlay -->
@@ -344,15 +222,9 @@
   const itemCountTagClasses = computed(() => {
     return {
       'bg-clip-padding rounded-tl-[5px] rounded-br-[10px]': true,
-<<<<<<< HEAD
       'bg-surface-elevated text-content-primary shadow-md ring-1 ring-black/5 dark:ring-0':
         !isCompleted.value,
       'bg-success-500 text-white shadow-md': isCompleted.value,
-=======
-      'bg-surface-800/90 text-surface-100 ring-1 ring-white/10':
-        !(selfCompletedNeed.value || currentCount.value >= neededCount.value),
-      'bg-complete text-white': selfCompletedNeed.value || currentCount.value >= neededCount.value,
->>>>>>> main
     };
   });
 </script>

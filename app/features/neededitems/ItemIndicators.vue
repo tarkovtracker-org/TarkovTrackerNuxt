@@ -1,3 +1,4 @@
+<template>
   <UIcon
     v-if="foundInRaid"
     v-tooltip="foundInRaidTitle"
@@ -20,6 +21,7 @@
   >
     <UIcon name="i-mdi-hammer-wrench" :class="[craftableIconBaseClass, craftableIconClass]" />
   </button>
+</template>
 <script setup lang="ts">
   const props = withDefaults(
     defineProps<{

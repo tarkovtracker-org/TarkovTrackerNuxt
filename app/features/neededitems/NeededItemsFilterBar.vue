@@ -90,20 +90,7 @@
                   <UIcon name="i-mdi-checkbox-blank-circle-outline" class="mr-1 h-4 w-4" />
                   {{ $t('page.neededitems.filters.non_fir', 'NON-FIR') }}
                 </UButton>
-                <UButton
-                  v-tooltip="
-                    $t(
-                      'page.neededitems.filters.hide_non_fir_special_equipment_title',
-                      'Hide non-FIR special equipment (e.g., MS2000 Markers, Wi-Fi Cameras)'
-                    )
-                  "
-                  :variant="hideNonFirSpecialEquipment ? 'soft' : 'ghost'"
-                  :color="hideNonFirSpecialEquipment ? 'primary' : 'neutral'"
-                  size="sm"
-                  @click="
-                    $emit('update:hideNonFirSpecialEquipment', !hideNonFirSpecialEquipment)
-                  "
-                >
+
                   <UButton
                     v-tooltip="
                       $t(
