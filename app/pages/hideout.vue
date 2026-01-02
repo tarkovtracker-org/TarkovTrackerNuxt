@@ -20,7 +20,7 @@
     </div>
     <div>
       <div v-if="isStoreLoading" class="text-surface-200 flex flex-col items-center gap-3 py-10">
-        <UIcon name="i-heroicons-arrow-path" class="text-primary-500 h-8 w-8 animate-spin" />
+        <UIcon name="i-heroicons-arrow-path" class="text-accent-500 h-8 w-8 animate-spin" />
         <div class="flex items-center gap-2 text-sm">
           {{ $t('page.hideout.loading') }}
           <RefreshButton />
@@ -77,14 +77,14 @@
       icon: 'mdi-clipboard-check',
       view: 'all',
       count: stationCounts.value.all,
-      badgeColor: 'bg-secondary-400',
+      badgeColor: 'bg-surface-600',
     },
     {
       title: t('page.hideout.primaryviews.available'),
       icon: 'mdi-tag-arrow-up-outline',
       view: 'available',
       count: stationCounts.value.available,
-      badgeColor: 'bg-primary-500',
+      badgeColor: 'bg-accent-500',
     },
     {
       title: t('page.hideout.primaryviews.maxed'),
@@ -128,14 +128,14 @@
         // Add a brief highlight effect
         stationElement.classList.add(
           'ring-2',
-          'ring-primary-500',
+          'ring-accent-500',
           'ring-offset-2',
           'ring-offset-surface-900'
         );
         setTimeout(() => {
           stationElement.classList.remove(
             'ring-2',
-            'ring-primary-500',
+            'ring-accent-500',
             'ring-offset-2',
             'ring-offset-surface-900'
           );

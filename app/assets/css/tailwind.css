@@ -483,6 +483,7 @@ select:disabled,
   --ui-text-inverted: #f8f8f8;
 
   /* Light mode border overrides - references accent for game mode switching */
+  --ui-border: var(--color-accent-200);
   --ui-border-accented: var(--color-accent-300);
   --ui-color-neutral-700: var(--color-accent-300);
 
@@ -509,6 +510,7 @@ select:disabled,
   --ui-text-inverted: #f8f8f8;
 
   /* Overwrite Nuxt UI defaults that pointed to neutral-700 - references accent for game mode switching */
+  --ui-border: var(--color-accent-800);
   --ui-border-accented: var(--color-accent-700);
   --ui-color-neutral-700: var(--color-accent-700);
 
@@ -568,9 +570,9 @@ select:disabled,
 /* =========================================
    3. COMPONENT & FRAMEWORK OVERRIDES
    ========================================= */
-/* Utility: default ring color aligned to brand (darker primary) */
+/* Utility: default ring color aligned to brand (dynamic accent) */
 .ring-default {
-  --tw-ring-color: var(--color-primary-700);
+  --tw-ring-color: var(--color-accent-700);
 }
 /* Utility: force accented ring to brand as well */
 .ring-accented {

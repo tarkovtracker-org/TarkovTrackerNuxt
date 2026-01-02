@@ -40,7 +40,7 @@
                   v-for="parent in parentTasks"
                   :key="parent.id"
                   :to="`/tasks?task=${parent.id}`"
-                  class="text-primary-400 hover:text-primary-300"
+                  class="text-accent-400 hover:text-accent-300"
                   @contextmenu="(e: MouseEvent) => handleTaskContextMenu(e, parent)"
                 >
                   {{ parent.name }}
@@ -72,7 +72,7 @@
                   v-for="child in childTasks"
                   :key="child.id"
                   :to="`/tasks?task=${child.id}`"
-                  class="text-primary-400 hover:text-primary-300"
+                  class="text-accent-400 hover:text-accent-300"
                   @contextmenu="(e: MouseEvent) => handleTaskContextMenu(e, child)"
                 >
                   {{ child.name }}

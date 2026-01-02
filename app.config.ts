@@ -42,7 +42,7 @@ export default defineAppConfig({
       slots: {
         base: 'relative w-full',
         input:
-          'h-11 bg-surface-900 border border-white/15 text-surface-50 placeholder:text-surface-500 rounded-md pl-10 pr-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-white/20',
+          'h-11 bg-surface-900 border border-white/15 text-surface-50 placeholder:text-surface-500 rounded-md pl-10 pr-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-white/20',
         leading: 'absolute inset-y-0 left-3 flex items-center pointer-events-none text-surface-300',
         options: 'z-[9999] max-h-60 overflow-auto',
       },
