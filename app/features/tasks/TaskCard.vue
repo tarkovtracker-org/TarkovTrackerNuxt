@@ -81,117 +81,101 @@
         </div>
         <div class="flex shrink-0 flex-nowrap items-center justify-end gap-2.5">
           <div class="flex items-center gap-1.5">
-              <span
-                v-if="(task.minPlayerLevel ?? 0) > 0"
-                v-tooltip="
-                  t(
-                    'page.tasks.questcard.levelBadgeTooltip',
-                    { level: task.minPlayerLevel },
-                    `Minimum player level ${task.minPlayerLevel} required to unlock this quest`
-                  )
-                "
-              >
-                <UBadge
-                  size="xs"
-                  :color="'gray' as any"
-                  variant="solid"
-                  class="cursor-help text-xs !text-white"
-                  :class="meetsLevelRequirement ? '!bg-success-600' : '!bg-error-600'"
-                >
-                  {{ t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel }) }}
-                </UBadge>
+            <!-- Level Badge -->
+            <GameBadge
+              v-if="(task.minPlayerLevel ?? 0) > 0"
+              variant="solid"
+              color="gray"
+              :tooltip="
+                t(
+                  'page.tasks.questcard.levelBadgeTooltip',
+                  { level: task.minPlayerLevel },
+                  `Minimum player level ${task.minPlayerLevel} required to unlock this quest`
+                )
+              "
+              :badge-class="[
+                'cursor-help text-xs !text-white',
+                meetsLevelRequirement ? '!bg-success-600' : '!bg-error-600'
+              ]"
+              :label="t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel })"
+            />
+
+            <!-- Map Badge -->
+            <GameBadge
+              variant="solid"
+              color="gray"
+              :tooltip="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')"
+              badge-class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-green-800 !text-white"
+              :icon="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"
+            >
+              <span class="truncate">
+                {{ task?.map?.name || t('page.tasks.questcard.anyMap', 'Any') }}
               </span>
-              <span v-tooltip="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')">
-                <UBadge
-                  size="xs"
-                  :color="'gray' as any"
-                  variant="solid"
-                  class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-green-800 !text-white"
-                >
-                  <UIcon
-                    :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"
-                    aria-hidden="true"
-                    class="h-3 w-3"
-                  />
-                  <span class="truncate">
-                    {{ task?.map?.name || t('page.tasks.questcard.anyMap', 'Any') }}
-                  </span>
-                </UBadge>
-              </span>
-            <UBadge
+            </GameBadge>
+
+            <!-- Progress Badge -->
+            <GameBadge
               v-if="objectiveProgress.total > 0"
-              size="xs"
-              :color="'gray' as any"
               variant="solid"
-              class="inline-flex items-center gap-1 text-xs border dark:text-gray-100 dark:border-gray-100"
-            >
-              <UIcon name="i-mdi-progress-check" aria-hidden="true" class="h-3 w-3" />
-              {{ t('page.tasks.questcard.progress', objectiveProgress) }}
-            </UBadge>
-              <span
-                v-if="preferencesStore.getShowRequiredLabels && task.kappaRequired"
-                v-tooltip="
-                  t(
-                    'page.tasks.questcard.kappaTooltip',
-                    'This quest is required to obtain the Kappa Secure Container'
-                  )
-                "
-              >
-                <UBadge
-                  size="xs"
-                  color="error"
-                  variant="solid"
-                  class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
-                >
-                  {{ t('page.tasks.questcard.kappa', 'Kappa') }}
-                </UBadge>
-              </span>
-              <span
-                v-if="preferencesStore.getShowRequiredLabels && task.lightkeeperRequired"
-                v-tooltip="
-                  t(
-                    'page.tasks.questcard.lightkeeperTooltip',
-                    'This quest is required to unlock the Lightkeeper trader'
-                  )
-                "
-              >
-                <UBadge
-                  size="xs"
-                  color="warning"
-                  variant="solid"
-                  class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
-                >
-                  {{ t('page.tasks.questcard.lightkeeper', 'Lightkeeper') }}
-                </UBadge>
-              </span>
-            <UBadge
+              color="gray"
+              badge-class="inline-flex items-center gap-1 text-xs border dark:text-gray-100 dark:border-gray-100"
+              icon="i-mdi-progress-check"
+              :label="t('page.tasks.questcard.progress', objectiveProgress)"
+            />
+
+            <!-- Kappa Badge -->
+            <GameBadge
+              v-if="preferencesStore.getShowRequiredLabels && task.kappaRequired"
+              variant="solid"
+              color="error"
+              :tooltip="
+                t(
+                  'page.tasks.questcard.kappaTooltip',
+                  'This quest is required to obtain the Kappa Secure Container'
+                )
+              "
+              badge-class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
+              :label="t('page.tasks.questcard.kappa', 'Kappa')"
+            />
+
+            <!-- Lightkeeper Badge -->
+            <GameBadge
+              v-if="preferencesStore.getShowRequiredLabels && task.lightkeeperRequired"
+              variant="solid"
+              color="warning"
+              :tooltip="
+                t(
+                  'page.tasks.questcard.lightkeeperTooltip',
+                  'This quest is required to unlock the Lightkeeper trader'
+                )
+              "
+              badge-class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
+              :label="t('page.tasks.questcard.lightkeeper', 'Lightkeeper')"
+            />
+
+            <!-- Failed Badge -->
+            <GameBadge
               v-if="isFailed"
-              size="xs"
-              :color="'gray' as any"
               variant="solid"
-              class="text-[11px] !bg-[var(--color-task-failed)] !text-white"
-            >
-               {{ t('page.dashboard.stats.failed.stat', 'Failed') }}
-            </UBadge>
-              <span
-                v-if="isInvalid && !isFailed"
-                v-tooltip="
-                  t(
-                    'page.tasks.questcard.blockedTooltip',
-                    'This quest is permanently blocked and can never be completed due to choices made in other quests'
-                  )
-                "
-              >
-                <UBadge
-                  size="xs"
-                  :color="'gray' as any"
-                  variant="solid"
-                  class="cursor-help text-xs !bg-[var(--color-task-blocked)] !text-white"
-                >
-                  {{ t('page.tasks.questcard.blocked', 'Blocked') }}
-                </UBadge>
-              </span>
-            <!-- XP display - moved to TaskCardRewards -->
+              color="gray"
+              badge-class="text-[11px] !bg-[var(--color-task-failed)] !text-white"
+              :label="t('page.dashboard.stats.failed.stat', 'Failed')"
+            />
+
+            <!-- Blocked Badge -->
+            <GameBadge
+              v-if="isInvalid && !isFailed"
+              variant="solid"
+              color="gray"
+              :tooltip="
+                t(
+                  'page.tasks.questcard.blockedTooltip',
+                  'This quest is permanently blocked and can never be completed due to choices made in other quests'
+                )
+              "
+              badge-class="cursor-help text-xs !bg-[var(--color-task-blocked)] !text-white"
+              :label="t('page.tasks.questcard.blocked', 'Blocked')"
+            />
           </div>
           <!-- Action buttons in header for consistent positioning -->
           <template v-if="isOurFaction">
@@ -447,6 +431,7 @@
   import { useRouter } from 'vue-router';
   import ContextMenu from '@/components/ui/ContextMenu.vue';
   import ContextMenuItem from '@/components/ui/ContextMenuItem.vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
   import { useTaskActions, type TaskActionPayload } from '@/composables/useTaskActions';
   import { useMetadataStore } from '@/stores/useMetadata';

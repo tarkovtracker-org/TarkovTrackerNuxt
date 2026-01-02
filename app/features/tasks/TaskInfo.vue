@@ -89,19 +89,25 @@
         </InfoRow>
         <!-- Required labels (Kappa, Lightkeeper) -->
         <div v-if="preferencesStore.getShowRequiredLabels" class="mb-1 flex flex-wrap gap-1">
-          <UBadge v-if="task.kappaRequired" size="xs" :color="'gray' as any" variant="solid" class="!bg-[var(--color-entity-kappa)] !text-white">
-            {{ t('page.tasks.questcard.kapparequired', 'KAPPA REQUIRED') }}
-          </UBadge>
-          <UBadge v-if="task.lightkeeperRequired" size="xs" :color="'gray' as any" variant="solid" class="!bg-[var(--color-entity-lightkeeper)] !text-white">
-            {{ t('page.tasks.questcard.lightkeeperrequired', 'LIGHTKEEPER REQUIRED') }}
-          </UBadge>
+          <GameBadge
+            v-if="task.kappaRequired"
+            variant="solid"
+            color="gray"
+            badge-class="!bg-[var(--color-entity-kappa)] !text-white"
+            :label="t('page.tasks.questcard.kapparequired', 'KAPPA REQUIRED')"
+          />
+          <GameBadge
+            v-if="task.lightkeeperRequired"
+            variant="solid"
+            color="gray"
+            badge-class="!bg-[var(--color-entity-lightkeeper)] !text-white"
+            :label="t('page.tasks.questcard.lightkeeperrequired', 'LIGHTKEEPER REQUIRED')"
+          />
         </div>
         <!-- Not Required label (Non-Kappa) -->
         <div v-if="preferencesStore.getShowNotRequiredLabels && nonKappa" class="mb-1 flex">
           <div class="mr-1">
-            <UBadge size="xs" color="error" variant="outline">
-              {{ t('page.tasks.questcard.nonkappa') }}
-            </UBadge>
+            <GameBadge variant="outline" color="error" :label="t('page.tasks.questcard.nonkappa')" />
           </div>
         </div>
         <InfoRow
@@ -152,6 +158,7 @@
   import { useRouter } from 'vue-router';
   import ContextMenu from '@/components/ui/ContextMenu.vue';
   import ContextMenuItem from '@/components/ui/ContextMenuItem.vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import type { Task } from '@/types/tarkov';

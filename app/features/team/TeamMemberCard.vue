@@ -8,9 +8,7 @@
             <h3 class="truncate text-xl font-bold sm:text-2xl">
               {{ displayName }}
             </h3>
-            <UBadge v-if="isOwner" color="primary" variant="solid" size="sm">
-              {{ $t('page.team.card.manageteam.membercard.owner') }}
-            </UBadge>
+            <GameBadge v-if="isOwner" color="primary" variant="solid" size="sm" :label="$t('page.team.card.manageteam.membercard.owner')" />
           </div>
           <div v-if="props.teammember == $supabase.user.id" class="mt-1">
             <span class="text-primary text-sm font-medium">
@@ -93,6 +91,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useEdgeFunctions } from '@/composables/api/useEdgeFunctions';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';

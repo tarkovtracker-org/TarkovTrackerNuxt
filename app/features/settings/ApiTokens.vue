@@ -62,7 +62,7 @@
                 </span>
               </div>
               <div class="flex flex-wrap gap-2 text-xs">
-                <UBadge
+                <GameBadge
                   :color="token.gameMode === 'pve' ? 'info' : 'warning'"
                   variant="solid"
                   size="xs"
@@ -72,16 +72,15 @@
                     class="mr-1 h-3 w-3"
                   />
                   {{ formatGameMode(token.gameMode) }}
-                </UBadge>
-                <UBadge
+                </GameBadge>
+                <GameBadge
                   v-for="perm in token.permissions"
                   :key="perm"
                   color="info"
                   variant="soft"
                   size="xs"
-                >
-                  {{ permissionLabel(perm) }}
-                </UBadge>
+                  :label="permissionLabel(perm)"
+                />
               </div>
               <div
                 class="flex items-center gap-2 rounded border border-base bg-surface-floating p-2"
@@ -151,9 +150,7 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <UBadge v-if="!token.isActive" color="warning" variant="subtle" size="xs">
-                {{ t('page.settings.card.apitokens.list.revoked') }}
-              </UBadge>
+              <GameBadge v-if="!token.isActive" color="warning" variant="subtle" size="xs" :label="t('page.settings.card.apitokens.list.revoked')" />
               <UButton
                 color="error"
                 variant="ghost"
@@ -312,6 +309,7 @@
 <script setup lang="ts">
   import { computed, onMounted, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useEdgeFunctions } from '@/composables/api/useEdgeFunctions';
   import type { RawTokenRow, TokenPermission, TokenRow } from '@/types/api';
   import { API_PERMISSIONS, GAME_MODE_OPTIONS, GAME_MODES, type GameMode } from '@/utils/constants';

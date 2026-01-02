@@ -109,7 +109,7 @@
               >
                 <div class="flex items-center">
                   <span>Task ID: {{ task.id }}</span>
-                  <UBadge size="xs" color="red" class="ml-2">Failed</UBadge>
+                  <GameBadge variant="solid" color="error" size="xs" label="Failed" badge-class="ml-2" />
                 </div>
                 <div class="text-sm text-gray-400">
                   This task will remain marked as failed after migration.
@@ -134,6 +134,7 @@
 </template>
 <script setup>
   import GenericCard from '@/components/ui/GenericCard.vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useDataMigration } from '@/composables/useDataMigration';
   import ImportConfirmDialog from './ImportConfirmDialog.vue';
   import MigrationSteps from './MigrationSteps.vue';

@@ -56,15 +56,14 @@
             class="shrink-0"
           >
             <span>{{ $t('page.neededitems.filters.label', 'Filters') }}</span>
-            <UBadge
+            <GameBadge
               v-if="activeFiltersCount > 0"
               color="primary"
               variant="soft"
               size="sm"
-              class="ml-2 px-2 py-0.5"
-            >
-              {{ activeFiltersCount }}
-            </UBadge>
+              badge-class="ml-2 px-2 py-0.5"
+              :label="activeFiltersCount.toString()"
+            />
           </UButton>
           <template #content>
             <div class="w-80 space-y-3 p-3">
@@ -166,12 +165,12 @@
       </div>
       <!-- Section 3: View Mode & Item Count -->
       <div class="flex items-center gap-3 rounded-lg bg-surface-elevated px-4 py-3 shadow-sm">
-        <UBadge color="neutral" variant="soft" size="md" class="px-3 py-1 text-sm">
+        <GameBadge color="neutral" variant="soft" size="md" badge-class="px-3 py-1 text-sm">
           <template v-if="groupByItem && ungroupedCount !== totalCount">
             {{ totalCount }} unique ({{ ungroupedCount }} total)
           </template>
           <template v-else>{{ totalCount }} {{ $t('page.neededitems.items', 'items') }}</template>
-        </UBadge>
+        </GameBadge>
         <div class="flex gap-1 border-l border-base pl-3">
           <UButton
             icon="i-mdi-view-list"
@@ -202,6 +201,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import FilterPill from '@/components/FilterPill.vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   type FilterType = 'all' | 'tasks' | 'hideout' | 'completed';
   type ViewMode = 'list' | 'grid';
   type FirFilter = 'all' | 'fir' | 'non-fir';

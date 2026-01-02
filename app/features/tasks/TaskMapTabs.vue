@@ -11,15 +11,14 @@
           <div class="relative flex items-center gap-2 px-2 py-1">
             <UIcon name="i-mdi-compass" class="h-4 w-4" />
             <span>{{ item.label }}</span>
-            <UBadge
+            <GameBadge
               v-if="item.count > 0"
               :color="index === selectedTabIndex ? 'primary' : 'neutral'"
               variant="solid"
               size="xs"
-              class="ml-1 rounded-full"
-            >
-              {{ item.count }}
-            </UBadge>
+              badge-class="ml-1 rounded-full"
+              :label="item.count.toString()"
+            />
           </div>
         </template>
       </UTabs>
@@ -28,6 +27,7 @@
 </template>
 <script setup lang="ts">
   import { computed } from 'vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   interface MapData {
     id: string;
     name: string;

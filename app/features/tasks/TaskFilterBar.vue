@@ -131,7 +131,7 @@
         >
           {{ currentUserDisplayName.toUpperCase() }}
           <template #badge>
-             <UBadge size="xs" color="primary" variant="solid" class="ml-1">YOU</UBadge>
+              <GameBadge size="xs" color="primary" variant="solid" badge-class="ml-1" label="YOU" />
           </template>
         </FilterPill>
         <FilterPill
@@ -219,6 +219,7 @@
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import FilterPill from '@/components/FilterPill.vue';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import { useTaskFiltering } from '@/composables/useTaskFiltering';
   import TaskSettingsModal from '@/features/tasks/TaskSettingsModal.vue';
   import { useMetadataStore } from '@/stores/useMetadata';

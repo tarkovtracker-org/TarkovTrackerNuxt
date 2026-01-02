@@ -141,10 +141,10 @@
                     <UIcon name="i-mdi-login" class="mr-2 h-4.5 w-4.5 text-content-tertiary" />
                     <span class="flex items-center text-sm">
                       <span class="mr-2 text-content-secondary">Auth Method:</span>
-                      <UBadge size="xs" :color="providerColor" variant="solid" class="text-white">
-                        <UIcon :name="providerIcon" class="mr-1 h-4 w-4" />
-                        {{ providerLabel }}
-                      </UBadge>
+                      <GameBadge size="xs" :color="providerColor" variant="solid" badge-class="text-white">
+                      <UIcon :name="providerIcon" class="mr-1 h-4 w-4" />
+                      {{ providerLabel }}
+                    </GameBadge>
                     </span>
                   </div>
                   <div class="flex items-center">
@@ -327,6 +327,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import GameBadge from '@/components/ui/GameBadge.vue';
   import GenericCard from '@/components/ui/GenericCard.vue';
   import { useTeamStoreWithSupabase } from '@/stores/useTeamStore';
   import { logger } from '@/utils/logger';
