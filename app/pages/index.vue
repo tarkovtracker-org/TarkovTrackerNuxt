@@ -2,10 +2,10 @@
   <div class="container mx-auto min-h-[calc(100vh-250px)] max-w-7xl p-4">
     <!-- Hero Section with Main Progress -->
     <div
-      class="border-primary-800/60 relative mb-6 overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-transparent dark:from-primary-900/40 dark:via-surface-900/90 dark:to-surface-900 dark:bg-linear-to-br dark:border-primary-700/30"
+      class="border-accent-800/60 relative mb-6 overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-transparent dark:from-accent-900/40 dark:via-surface-900/90 dark:to-surface-900 dark:bg-linear-to-br dark:border-accent-700/30"
     >
       <div
-        class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(var(--color-primary-500),0.1),transparent_50%)]"
+        class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(var(--color-accent-500),0.1),transparent_50%)]"
       ></div>
       <div class="relative p-4 sm:p-6 lg:p-8">
         <div class="grid grid-cols-1 items-center gap-6 lg:grid-cols-3 lg:gap-8">
@@ -39,7 +39,7 @@
                   fill="none"
                   :stroke-dasharray="circumference"
                   :stroke-dashoffset="progressOffset"
-                  class="text-primary-500 transition-all duration-1000 ease-out"
+                  class="text-accent-500 transition-all duration-1000 ease-out"
                   stroke-linecap="round"
                 />
               </svg>
@@ -74,7 +74,7 @@
                 </div>
               </div>
               <div class="rounded-xl border border-gray-200 bg-gray-100 p-3 dark:border-surface-700/50 dark:bg-surface-800/50 md:p-4">
-                <div class="text-xl font-bold text-primary-600 dark:text-primary-400 md:text-3xl">
+                <div class="text-xl font-bold text-accent-600 dark:text-accent-400 md:text-3xl">
                   {{ dashboardStats.availableTasksCount.value }}
                 </div>
                 <div class="mt-1 text-[10px] tracking-wide uppercase text-gray-600 dark:text-surface-300 md:text-xs">
@@ -105,7 +105,7 @@
     <!-- Progress Breakdown Section -->
     <div class="mb-6">
       <h2 class="mb-4 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-        <UIcon name="i-mdi-chart-line" class="mr-2 h-6 w-6 text-primary-600 dark:text-primary-500" />
+        <UIcon name="i-mdi-chart-line" class="mr-2 h-6 w-6 text-accent-600 dark:text-accent-500" />
         {{ $t('page.dashboard.progress.title') }}
       </h2>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -115,7 +115,7 @@
           :completed="dashboardStats.completedTasks.value"
           :total="dashboardStats.totalTasks.value"
           :percentage="totalTasksPercentageNum"
-          color="primary"
+          color="accent"
           @click="router.push('/tasks')"
         />
         <DashboardProgressCard
@@ -159,7 +159,7 @@
     <!-- Trader Progress Section -->
     <div class="mb-6">
       <h2 class="mb-4 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-        <UIcon name="i-mdi-account-group" class="mr-2 h-6 w-6 text-primary-600 dark:text-primary-500" />
+        <UIcon name="i-mdi-account-group" class="mr-2 h-6 w-6 text-accent-600 dark:text-accent-500" />
         {{ $t('page.dashboard.traders.title') }}
       </h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
@@ -169,7 +169,7 @@
             v-tooltip="$t('page.dashboard.traders.viewTasks', { name: trader.name })"
             role="button"
             tabindex="0"
-            class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all outline-none hover:border-primary-500/30 hover:shadow-md focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:border-primary-700/30 dark:bg-surface-800 dark:hover:border-primary-700/50"
+            class="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all outline-none hover:border-accent-500/30 hover:shadow-md focus-visible:border-accent-500 focus-visible:ring-2 focus-visible:ring-accent-500/50 dark:border-accent-700/30 dark:bg-surface-800 dark:hover:border-accent-700/50"
             :aria-label="$t('page.dashboard.traders.viewTasks', { name: trader.name })"
             @click="navigateToTraderTasks(trader.id)"
             @keydown.enter="navigateToTraderTasks(trader.id)"
@@ -197,12 +197,12 @@
                 :class="
                   holidayEffectsEnabled
                     ? 'candy-cane'
-                    : 'from-primary-600 to-primary-400 bg-linear-to-r'
+                    : 'from-accent-600 to-accent-400 bg-linear-to-r'
                 "
                 :style="{ width: `${trader.percentage}%` }"
               ></div>
             </div>
-            <div class="mt-1 text-right text-sm font-medium text-primary-600 dark:text-primary-400">
+            <div class="mt-1 text-right text-sm font-medium text-accent-600 dark:text-accent-400">
               {{ trader.percentage }}%
             </div>
           </div>
@@ -211,7 +211,7 @@
     <!-- Milestones Section -->
     <div>
       <h2 class="mb-4 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-        <UIcon name="i-mdi-star-circle" class="mr-2 h-6 w-6 text-primary-600 dark:text-primary-500" />
+        <UIcon name="i-mdi-star-circle" class="mr-2 h-6 w-6 text-accent-600 dark:text-accent-500" />
         {{ $t('page.dashboard.milestones.title') }}
       </h2>
       <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -221,7 +221,7 @@
           :is-achieved="totalTasksPercentageNum >= 25"
           achieved-icon="i-mdi-check-circle"
           unachieved-icon="i-mdi-circle-outline"
-          color="primary"
+          color="accent"
         />
         <DashboardMilestoneCard
           title="50%"

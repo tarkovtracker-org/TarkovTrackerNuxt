@@ -32,7 +32,7 @@
           v-tooltip="t('app_bar.loading_data')"
           class="inline-flex rounded"
         >
-          <UIcon name="i-heroicons-arrow-path" class="text-primary-500 h-6 w-6 animate-spin" />
+          <UIcon name="i-heroicons-arrow-path" class="text-accent-500 h-6 w-6 animate-spin" />
         </span>
         <!-- Language selector -->
         <USelectMenu
@@ -56,7 +56,7 @@
               base: 'px-3 py-2 text-sm cursor-pointer transition-colors rounded',
               inactive: 'text-content-secondary hover:bg-surface-200 dark:hover:bg-surface-800 hover:text-content-primary dark:text-surface-200 dark:hover:text-white',
               active: 'bg-surface-200 text-content-primary dark:bg-surface-800 dark:text-white',
-              selected: 'bg-primary-50 text-primary-600 ring-1 ring-primary-500 dark:bg-primary-500/10 dark:text-primary-100',
+              selected: 'bg-accent-50 text-accent-600 ring-1 ring-accent-500 dark:bg-accent-500/10 dark:text-accent-100',
             },
           }"
           class="h-auto min-w-0"

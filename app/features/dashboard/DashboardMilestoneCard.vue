@@ -16,7 +16,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  export type MilestoneColor = 'primary' | 'info' | 'success' | 'warning' | 'purple' | 'kappa' | 'lightkeeper';
+  export type MilestoneColor = 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'purple' | 'kappa' | 'lightkeeper';
   const props = withDefaults(
     defineProps<{
       title: string;
@@ -37,6 +37,13 @@
         'shadow-lg shadow-primary-100 dark:shadow-primary-900/20',
       ].join(' '),
       icon: 'text-primary-600 dark:text-primary-400',
+    },
+    accent: {
+      achieved: [
+        'bg-linear-to-br from-accent-50 to-white border-accent-200 dark:from-accent-900/40 dark:to-surface-900 dark:border-accent-600/50',
+        'shadow-lg shadow-accent-100 dark:shadow-accent-900/20',
+      ].join(' '),
+      icon: 'text-accent-600 dark:text-accent-400',
     },
     info: {
       achieved: [

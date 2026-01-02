@@ -42,7 +42,7 @@
         v-if="isLoading"
         class="absolute inset-0 z-[1001] flex items-center justify-center bg-gray-100/50 dark:bg-surface-900/50"
       >
-        <UIcon name="i-mdi-loading" class="text-primary-500 h-8 w-8 animate-spin" />
+        <UIcon name="i-mdi-loading" class="text-accent-500 h-8 w-8 animate-spin" />
       </div>
       <!-- Map controls (top right) -->
       <div class="absolute top-2 right-2 z-[1000] flex gap-2 rounded bg-white/90 p-1.5 dark:bg-surface-800/90">

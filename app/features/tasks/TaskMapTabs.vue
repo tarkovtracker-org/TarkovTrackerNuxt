@@ -13,10 +13,10 @@
             <span>{{ item.label }}</span>
             <GameBadge
               v-if="item.count > 0"
-              :color="index === selectedTabIndex ? 'primary' : 'neutral'"
+              :color="index === selectedTabIndex ? 'neutral' : 'neutral'"
               variant="solid"
               size="xs"
-              badge-class="ml-1 rounded-full"
+              :badge-class="index === selectedTabIndex ? 'ml-1 rounded-full !bg-accent-500 !text-white' : 'ml-1 rounded-full'"
               :label="item.count.toString()"
             />
           </div>

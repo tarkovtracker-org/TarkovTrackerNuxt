@@ -13,7 +13,7 @@
             <span v-tooltip="task?.name">
               <router-link
                 :to="`/tasks?task=${task.id}`"
-                class="text-primary-700 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 flex min-w-0 items-center gap-2 no-underline"
+                class="text-accent-700 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 flex min-w-0 items-center gap-2 no-underline"
                 @click.stop
               >
               <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-800">
@@ -44,7 +44,7 @@
                 :href="task.wikiLink"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
+                class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
                 :aria-label="t('page.tasks.questcard.viewOnWiki', 'View on Wiki')"
                 @click.stop
               >
@@ -55,7 +55,7 @@
                 :href="tarkovDevTaskUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
+                class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
                 :aria-label="t('page.tasks.questcard.viewOnTarkovDev', 'View on tarkov.dev')"
                 @click.stop
               >
@@ -207,7 +207,7 @@
               v-else
               :size="actionButtonSize"
               icon="i-mdi-clipboard-text"
-              color="primary"
+              color="accent"
               variant="solid"
               class="shrink-0 shadow-sm"
               @click.stop="markTaskUncomplete()"

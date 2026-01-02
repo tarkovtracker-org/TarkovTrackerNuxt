@@ -23,7 +23,7 @@
       <!-- XP Badge -->
       <span
         v-if="preferencesStore.getShowExperienceRewards && experience > 0"
-        class="inline-flex items-center gap-1 rounded bg-primary-600! px-2 py-0.5 text-xs text-white!"
+        class="inline-flex items-center gap-1 rounded bg-accent-600! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
         <span>{{ formatNumber(experience) }} XP</span>
@@ -64,7 +64,7 @@
         <span
           v-if="itemRewards.length > 0"
           v-tooltip="itemRewardsSummaryTooltip"
-          class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
+          class="inline-flex cursor-help items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!"
         >
           <UIcon name="i-mdi-package-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
           <span>
@@ -81,7 +81,7 @@
       <span
         v-if="offerUnlockRewards.length > 0"
         v-tooltip="offerUnlockSummaryTooltip"
-        class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
+        class="inline-flex cursor-help items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-cart-check" aria-hidden="true" class="h-4 w-4 !text-white" />
         <span>
@@ -258,11 +258,11 @@
     return props.traderUnlockReward || null;
   });
   const rewardLinkClass =
-    'text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 inline-flex items-center gap-1.5 text-xs';
+    'text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 inline-flex items-center gap-1.5 text-xs';
   const rewardItemCardClass = [
     'group relative flex flex-col items-center gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none cursor-pointer',
     'transition-colors hover:shadow-md dark:hover:bg-white/10 focus:outline-none',
-    'focus-visible:ring-primary-500 focus-visible:ring-offset-surface-900',
+    'focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900',
     'focus-visible:ring-2 focus-visible:ring-offset-2',
   ].join(' ');
   const showDetails = ref(false);

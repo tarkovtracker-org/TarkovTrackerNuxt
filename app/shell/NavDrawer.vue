@@ -34,7 +34,8 @@
                 ? '/img/logos/tarkovtrackerlogo-mini.webp'
                 : '/img/logos/tarkovtrackerlogo-light.webp'
             "
-            class="h-auto w-full invert dark:invert-0"
+            class="h-auto w-full"
+            :class="currentGameMode === 'pve' ? 'logo-pve-tint' : 'logo-pvp-tint'"
             preload
           />
         </div>
@@ -46,7 +47,7 @@
       <DrawerLevel :is-collapsed="isCollapsed" />
       <div v-if="!isCollapsed" class="my-2 flex flex-col items-center gap-1.5 px-4">
         <button
-          class="w-full rounded border px-2 py-2.5 text-center text-xs font-medium transition-colors border-base text-content-secondary hover:text-content-primary dark:border-primary-800/50 dark:hover:border-primary-600 dark:text-white/80 dark:hover:text-white"
+          class="w-full rounded border px-2 py-2.5 text-center text-xs font-medium transition-colors border-base text-content-secondary hover:text-content-primary dark:border-accent-800/50 dark:hover:border-accent-600 dark:text-white/80 dark:hover:text-white"
           @click="navigateToSettings"
         >
           {{ currentEditionName }}
@@ -56,7 +57,7 @@
           <!-- Faction Cycling Button -->
           <span v-tooltip="`Switch to ${nextFaction}`" class="aspect-square">
             <button
-              class="w-full h-full rounded border px-2 py-2.5 text-center transition-colors border-base hover:bg-surface-200 dark:border-primary-800/50 dark:hover:border-primary-600 dark:hover:bg-white/5"
+              class="w-full h-full rounded border px-2 py-2.5 text-center transition-colors border-base hover:bg-surface-200 dark:border-accent-800/50 dark:hover:border-accent-600 dark:hover:bg-white/5"
               @click="cycleFaction"
             >
               <NuxtImg
@@ -70,7 +71,7 @@
           <!-- Game Mode Cycling Button -->
           <span v-tooltip="`Switch to ${nextGameModeLabel}`" class="flex-1">
             <button
-              class="w-full h-full rounded border px-2 py-2.5 flex items-center justify-center transition-colors border-base hover:bg-surface-200 dark:border-primary-800/50 dark:hover:border-primary-600 dark:hover:bg-white/5"
+              class="w-full h-full rounded border px-2 py-2.5 flex items-center justify-center transition-colors border-base hover:bg-surface-200 dark:border-accent-800/50 dark:hover:border-accent-600 dark:hover:bg-white/5"
               :class="currentGameModeColorClass"
               @click="cycleGameMode"
             >

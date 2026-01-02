@@ -40,7 +40,7 @@
                     </svg>
                   </span>
                   <span
-                    class="text-primary-400 decoration-primary-400/40 group-hover:text-primary-300 group-hover:decoration-primary-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
+                    class="text-accent-400 decoration-accent-400/40 group-hover:text-accent-300 group-hover:decoration-accent-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
                   >
                     {{ t('footer.call_to_action.discord') }}
                   </span>
@@ -65,7 +65,7 @@
                     <UIcon name="i-mdi-github" class="h-5 w-5" />
                   </span>
                   <span
-                    class="text-primary-400 decoration-primary-400/40 group-hover:text-primary-300 group-hover:decoration-primary-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
+                    class="text-accent-400 decoration-accent-400/40 group-hover:text-accent-300 group-hover:decoration-accent-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
                   >
                     {{ t('footer.call_to_action.github') }}
                   </span>
@@ -107,13 +107,13 @@
           <div class="flex flex-col items-center gap-2 lg:items-end">
             <router-link
               to="/terms-of-service"
-              class="text-primary-400 decoration-primary-400/40 hover:text-primary-300 hover:decoration-primary-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
+              class="text-accent-400 decoration-accent-400/40 hover:text-accent-300 hover:decoration-accent-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
             >
               {{ t('footer.terms_of_service') }}
             </router-link>
             <router-link
               to="/privacy"
-              class="text-primary-400 decoration-primary-400/40 hover:text-primary-300 hover:decoration-primary-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
+              class="text-accent-400 decoration-accent-400/40 hover:text-accent-300 hover:decoration-accent-300 text-sm font-semibold underline underline-offset-2 transition-colors duration-150"
             >
               {{ t('footer.privacy_policy') }}
             </router-link>
@@ -129,7 +129,7 @@
           <span class="text-sm text-content-tertiary">·</span>
           <router-link
             to="/credits"
-            class="text-primary-400 decoration-primary-400/40 hover:text-primary-300 hover:decoration-primary-300 underline underline-offset-2 transition-colors duration-150"
+            class="text-accent-400 decoration-accent-400/40 hover:text-accent-300 hover:decoration-accent-300 underline underline-offset-2 transition-colors duration-150"
           >
             {{ t('footer.credits') }}
           </router-link>

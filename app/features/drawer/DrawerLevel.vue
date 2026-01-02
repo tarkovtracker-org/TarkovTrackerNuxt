@@ -146,7 +146,7 @@
           @click="navigateToSettings"
         >
           <div class="mb-1.5 flex items-center justify-between text-[0.65rem] leading-none">
-            <span class="font-medium text-content-secondary group-hover/xp:text-primary-600 dark:group-hover/xp:text-primary-400 transition-colors">
+            <span class="font-medium text-content-secondary group-hover/xp:text-accent-600 dark:group-hover/xp:text-accent-400 transition-colors">
               {{ formatNumber(xpCalculation.totalXP.value) }} XP
             </span>
             <span class="text-content-tertiary">
@@ -155,7 +155,7 @@
           </div>
           <div class="h-1.5 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
             <div
-              class="h-full rounded-full bg-gradient-to-r from-primary-600 to-primary-500 transition-all duration-500 ease-out"
+              class="h-full rounded-full bg-gradient-to-r from-accent-600 to-accent-500 transition-all duration-500 ease-out"
               :style="{ width: `${xpCalculation.xpProgress.value}%` }"
             ></div>
           </div>

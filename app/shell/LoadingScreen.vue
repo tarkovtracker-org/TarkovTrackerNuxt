@@ -13,7 +13,7 @@
         <UIcon
           v-if="!hasErrors"
           name="i-heroicons-arrow-path"
-          class="text-primary-500 h-16 w-16 animate-spin"
+          class="text-accent-500 h-16 w-16 animate-spin"
         />
         <UIcon v-else name="i-heroicons-exclamation-triangle" class="text-warning-500 h-16 w-16" />
       </div>
@@ -21,7 +21,7 @@
       <div class="flex flex-col items-center gap-2 text-center">
         <h2
           id="loading-screen-title"
-          class="focus-visible:ring-primary-500 rounded-sm text-xl font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 dark:text-gray-100"
+          class="focus-visible:ring-accent-500 rounded-sm text-xl font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 dark:text-gray-100"
         >
           {{ hasErrors ? $t('loading.title_error') : $t('loading.title') }}
         </h2>
@@ -189,7 +189,7 @@
   function getStatusClass(loading: boolean, error: Error | null): string {
     const baseClass = 'h-4 w-4';
     if (error) return `${baseClass} text-error-500`;
-    if (loading) return `${baseClass} animate-spin text-primary-500`;
+    if (loading) return `${baseClass} animate-spin text-accent-500`;
     return `${baseClass} text-green-500`;
   }
   function handleRetry() {

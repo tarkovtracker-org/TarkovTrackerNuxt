@@ -11,10 +11,10 @@ html {
 
 /* Global Interactive & Cursor Fixes */
 button,
-[role="button"],
-input[type="submit"],
-input[type="reset"],
-input[type="button"],
+[role='button'],
+input[type='submit'],
+input[type='reset'],
+input[type='button'],
 label[for],
 select,
 a {
@@ -22,7 +22,7 @@ a {
 }
 
 button:disabled,
-[role="button"][aria-disabled="true"],
+[role='button'][aria-disabled='true'],
 input:disabled,
 select:disabled,
 .disabled,
@@ -35,14 +35,14 @@ select:disabled,
    ========================================= */
 /* Tailwind v4 + Nuxt UI v4 theme tokens */
 @layer base {
-  /* Apply a global focus ring that matches the "Trader Progress" style (primary-500) */
+  /* Apply a global focus ring that follows game mode accent color */
   button,
   a,
   input,
   select,
   textarea,
   [tabindex]:not([tabindex='-1']) {
-    @apply focus-visible:ring-primary-500 focus:outline-none focus-visible:ring-2;
+    @apply focus-visible:ring-accent-500 focus:outline-none focus-visible:ring-2;
   }
 
   /* Global Fixes for Nuxt UI Components */
@@ -50,7 +50,7 @@ select:disabled,
     cursor: pointer !important;
   }
 
-  input[role="combobox"] {
+  input[role='combobox'] {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
   }
@@ -128,18 +128,19 @@ select:disabled,
   --color-red-900: hsl(0 62.8% 30.6%);
   --color-red-950: hsl(0 74.7% 15.5%);
 
-  /* Accent (Primitive) - Deep Forest/Teal */
-  --color-accent-50: hsl(180 14% 94%);
-  --color-accent-100: hsl(180 14% 86%);
-  --color-accent-200: hsl(184 16% 72%);
-  --color-accent-300: hsl(186 18% 58%);
-  --color-accent-400: hsl(187 22% 44%);
-  --color-accent-500: hsl(189 28% 32%);
-  --color-accent-600: hsl(189 30% 26%);
-  --color-accent-700: hsl(190 32% 20%);
-  --color-accent-800: hsl(190 34% 15%);
-  --color-accent-900: hsl(192 38% 11%);
-  --color-accent-950: hsl(192 42% 8%);
+  /* Accent (Dynamic) - Points to PvP by default, switched via .pve-mode class */
+  /* These are CSS custom property references that will be overridden in :root.pve-mode */
+  --color-accent-50: var(--color-pvp-50);
+  --color-accent-100: var(--color-pvp-100);
+  --color-accent-200: var(--color-pvp-200);
+  --color-accent-300: var(--color-pvp-300);
+  --color-accent-400: var(--color-pvp-400);
+  --color-accent-500: var(--color-pvp-500);
+  --color-accent-600: var(--color-pvp-600);
+  --color-accent-700: var(--color-pvp-700);
+  --color-accent-800: var(--color-pvp-800);
+  --color-accent-900: var(--color-pvp-900);
+  --color-accent-950: var(--color-pvp-950);
 
   /* Surface (Primitive) - Neutral Grays (Warm/Bronze Tint) */
   --color-surface-50: hsl(40 10% 97%);
@@ -154,34 +155,34 @@ select:disabled,
   --color-surface-900: hsl(40 8% 7%);
   --color-surface-950: hsl(40 10% 3.5%);
 
-  /* PvP (Primitive) - In-game Tan */
-  --color-pvp-50: hsl(40 60% 99%);
-  --color-pvp-100: hsl(38 44.4% 96.5%);
-  --color-pvp-200: hsl(37 47.4% 92.5%);
-  --color-pvp-300: hsl(38 38.5% 87.3%);
-  --color-pvp-400: hsl(46 26.5% 80.8%);
-  --color-pvp-500: hsl(41 22.3% 72.7%);
-  --color-pvp-600: hsl(36 20.2% 61.2%);
-  --color-pvp-700: hsl(34 14.2% 48.4%);
-  --color-pvp-800: hsl(31 14.6% 36.3%);
-  --color-pvp-900: hsl(32 14.7% 25.3%);
-  --color-pvp-950: hsl(39 18.4% 14.9%);
+  /* PvP (Primitive) - Matches Primary (Brand Tan) for seamless default experience */
+  --color-pvp-50: hsl(42 31.3% 93.7%);
+  --color-pvp-100: hsl(39 28.8% 88.4%);
+  --color-pvp-200: hsl(40 27.7% 76.7%);
+  --color-pvp-300: hsl(40 28.1% 65.1%);
+  --color-pvp-400: hsl(40 28% 53.1%);
+  --color-pvp-500: hsl(39 20.5% 50.2%);
+  --color-pvp-600: hsl(38 20.7% 45.5%);
+  --color-pvp-700: hsl(38 21.1% 35.3%);
+  --color-pvp-800: hsl(37 17.3% 26.1%);
+  --color-pvp-900: hsl(33 10.6% 16.7%);
+  --color-pvp-950: hsl(40 13% 9%);
 
-  /* PvE (Primitive) - In-game Blue */
-  --color-pve-50: hsl(196 57.9% 96.3%);
-  --color-pve-100: hsl(196 57.9% 92.5%);
-  --color-pve-200: hsl(196 57.9% 85.1%);
-  --color-pve-300: hsl(197 55.6% 75.3%);
-  --color-pve-400: hsl(196 40% 60.8%);
-  --color-pve-500: hsl(196 35.2% 52.2%);
-  --color-pve-600: hsl(197 33.3% 43.5%);
-  --color-pve-700: hsl(198 32.6% 35.5%);
-  --color-pve-800: hsl(199 32.4% 27.3%);
-  --color-pve-900: hsl(201 32% 19.6%);
-  --color-pve-950: hsl(201 31.2% 12.5%);
+  /* PvE (Primitive) - In-game Blue (adjusted to match logo filter) */
+  --color-pve-50: hsl(220 50% 96%);
+  --color-pve-100: hsl(220 50% 92%);
+  --color-pve-200: hsl(222 48% 84%);
+  --color-pve-300: hsl(224 46% 74%);
+  --color-pve-400: hsl(226 40% 62%);
+  --color-pve-500: hsl(228 38% 52%);
+  --color-pve-600: hsl(230 36% 44%);
+  --color-pve-700: hsl(232 34% 36%);
+  --color-pve-800: hsl(234 32% 28%);
+  --color-pve-900: hsl(236 30% 20%);
+  --color-pve-950: hsl(238 28% 14%);
 
   /* --- Semantic Mappings (Aliases) --- */
-  
+
   /* Brand Aliases */
   --color-brand-50: var(--color-primary-50);
   --color-brand-100: var(--color-primary-100);
@@ -317,14 +318,14 @@ select:disabled,
   --color-link: hsl(187 100% 38%);
 
   /* --- Entities --- */
-  --color-entity-lightkeeper: var(--color-amber-500); 
+  --color-entity-lightkeeper: var(--color-amber-500);
   --color-entity-kappa: var(--color-entity-twitch);
-  --color-entity-discord: #5865f2;                    
+  --color-entity-discord: #5865f2;
   --color-entity-twitch: #9146ff;
-  
+
   /* --- Task Status --- */
   --color-task-locked: var(--color-gray-400);
-  --color-task-available: var(--color-primary-600);
+  --color-task-available: var(--color-accent-600);
   --color-task-complete: var(--color-success-600);
   --color-task-failed: var(--color-error-600);
   --color-task-blocked: var(--color-gray-600);
@@ -333,13 +334,13 @@ select:disabled,
   --color-reward-item: var(--color-blue-400);
   --color-reward-skill: var(--color-success-600);
   --color-reward-trader: var(--color-warning-600);
-  --color-reward-xp: var(--color-primary-600);
+  --color-reward-xp: var(--color-accent-600);
 
   /* --- Map Markers --- */
-  --color-map-marker-self: var(--color-error-500);    
-  --color-map-marker-team: var(--color-warning-500);  
-  --color-map-extract-pmc: var(--color-success-500);  
-  --color-map-extract-scav: var(--color-warning-400); 
+  --color-map-marker-self: var(--color-error-500);
+  --color-map-marker-team: var(--color-warning-500);
+  --color-map-extract-pmc: var(--color-success-500);
+  --color-map-extract-scav: var(--color-warning-400);
   --color-map-extract-coop: var(--color-secondary-400);
 }
 
@@ -385,46 +386,46 @@ select:disabled,
     --color-surface-900: oklch(0.182204 0 0);
     --color-surface-950: oklch(0.144335 0.002191 106.67);
 
-    /* PvP (Primitive) */
-    --color-pvp-50: oklch(0.994254 0.002849 84.56);
-    --color-pvp-100: oklch(0.97706 0.007366 80.72);
-    --color-pvp-200: oklch(0.951577 0.016465 79.35);
-    --color-pvp-300: oklch(0.915587 0.023529 82.12);
-    --color-pvp-400: oklch(0.872401 0.027713 93.13);
-    --color-pvp-500: oklch(0.807177 0.030874 85.57);
-    --color-pvp-600: oklch(0.713128 0.038492 78);
-    --color-pvp-700: oklch(0.60116 0.034516 74.97);
-    --color-pvp-800: oklch(0.486765 0.027433 69.19);
-    --color-pvp-900: oklch(0.381338 0.020591 70.09);
-    --color-pvp-950: oklch(0.279315 0.017462 82.23);
+    /* PvP (Primitive) - Matches Primary OKLCH values */
+    --color-pvp-50: oklch(0.958531 0.009845 87.47);
+    --color-pvp-100: oklch(0.920558 0.016115 82.79);
+    --color-pvp-200: oklch(0.838958 0.032256 84.59);
+    --color-pvp-300: oklch(0.756775 0.049173 83.87);
+    --color-pvp-400: oklch(0.672055 0.066713 84.66);
+    --color-pvp-500: oklch(0.634237 0.052556 83.12);
+    --color-pvp-600: oklch(0.588274 0.048467 80.24);
+    --color-pvp-700: oklch(0.492406 0.040305 80.92);
+    --color-pvp-800: oklch(0.395258 0.025655 78.78);
+    --color-pvp-900: oklch(0.291603 0.010623 73.5);
+    --color-pvp-950: oklch(0.209826 0.008289 84.59);
 
-    /* PvE (Primitive) */
-    --color-pve-50: oklch(0.973985 0.009403 222.06);
-    --color-pve-100: oklch(0.948028 0.018804 222.16);
-    --color-pve-200: oklch(0.896376 0.0375 222.45);
-    --color-pve-300: oklch(0.826229 0.059051 224.48);
-    --color-pve-400: oklch(0.71572 0.068204 223.86);
-    --color-pve-500: oklch(0.649348 0.073321 223.58);
-    --color-pve-600: oklch(0.567896 0.06509 225.53);
-  --color-pve-700: oklch(0.487519 0.054261 227.86);
-    --color-pve-800: oklch(0.405769 0.043568 228.42);
-    --color-pve-900: oklch(0.324052 0.03313 231.99);
-    --color-pve-950: oklch(0.247436 0.022404 232.37);
+    /* PvE (Primitive) - Adjusted to match logo indigo-blue */
+    --color-pve-50: oklch(0.968 0.012 260);
+    --color-pve-100: oklch(0.938 0.024 260);
+    --color-pve-200: oklch(0.875 0.048 262);
+    --color-pve-300: oklch(0.790 0.072 264);
+    --color-pve-400: oklch(0.680 0.090 266);
+    --color-pve-500: oklch(0.580 0.100 268);
+    --color-pve-600: oklch(0.500 0.090 270);
+    --color-pve-700: oklch(0.420 0.078 272);
+    --color-pve-800: oklch(0.340 0.064 274);
+    --color-pve-900: oklch(0.270 0.050 276);
+    --color-pve-950: oklch(0.200 0.040 278);
 
-  /* --- Stash Grid Palette (In-Game Inventory Look) --- */
-  /* Base Grid Cell - Defined in :root for Theme Switching */
-  /* See :root and :root.dark below for stash-base/border */
-  
-  --color-stash-violet: rgba(80, 40, 140, 0.2);
-  --color-stash-orange: rgba(255, 120, 0, 0.15);
-  --color-stash-yellow: rgba(255, 220, 0, 0.15);
-  --color-stash-green: rgba(35, 140, 35, 0.2);
-  --color-stash-red: rgba(220, 20, 20, 0.15);
-  --color-stash-blue: rgba(0, 180, 255, 0.1);
-  --color-stash-grey: rgba(80, 80, 80, 0.25);
-  /* Default overlay: Transparent in light (to see grey base), White wash in dark */
-  --color-stash-default: transparent;
-  --color-stash-black: rgba(0, 0, 0, 0.4);
+    /* --- Stash Grid Palette (In-Game Inventory Look) --- */
+    /* Base Grid Cell - Defined in :root for Theme Switching */
+    /* See :root and :root.dark below for stash-base/border */
+
+    --color-stash-violet: rgba(80, 40, 140, 0.2);
+    --color-stash-orange: rgba(255, 120, 0, 0.15);
+    --color-stash-yellow: rgba(255, 220, 0, 0.15);
+    --color-stash-green: rgba(35, 140, 35, 0.2);
+    --color-stash-red: rgba(220, 20, 20, 0.15);
+    --color-stash-blue: rgba(0, 180, 255, 0.1);
+    --color-stash-grey: rgba(80, 80, 80, 0.25);
+    /* Default overlay: Transparent in light (to see grey base), White wash in dark */
+    --color-stash-default: transparent;
+    --color-stash-black: rgba(0, 0, 0, 0.4);
 
     /* Green (Primitive) */
     --color-green-50: oklch(0.965519 0.014927 164.73);
@@ -480,13 +481,13 @@ select:disabled,
   --ui-text-highlighted: #855d28;
   --ui-text-dimmed: #a1a1aa;
   --ui-text-inverted: #f8f8f8;
-  
+
   /* Light mode border overrides */
   --ui-border-accented: var(--color-primary-300);
   --ui-color-neutral-700: var(--color-primary-300);
-  
-  /* Primary token for light mode */
-  --ui-primary: var(--color-primary-600);
+
+  /* Primary token for light mode - references accent for game mode switching */
+  --ui-primary: var(--color-accent-600);
 
   /* --- Stash Grid (Light Mode) --- */
   --color-stash-base: #aaaaaa;
@@ -506,13 +507,13 @@ select:disabled,
   --ui-text-highlighted: #9a8866;
   --ui-text-dimmed: #71717a;
   --ui-text-inverted: #f8f8f8;
-  
+
   /* Overwrite Nuxt UI defaults that pointed to neutral-700 */
   --ui-border-accented: var(--color-primary-700);
   --ui-color-neutral-700: var(--color-primary-700);
-  
-  /* Set Nuxt UI primary token used by dark theme buttons */
-  --ui-primary: var(--color-primary-500);
+
+  /* Set Nuxt UI primary token used by dark theme buttons - references accent for game mode switching */
+  --ui-primary: var(--color-accent-500);
 
   /* --- Dark Mode Semantic Overrides --- */
   --color-task-complete: var(--color-success-500);
@@ -523,9 +524,45 @@ select:disabled,
   --color-stash-border: #303030; /* Subtle metallic border */
   --stash-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8); /* Deep shadow */
   --stash-sheen: rgba(255, 255, 255, 0.02); /* Subtle sheen */
-  
+
   /* Re-apply white wash for default items in dark mode */
   --color-stash-default: rgba(255, 255, 255, 0.22);
+}
+
+/* =========================================
+   2.5 GAME MODE COLOR SWITCHING (PvE Mode)
+   ========================================= */
+/* When .pve-mode is applied to <html>, switch accent colors to PvE blue */
+:root.pve-mode,
+:root.pve-mode.dark {
+  --color-accent-50: var(--color-pve-50);
+  --color-accent-100: var(--color-pve-100);
+  --color-accent-200: var(--color-pve-200);
+  --color-accent-300: var(--color-pve-300);
+  --color-accent-400: var(--color-pve-400);
+  --color-accent-500: var(--color-pve-500);
+  --color-accent-600: var(--color-pve-600);
+  --color-accent-700: var(--color-pve-700);
+  --color-accent-800: var(--color-pve-800);
+  --color-accent-900: var(--color-pve-900);
+  --color-accent-950: var(--color-pve-950);
+}
+
+/* Logo filter utilities for game-mode-based tinting */
+/* PvP: warm tan tint (applied in light mode, no tint needed in dark mode) */
+.logo-pvp-tint {
+  filter: sepia(0.15) saturate(1.2) brightness(0.95);
+}
+.dark .logo-pvp-tint {
+  filter: none;
+}
+
+/* PvE: cool blue tint */
+.logo-pve-tint {
+  filter: sepia(0.2) saturate(1.6) hue-rotate(170deg) brightness(0.9);
+}
+.dark .logo-pve-tint {
+  filter: sepia(0.15) saturate(1.4) hue-rotate(175deg) brightness(1.1);
 }
 
 /* =========================================
@@ -569,7 +606,7 @@ select:disabled,
   .bg-surface-floating {
     @apply bg-white shadow-md dark:bg-[#1e1e20]; /* Even lighter */
   }
-  
+
   /* Semantic Text */
   .text-content-primary {
     @apply text-gray-900;
@@ -595,19 +632,19 @@ select:disabled,
   .border-base {
     @apply border-gray-200 dark:border-white/10;
   }
-  
+
   /* Semantic Divider (background) */
   .bg-divider {
     @apply bg-gray-200 dark:bg-white/10;
   }
-  
+
   /* --- Stash Grid Utilities --- */
   /* Base cell style (mimics empty inventory slot) */
   .bg-stash-cell {
     background-color: var(--color-stash-base);
     background-image: linear-gradient(
-      135deg, 
-      var(--stash-sheen) 0%, 
+      135deg,
+      var(--stash-sheen) 0%,
       transparent 100%
     ); /* Adaptive sheen */
     box-shadow: var(--stash-shadow); /* Adaptive shadow */
@@ -632,7 +669,7 @@ select:disabled,
 
   /* Overlay utility */
   .overlay-stash-bg {
-    @apply absolute rounded inset-[1px]; /* Slight indent to show border */
+    @apply absolute inset-[1px] rounded; /* Slight indent to show border */
     mix-blend-mode: normal;
   }
 
@@ -699,7 +736,9 @@ select:disabled,
 :root:not(.dark) .leaflet-popup-tip {
   background-color: #ffffff !important;
   color: #111827 !important; /* gray-900 */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 :root:not(.dark) .leaflet-control-zoom a {

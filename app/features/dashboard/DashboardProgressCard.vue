@@ -45,7 +45,7 @@
 </template>
 <script setup lang="ts">
   import { usePreferencesStore } from '@/stores/usePreferences';
-  export type ProgressCardColor = 'primary' | 'info' | 'success' | 'warning' | 'purple' | 'kappa' | 'lightkeeper' | 'item';
+  export type ProgressCardColor = 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'purple' | 'kappa' | 'lightkeeper' | 'item';
   const props = defineProps<{
     icon: string;
     label: string;
@@ -77,6 +77,13 @@
       icon: 'text-primary-600 dark:text-primary-400',
       percentage: 'text-primary-600 dark:text-primary-400',
       bar: 'from-primary-500 to-primary-400 bg-gradient-to-r',
+    },
+    accent: {
+      hover: 'hover:border-accent-500/50 dark:hover:border-accent-700/50',
+      iconBg: 'bg-accent-50 dark:bg-accent-600/15',
+      icon: 'text-accent-600 dark:text-accent-400',
+      percentage: 'text-accent-600 dark:text-accent-400',
+      bar: 'from-accent-500 to-accent-400 bg-gradient-to-r',
     },
     info: {
       hover: 'hover:border-info-500/50 dark:hover:border-info-700/50',

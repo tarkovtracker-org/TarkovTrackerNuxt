@@ -62,7 +62,7 @@
         <FilterPill
           :active="secondaryView === 'all'"
           :count="statusCounts.all"
-          count-color="bg-secondary-400"
+          count-color="bg-surface-600"
           @click="setSecondaryView('all')"
         >
           <template #icon>
@@ -75,7 +75,7 @@
           :label="t('page.tasks.secondaryviews.available').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.available"
-          count-color="bg-primary-500"
+          count-color="bg-accent-500"
           @click="setSecondaryView('available')"
         >
             <template #icon>
@@ -131,7 +131,7 @@
         >
           {{ currentUserDisplayName.toUpperCase() }}
           <template #badge>
-              <GameBadge size="xs" color="primary" variant="solid" badge-class="ml-1" label="YOU" />
+              <GameBadge size="xs" color="neutral" variant="solid" badge-class="ml-1 !bg-accent-500 !text-white" label="YOU" />
           </template>
         </FilterPill>
         <FilterPill
@@ -182,9 +182,9 @@
           :class="[
             'flex items-center gap-2 rounded-md px-2.5 py-1.5 transition-colors',
             'hover:bg-white/60 dark:hover:bg-white/5',
-            'focus:ring-primary-500 focus:ring-1 focus:outline-none',
+            'focus:ring-accent-500 focus:ring-1 focus:outline-none',
             preferencesStore.getTaskTraderView === trader.id
-              ? 'bg-primary-100 text-primary-900 shadow-sm dark:bg-primary-500/20 dark:text-primary-100 dark:shadow-none'
+              ? 'bg-accent-100 text-accent-900 shadow-sm dark:bg-accent-500/20 dark:text-accent-100 dark:shadow-none'
               : 'text-content-tertiary hover:text-content-primary',
           ]"
           @click="onTraderSelect({ label: trader.name, value: trader.id })"
@@ -203,7 +203,7 @@
             <span
               :class="[
                 'absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] font-bold text-white',
-                (traderCounts[trader.id] ?? 0) > 0 ? 'bg-primary-500' : 'bg-surface-600',
+                (traderCounts[trader.id] ?? 0) > 0 ? 'bg-accent-500' : 'bg-surface-600',
               ]"
             >
               {{ traderCounts[trader.id] ?? 0 }}
