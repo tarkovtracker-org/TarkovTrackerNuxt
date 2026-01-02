@@ -95,8 +95,12 @@
               color="gray"
               :tooltip="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')"
               badge-class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-green-800 !text-white"
-              :icon="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"
             >
+              <UIcon 
+                :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'" 
+                class="h-3 w-3" 
+                aria-hidden="true" 
+              />
               <span class="truncate">
                 {{ task?.map?.name || t('page.tasks.questcard.anyMap', 'Any') }}
               </span>
