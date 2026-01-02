@@ -482,9 +482,9 @@ select:disabled,
   --ui-text-dimmed: #a1a1aa;
   --ui-text-inverted: #f8f8f8;
 
-  /* Light mode border overrides */
-  --ui-border-accented: var(--color-primary-300);
-  --ui-color-neutral-700: var(--color-primary-300);
+  /* Light mode border overrides - references accent for game mode switching */
+  --ui-border-accented: var(--color-accent-300);
+  --ui-color-neutral-700: var(--color-accent-300);
 
   /* Primary token for light mode - references accent for game mode switching */
   --ui-primary: var(--color-accent-600);
@@ -508,9 +508,9 @@ select:disabled,
   --ui-text-dimmed: #71717a;
   --ui-text-inverted: #f8f8f8;
 
-  /* Overwrite Nuxt UI defaults that pointed to neutral-700 */
-  --ui-border-accented: var(--color-primary-700);
-  --ui-color-neutral-700: var(--color-primary-700);
+  /* Overwrite Nuxt UI defaults that pointed to neutral-700 - references accent for game mode switching */
+  --ui-border-accented: var(--color-accent-700);
+  --ui-color-neutral-700: var(--color-accent-700);
 
   /* Set Nuxt UI primary token used by dark theme buttons - references accent for game mode switching */
   --ui-primary: var(--color-accent-500);
