@@ -5,12 +5,8 @@
       <!-- Item image -->
       <div class="relative h-16 w-16 shrink-0 overflow-hidden rounded bg-surface-base">
         <GameItem
-          :src="groupedItem.item.image512pxLink || groupedItem.item.iconLink"
-          :item-name="groupedItem.item.name"
-          :wiki-link="groupedItem.item.wikiLink"
-          :dev-link="groupedItem.item.link"
+          :item="groupedItem.item"
           :is-visible="true"
-          :background-color="groupedItem.item.backgroundColor || 'grey'"
           size="small"
           simple-mode
           fill

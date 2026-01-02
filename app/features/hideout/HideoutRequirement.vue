@@ -15,10 +15,7 @@
       <!-- Image Area -->
       <div class="relative flex h-16 w-full shrink-0 items-center justify-center sm:h-20">
         <GameItem
-          :item-id="requirement.item.id"
-          :item-name="requirement.item.name"
-          :dev-link="requirement.item.link"
-          :wiki-link="requirement.item.wikiLink"
+          :item="requirement.item"
           size="small"
           :show-actions="false"
           simple-mode

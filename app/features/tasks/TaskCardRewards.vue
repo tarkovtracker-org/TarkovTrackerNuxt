@@ -131,12 +131,11 @@
                     @contextmenu.prevent.stop="$emit('item-context-menu', $event, reward.item)"
                     @click.stop
                   >
-                    <GameItemImage
-                      v-if="reward.item?.iconLink"
-                      :src="reward.item?.iconLink"
-                      :alt="reward.item?.name || reward.item?.shortName || 'Item'"
-                      :background-color="reward.item?.backgroundColor"
+                    <GameItem
+                      v-if="reward.item"
+                      :item="reward.item"
                       size="small"
+                      simple-mode
                       class="mx-auto"
                     />
                     <div class="flex flex-col items-center gap-0.5">
@@ -179,12 +178,11 @@
                     @contextmenu.prevent.stop="$emit('item-context-menu', $event, offer.item)"
                     @click.stop
                   >
-                    <GameItemImage
-                      v-if="offer.item?.iconLink"
-                      :src="offer.item?.iconLink"
-                      :alt="offer.item?.name || offer.item?.shortName || 'Item'"
-                      :background-color="offer.item?.backgroundColor"
+                    <GameItem
+                      v-if="offer.item"
+                      :item="offer.item"
                       size="small"
+                      simple-mode
                       class="mx-auto"
                     />
                     <div class="flex flex-col items-center gap-0.5">
@@ -209,7 +207,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import GameItemImage from '@/components/ui/GameItemImage.vue';
+  import GameItem from '@/components/ui/GameItem.vue';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import type { Task } from '@/types/tarkov';
   import { useLocaleNumberFormatter } from '@/utils/formatters';

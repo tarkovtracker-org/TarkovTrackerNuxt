@@ -4,10 +4,8 @@
     <div class="relative aspect-video w-full shrink-0 overflow-hidden">
       <GameItem
         v-if="imageItem"
-        :image-item="imageItem"
-        :src="imageItem.image512pxLink"
+        :item="imageItem"
         :is-visible="true"
-        :background-color="imageItem?.backgroundColor || 'grey'"
         size="small"
         simple-mode
         fill

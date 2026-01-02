@@ -48,15 +48,10 @@
             </span>
           </div>
           <GameItem
-            v-if="imageItem"
-            :image-item="imageItem"
-            :src="imageItem.image512pxLink"
+            v-if="item"
+            :item="item"
             :is-visible="true"
-            :item-name="item?.name ?? null"
-            :wiki-link="item?.wikiLink ?? null"
-            :dev-link="item?.link ?? null"
             :task-wiki-link="relatedTask?.wikiLink"
-            :background-color="imageItem.backgroundColor || 'grey'"
             size="small"
             simple-mode
             fill

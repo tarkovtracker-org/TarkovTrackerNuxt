@@ -20,7 +20,8 @@
         @click.stop="toggleCountForRow(row)"
       >
         <GameItem
-          v-if="row.meta.itemIcon"
+          v-if="row.meta.item || row.meta.itemIcon"
+          :item="row.meta.item"
           :src="row.meta.itemIcon"
           :item-name="row.meta.itemName"
           :background-color="row.meta.backgroundColor"
@@ -104,6 +105,7 @@
   const progressStore = useProgressStore();
   const metadataStore = useMetadataStore();
   type ObjectiveMeta = {
+    item?: any;
     neededCount: number;
     currentCount: number;
     itemName: string;
@@ -143,6 +145,7 @@
         objective.markerItem ||
         objective.questItem;
       map[objective.id] = {
+        item,
         neededCount,
         currentCount,
         itemName:
@@ -160,6 +163,7 @@
   const objectiveRows = computed<ObjectiveRow[]>(() => {
     return props.objectives.map((objective) => {
       const fallback: ObjectiveMeta = {
+        item: undefined,
         neededCount: objective.count ?? 1,
         currentCount: tarkovStore.getObjectiveCount(objective.id),
         itemName: objective.description || t('page.tasks.questcard.item', 'Item'),

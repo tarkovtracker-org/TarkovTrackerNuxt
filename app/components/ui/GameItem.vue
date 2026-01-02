@@ -9,7 +9,7 @@
     <GameItemImage
       v-if="simpleMode"
       :src="computedImageSrc"
-      :item-name="props.itemName"
+      :item-name="computedItemName"
       :background-color="resolvedBackgroundColor"
       :fill="fill"
       :size="size"
@@ -21,19 +21,19 @@
       <GameItemImage
         class="relative mr-2 flex shrink-0 items-center justify-center rounded"
         :src="computedImageSrc"
-        :item-name="props.itemName"
+        :item-name="computedItemName"
         :background-color="resolvedBackgroundColor"
         :size="size"
       >
         <!-- Hover action buttons - centered overlay on image -->
         <div
-          v-if="showActions && (props.devLink || props.wikiLink)"
+          v-if="showActions && (computedWikiLink || computedDevLink)"
           class="absolute inset-0 z-20 flex items-center justify-center gap-1 rounded bg-surface-900/80 opacity-0 transition-opacity group-hover:opacity-100"
         >
             <a
-              v-if="props.wikiLink"
+              v-if="computedWikiLink"
               v-tooltip="'View on Wiki'"
-              :href="props.wikiLink"
+              :href="computedWikiLink"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center justify-center rounded p-0.5 text-gray-200 transition-colors hover:bg-white/20 hover:text-white"
@@ -42,9 +42,9 @@
               <img src="/img/logos/wikilogo.webp" alt="Wiki" :class="overlayIconClasses" />
             </a>
             <a
-              v-if="props.devLink"
+              v-if="computedDevLink"
               v-tooltip="'View on tarkov.dev'"
-              :href="props.devLink"
+              :href="computedDevLink"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center justify-center rounded p-0.5 text-gray-200 transition-colors hover:bg-white/20 hover:text-white"
@@ -69,10 +69,10 @@
         {{ formatNumber(props.count) }}
       </div>
       <div
-        v-if="props.itemName"
+        v-if="computedItemName"
         class="flex items-center justify-center text-center text-sm leading-tight font-bold text-gray-900 dark:text-white"
       >
-        {{ props.itemName }}
+        {{ computedItemName }}
       </div>
     </div>
     <!-- Context Menu -->
@@ -89,32 +89,32 @@
             "
           />
           <div
-            v-if="props.wikiLink || props.devLink || props.itemName"
+            v-if="computedWikiLink || computedDevLink || computedItemName"
             class="my-1 border-t border-gray-700"
           />
         </template>
         <!-- Item Options -->
         <ContextMenuItem
-          v-if="props.itemName && props.wikiLink"
+          v-if="computedItemName && computedWikiLink"
           icon="/img/logos/wikilogo.webp"
-          :label="`View ${props.itemName} on Wiki`"
+          :label="`View ${computedItemName} on Wiki`"
           @click="
             openWikiLink();
             close();
           "
         />
         <ContextMenuItem
-          v-if="props.itemName && props.devLink"
+          v-if="computedItemName && computedDevLink"
           icon="/img/logos/tarkovdevlogo.webp"
-          :label="`View ${props.itemName} on Tarkov.dev`"
+          :label="`View ${computedItemName} on Tarkov.dev`"
           @click="
             openTarkovDevLink();
             close();
           "
         />
-        <template v-if="!props.itemName">
+        <template v-if="!computedItemName">
           <ContextMenuItem
-            v-if="props.wikiLink"
+            v-if="computedWikiLink"
             icon="/img/logos/wikilogo.webp"
             label="View on Wiki"
             @click="
@@ -123,7 +123,7 @@
             "
           />
           <ContextMenuItem
-            v-if="props.devLink"
+            v-if="computedDevLink"
             icon="/img/logos/tarkovdevlogo.webp"
             label="View on Tarkov.dev"
             @click="
@@ -133,11 +133,11 @@
           />
         </template>
         <div
-          v-if="props.itemName && (props.wikiLink || props.devLink)"
+          v-if="computedItemName && (computedWikiLink || computedDevLink)"
           class="my-1 border-t border-gray-700"
         />
         <ContextMenuItem
-          v-if="props.itemName"
+          v-if="computedItemName"
           icon="i-mdi-content-copy"
           label="Copy Item Name"
           @click="
@@ -152,14 +152,21 @@
 <script setup lang="ts">
   import { computed, defineAsyncComponent, ref } from 'vue';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
+  import type { TarkovItem } from '@/types/tarkov';
   import ContextMenu from './ContextMenu.vue';
   import ContextMenuItem from './ContextMenuItem.vue';
   import GameItemImage from './GameItemImage.vue';
+
   const ItemCountControls = defineAsyncComponent(
     () => import('@/features/neededitems/ItemCountControls.vue')
   );
+
   interface Props {
-    // Basic item identification
+    /**
+     * The primary item object. When provided, many other props (itemName, backgroundColor, etc.) are resolved automatically.
+     */
+    item?: TarkovItem | null;
+    // Basic item identification (Legacy - prefer item prop)
     itemId?: string;
     itemName?: string | null;
     // Image sources (multiple options for flexibility)
@@ -190,6 +197,7 @@
     fill?: boolean;
     // Legacy compatibility
     noBorder?: boolean;
+    /** @deprecated use item prop */
     imageItem?: {
       iconLink?: string;
       image512pxLink?: string;
@@ -197,6 +205,7 @@
     };
   }
   const props = withDefaults(defineProps<Props>(), {
+    item: null,
     itemId: '',
     itemName: null,
     src: '',
@@ -227,63 +236,100 @@
     decrease: [];
     toggle: [];
   }>();
+
   const formatNumber = useLocaleNumberFormatter();
   const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+
   const computedImageSrc = computed(() => {
+    // Priority: direct src -> direct links -> item object -> itemId
     if (props.src) return props.src;
     if (props.iconLink) return props.iconLink;
+    if (props.image512pxLink && props.size === 'large') return props.image512pxLink;
+    
+    if (props.item) {
+      if (props.size === 'large' && props.item.image512pxLink) return props.item.image512pxLink;
+      return props.item.iconLink || props.item.image8xLink || props.item.image512pxLink || '';
+    }
+
+    // Legacy imageItem support
     if (props.imageItem?.iconLink) return props.imageItem.iconLink;
     if (props.imageItem?.image512pxLink && props.size === 'large')
       return props.imageItem.image512pxLink;
+    
     if (props.itemId) return `https://assets.tarkov.dev/${props.itemId}-icon.webp`;
     return '';
   });
+
+  const computedItemName = computed(() => {
+    return props.itemName || props.item?.name || props.item?.shortName || null;
+  });
+
+  const computedWikiLink = computed(() => {
+    return props.wikiLink || props.item?.wikiLink || null;
+  });
+
+  const computedDevLink = computed(() => {
+    return props.devLink || props.item?.link || null;
+  });
+
   const containerClasses = computed(() => {
     if (props.simpleMode) {
       return 'block';
     }
     return '';
   });
+
   const resolvedBackgroundColor = computed(() => {
     return (
       props.backgroundColor ||
+      props.item?.backgroundColor ||
       props.imageItem?.backgroundColor ||
       'default'
     )
   });
+
   const overlayIconClasses = computed(() => {
     if (props.size === 'xs') {
       return 'h-3.5 w-3.5';
     }
     return 'h-5 w-5';
   });
+
   // Action methods
   const openTarkovDevLink = () => {
-    if (props.devLink) {
-      window.open(props.devLink, '_blank');
+    const link = computedDevLink.value;
+    if (link) {
+      window.open(link, '_blank');
     }
   };
+
   const openWikiLink = () => {
-    if (props.wikiLink) {
-      window.open(props.wikiLink, '_blank');
+    const link = computedWikiLink.value;
+    if (link) {
+      window.open(link, '_blank');
     }
   };
+
   const copyItemName = () => {
-    if (props.itemName) {
-      navigator.clipboard.writeText(props.itemName);
+    const name = computedItemName.value;
+    if (name) {
+      navigator.clipboard.writeText(name);
     }
   };
+
   const handleClick = (event: MouseEvent) => {
     if (props.clickable) {
       emit('click', event);
     }
   };
+
   const handleContextMenu = (event: MouseEvent) => {
     // Only show context menu if there are links available
-    if (props.devLink || props.wikiLink || props.itemName || props.taskWikiLink) {
+    if (computedDevLink.value || computedWikiLink.value || computedItemName.value || props.taskWikiLink) {
       contextMenu.value?.open(event);
     }
   };
+
   const openTaskWiki = () => {
     if (props.taskWikiLink) {
       window.open(props.taskWikiLink, '_blank');

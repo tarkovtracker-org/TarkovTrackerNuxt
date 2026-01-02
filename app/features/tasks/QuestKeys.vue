@@ -15,10 +15,7 @@
         <template #keys>
           <span v-for="(key, keyIndex) in keyMap.keys" :key="keyIndex" class="inline-block" :class="{ 'ml-2': keyMap.keys.length > 1 && keyIndex === 0 }">
             <GameItem
-              :item-id="key.id"
-              :item-name="key.shortName"
-              :dev-link="key.link"
-              :wiki-link="key.wikiLink"
+              :item="key"
               :count="1"
               size="xs"
               class="mr-2"

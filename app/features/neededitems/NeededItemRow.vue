@@ -7,14 +7,9 @@
             <div class="relative h-18 w-18 shrink-0">
               <GameItem
                 v-if="isVisible"
-                :image-item="imageItem"
-                :src="imageItem?.image512pxLink || imageItem?.iconLink"
+                :item="imageItem"
                 :is-visible="true"
-                :item-name="item.name"
-                :wiki-link="item.wikiLink"
-                :dev-link="item.link"
                 :task-wiki-link="relatedTask?.wikiLink"
-                :background-color="imageItem?.backgroundColor || 'grey'"
                 size="small"
                 simple-mode
                 fill
@@ -74,14 +69,9 @@
                     <div class="flex aspect-video w-full items-center justify-center bg-surface-elevated">
                       <GameItem
                         v-if="imageItem"
-                        :image-item="imageItem"
-                        :src="imageItem.image512pxLink"
+                        :item="imageItem"
                         :is-visible="true"
-                        :item-name="item.name"
-                        :wiki-link="item.wikiLink"
-                        :dev-link="item.link"
                         :task-wiki-link="relatedTask?.wikiLink"
-                        :background-color="imageItem?.backgroundColor || 'grey'"
                         size="large"
                         simple-mode
                         fill
