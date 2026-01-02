@@ -169,8 +169,12 @@
     return false;
   });
   const iconClasses = computed(() => {
-    if (isActive.value) return 'text-accent-600 dark:text-accent-400';
-    if (props.iconColor) return [`text-${props.iconColor}`].join(' ');
+    if (isActive.value) {
+      // Use iconColor if provided, otherwise fall back to accent colors
+      return props.iconColor
+        ? `text-${props.iconColor}`
+        : 'text-accent-600 dark:text-accent-400';
+    }
     // Default fallback: gray text that turns darker/lighter on hover based on theme
     return 'text-content-tertiary group-hover:text-content-primary';
   });

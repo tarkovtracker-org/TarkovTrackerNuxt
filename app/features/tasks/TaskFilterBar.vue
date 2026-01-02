@@ -62,7 +62,7 @@
         <FilterPill
           :active="secondaryView === 'all'"
           :count="statusCounts.all"
-          count-color="bg-surface-600"
+          count-color="bg-[var(--color-filter-all)]"
           @click="setSecondaryView('all')"
         >
           <template #icon>

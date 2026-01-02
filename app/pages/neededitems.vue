@@ -247,7 +247,7 @@
         value: 'all' as FilterType,
         icon: 'i-mdi-clipboard-list',
         count: allIncomplete.length,
-        badgeColor: 'bg-surface-600',
+        badgeColor: 'bg-[var(--color-filter-all)]',
       },
       {
         label: t('page.neededitems.filters.tasks', 'Tasks'),

@@ -44,8 +44,8 @@
             </span>
           </div>
           <GameItem
-            v-if="item"
-            :item="item"
+            v-if="imageItem"
+            :item="imageItem"
             :is-visible="true"
             :task-wiki-link="relatedTask?.wikiLink"
             size="fluid"

@@ -529,7 +529,7 @@
     if (isComplete.value && !isFailed.value) return `border-success-500/25 bg-success-500/10 ${cursor}`;
     if (isFailed.value) return `border-error-500/25 bg-error-500/10 ${cursor}`; // Red for failed
     if (isInvalid.value) return `border-[var(--color-task-blocked)]/25 bg-[var(--color-task-blocked)]/10 ${cursor}`; // Gray for blocked
-    if (isLocked.value) return `border-warning-500/25 bg-warning-500/10 ${cursor}`; // Amber/orange for locked
+    if (isLocked.value) return `border-[var(--color-task-locked)]/25 bg-[var(--color-task-locked)]/10 ${cursor}`; // Amber/orange for locked
     return `border-base ${cursor}`;
   });
   const isCompact = computed(() => preferencesStore.getTaskCardDensity === 'compact');
@@ -550,7 +550,7 @@
     if (isFailed.value) return 'text-error-600';
     if (isComplete.value) return 'text-success-600';
     if (isInvalid.value) return 'text-neutral-600';
-    if (isLocked.value) return 'text-warning-600';
+    if (isLocked.value) return 'text-[var(--color-task-locked)]';
     return 'text-brand-600';
   });
   const lockedBehind = computed(() => {

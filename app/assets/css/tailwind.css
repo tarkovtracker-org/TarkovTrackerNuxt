@@ -330,8 +330,11 @@ select:disabled,
   --color-task-failed: var(--color-error-600);
   --color-task-blocked: var(--color-gray-600);
 
+  /* --- Filters --- */
+  --color-filter-all: var(--color-blue-500);
+
   /* --- Rewards --- */
-  --color-reward-item: var(--color-blue-400);
+  --color-reward-item: var(--color-surface-400);
   --color-reward-skill: var(--color-success-600);
   --color-reward-trader: var(--color-warning-600);
   --color-reward-xp: var(--color-accent-600);

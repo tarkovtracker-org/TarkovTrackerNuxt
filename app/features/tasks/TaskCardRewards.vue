@@ -64,7 +64,7 @@
         <span
           v-if="itemRewards.length > 0"
           v-tooltip="itemRewardsSummaryTooltip"
-          class="inline-flex cursor-help items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!"
+          class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
         >
           <UIcon name="i-mdi-package-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
           <span>
@@ -81,7 +81,7 @@
       <span
         v-if="offerUnlockRewards.length > 0"
         v-tooltip="offerUnlockSummaryTooltip"
-        class="inline-flex cursor-help items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!"
+        class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
       >
         <UIcon name="i-mdi-cart-check" aria-hidden="true" class="h-4 w-4 !text-white" />
         <span>
