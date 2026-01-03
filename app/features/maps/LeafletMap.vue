@@ -122,7 +122,6 @@
             <span>Co-op Extract (PMC + Scav)</span>
           </div>
         </div>
-
         <!-- Controls Legend -->
         <div
           class="ml-auto flex flex-wrap-reverse items-center justify-end gap-x-4 gap-y-1 text-[10px] font-medium text-gray-400"

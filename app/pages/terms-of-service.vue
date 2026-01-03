@@ -57,9 +57,9 @@
   <div class="mx-auto max-w-7xl px-4 py-4">
     <div class="flex flex-col items-start xl:flex-row xl:gap-2">
       <!-- Spacer for fixed sidebar -->
-      <div class="hidden w-[300px] shrink-0 xl:block"></div>
+      <div class="hidden w-75 shrink-0 xl:block"></div>
       <!-- Fixed sidebar (stays in viewport, accounts for drawer + container) -->
-      <aside class="fixed left-[calc(max(15rem,(100vw-100rem)/2+15rem))] hidden w-[300px] xl:block">
+      <aside class="fixed left-[calc(max(15rem,(100vw-100rem)/2+15rem))] hidden w-75 xl:block">
         <UCard
           class="border border-gray-700/50 bg-linear-to-b from-gray-900/80 to-gray-900/40 backdrop-blur"
         >

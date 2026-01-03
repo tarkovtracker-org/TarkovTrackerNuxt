@@ -211,8 +211,9 @@
   const itemCountTagClasses = computed(() => {
     return {
       'bg-clip-padding rounded-tl-[5px] rounded-br-[10px]': true,
-      'bg-surface-800/90 text-surface-100 ring-1 ring-white/10':
-        !(selfCompletedNeed.value || currentCount.value >= neededCount.value),
+      'bg-surface-800/90 text-surface-100 ring-1 ring-white/10': !(
+        selfCompletedNeed.value || currentCount.value >= neededCount.value
+      ),
       'bg-complete text-white': selfCompletedNeed.value || currentCount.value >= neededCount.value,
     };
   });

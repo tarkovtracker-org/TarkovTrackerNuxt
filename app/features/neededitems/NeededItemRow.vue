@@ -65,7 +65,7 @@
                 <UCard>
                   <div class="flex h-full flex-col items-end">
                     <!-- Item image -->
-                    <div class="flex aspect-video min-h-[100px] self-stretch">
+                    <div class="flex aspect-video min-h-25 self-stretch">
                       <GameItem
                         v-if="imageItem"
                         :image-item="imageItem"

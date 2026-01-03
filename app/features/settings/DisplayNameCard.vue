@@ -43,7 +43,7 @@
             {{ $t('settings.display_name.label', 'Display Name') }}
             <span class="text-surface-400 ml-2 text-xs">({{ currentMode.toUpperCase() }})</span>
           </label>
-          <div class="flex items-center gap-2 max-w-sm">
+          <div class="flex max-w-sm items-center gap-2">
             <UInput
               v-model="localDisplayName"
               :maxlength="displayNameMaxLength"
