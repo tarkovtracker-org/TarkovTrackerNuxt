@@ -526,7 +526,6 @@
     background-color: var(--color-surface-700) !important;
   }
 
-  /* Extract marker base styling (no !important needed - our own class) */
   .extract-marker {
     background: transparent;
     border: none;
