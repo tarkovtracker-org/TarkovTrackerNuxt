@@ -429,26 +429,36 @@ export function useTaskFiltering() {
       return;
     }
     reloadingTasks.value = true;
-    try {
-      let visibleTaskList = JSON.parse(JSON.stringify(metadataStore.tasks));
-      // Apply task type filters (Kappa, Lightkeeper, Non-special)
-      visibleTaskList = filterTasksByTypeSettings(visibleTaskList);
-      // Apply primary view filter
-      visibleTaskList = filterTasksByView(
-        visibleTaskList,
-        activePrimaryView,
-        activeMapView,
-        activeTraderView,
-        mergedMaps
-      );
-      // Apply status and user filters
-      visibleTaskList = filterTasksByStatus(visibleTaskList, activeSecondaryView, activeUserView);
-      // Sort by impact (number of incomplete successor tasks) - highest impact first
-      visibleTaskList = sortTasksByImpact(visibleTaskList, activeUserView);
-      visibleTasks.value = visibleTaskList;
-    } finally {
-      reloadingTasks.value = false;
-    }
+    // Yield to browser before heavy computation to keep UI responsive
+    return new Promise<void>((resolve, reject) => {
+      requestAnimationFrame(() => {
+        try {
+          // Shallow copy - filter operations create new arrays, don't mutate originals
+          let visibleTaskList = [...metadataStore.tasks];
+          // Apply task type filters (Kappa, Lightkeeper, Non-special)
+          visibleTaskList = filterTasksByTypeSettings(visibleTaskList);
+          // Apply primary view filter
+          visibleTaskList = filterTasksByView(
+            visibleTaskList,
+            activePrimaryView,
+            activeMapView,
+            activeTraderView,
+            mergedMaps
+          );
+          // Apply status and user filters
+          visibleTaskList = filterTasksByStatus(visibleTaskList, activeSecondaryView, activeUserView);
+          // Sort by impact (number of incomplete successor tasks) - highest impact first
+          visibleTaskList = sortTasksByImpact(visibleTaskList, activeUserView);
+          visibleTasks.value = visibleTaskList;
+          resolve();
+        } catch (error) {
+          logger.error('[TaskFiltering] Failed to update visible tasks:', error);
+          reject(error);
+        } finally {
+          reloadingTasks.value = false;
+        }
+      });
+    });
   };
   /**
    * Calculate task counts by status (all, available, locked, completed)
