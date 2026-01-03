@@ -424,10 +424,11 @@
       loading.value = false;
     }
   };
-  const generateToken = () => {
+  const generateToken = (gameMode: GameMode) => {
     const bytes = crypto.getRandomValues(new Uint8Array(32));
     const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-    return `tt_${hex}`;
+    const prefix = gameMode === GAME_MODES.PVE ? 'PVE' : 'PVP';
+    return `${prefix}_${hex}`;
   };
   const hashToken = async (token: string) => {
     const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
@@ -480,7 +481,7 @@
       return insertResult.data?.token_id || null;
     };
     try {
-      const rawToken = generateToken();
+      const rawToken = generateToken(selectedGameMode.value);
       // Prefer gateway (Cloudflare Worker) for rate limiting & auth hardening
       try {
         const response = await edgeFunctions.createToken({

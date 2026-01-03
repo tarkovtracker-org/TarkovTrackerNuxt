@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { reactive } from 'vue';
 import { logger } from '@/utils/logger';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { hydrateUserFromSession } from '@/utils/userHydration';
 type SupabaseUser = {
   id: string | null;
@@ -109,7 +110,7 @@ export default defineNuxtPlugin(() => {
     // This prevents User A's data from being migrated to User B's account
     if (typeof window !== 'undefined') {
       logger.debug('[Supabase] Clearing game progress localStorage on logout');
-      localStorage.removeItem('progress');
+      localStorage.removeItem(STORAGE_KEYS.progress);
       // Keep UI preferences (user store) but you may want to clear user-specific data
       // localStorage.removeItem("user"); // Uncomment if user data should also be cleared
     }

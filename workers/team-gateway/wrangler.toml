@@ -7,7 +7,7 @@ compatibility_date = "2025-11-27"
 # SUPABASE_URL = "https://<project>.supabase.co"
 # SUPABASE_ANON_KEY = "<anon key>"
 # SUPABASE_SERVICE_ROLE_KEY = "<service role key>"
-# ALLOWED_ORIGIN = "https://dev.tarkovtracker.org, http://localhost:3000"
+# ALLOWED_ORIGIN = "https://tarkovtracker.org, http://localhost:3000"
 
 [[kv_namespaces]]
 binding = "TEAM_GATEWAY_KV"

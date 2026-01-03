@@ -169,7 +169,10 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
       const direction = e.deltaY < 0 ? 1 : -1;
       const nextIndex = currentIndex + direction;
       if (nextIndex >= 0 && nextIndex < floors.value.length) {
-        setFloor(floors.value[nextIndex]!);
+        const nextFloor = floors.value[nextIndex];
+        if (nextFloor !== undefined) {
+          setFloor(nextFloor);
+        }
       }
     }
   };

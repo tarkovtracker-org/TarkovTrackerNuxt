@@ -17,7 +17,7 @@
       </div>
     </div>
     <div
-      class="absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-b from-primary-500/10 via-primary-500/5 to-primary-500/10 text-center backdrop-blur-[2px]"
+      class="fixed inset-0 z-10 flex items-center justify-center bg-gradient-to-b from-primary-500/10 via-primary-500/5 to-primary-500/10 text-center backdrop-blur-[2px]"
     >
       <div
         class="rounded-lg bg-white/80 px-4 py-3 shadow-lg shadow-black/5 backdrop-blur-md dark:bg-black/55 dark:shadow-black/40"

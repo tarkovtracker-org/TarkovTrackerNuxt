@@ -43,7 +43,6 @@ const props = defineProps<{
 }>();
 const countColorClass = computed(() => {
     if (props.countColor) return props.countColor;
-    // Soft badge styling: transparent tinted backgrounds with vivid text
     return (props.count && props.count > 0) || props.active 
       ? 'badge-soft-accent' 
       : 'badge-soft-surface';

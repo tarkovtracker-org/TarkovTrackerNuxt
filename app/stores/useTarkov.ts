@@ -1,4 +1,5 @@
 import { type _GettersTree, defineStore, type StateTree } from 'pinia';
+import { watch } from 'vue';
 import { useSupabaseSync } from '@/composables/supabase/useSupabaseSync';
 import {
   actions,
@@ -13,6 +14,7 @@ import { useMetadataStore } from '@/stores/useMetadata';
 import type { Task } from '@/types/tarkov';
 import { GAME_MODES, type GameMode } from '@/utils/constants';
 import { logger } from '@/utils/logger';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
 // Create a type that extends UserState with Pinia store methods
 type TarkovStoreInstance = UserState & {
   $state: UserState;
@@ -140,7 +142,7 @@ const tarkovActions = {
       }
       // Clear localStorage and update store
       logger.debug('[TarkovStore] Clearing localStorage and updating store');
-      localStorage.removeItem('progress');
+      localStorage.removeItem(STORAGE_KEYS.progress);
       // Use $patch with a function to fully replace the pvp object (not deep merge)
       this.$patch((state) => {
         state.pvp = freshPvPData;
@@ -182,7 +184,7 @@ const tarkovActions = {
       }
       // Clear localStorage and update store
       logger.debug('[TarkovStore] Clearing localStorage and updating store');
-      localStorage.removeItem('progress');
+      localStorage.removeItem(STORAGE_KEYS.progress);
       // Use $patch with a function to fully replace the pve object (not deep merge)
       this.$patch((state) => {
         state.pve = freshPvEData;
@@ -563,7 +565,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
   actions: tarkovActions,
   // Enable automatic localStorage persistence with user scoping
   persist: {
-    key: 'progress', // LocalStorage key for user progress data
+    key: STORAGE_KEYS.progress, // LocalStorage key for user progress data
     storage: typeof window !== 'undefined' ? localStorage : undefined,
     // Add userId to serialized data to prevent cross-user contamination
     serializer: {
@@ -614,10 +616,10 @@ export const useTarkovStore = defineStore('swapTarkov', {
             // Backup the corrupted/mismatching localStorage
             if (typeof window !== 'undefined') {
               try {
-                const backupKey = `progress_backup_${storedUserId}_${Date.now()}`;
+                const backupKey = `${STORAGE_KEYS.progressBackupPrefix}${storedUserId}_${Date.now()}`;
                 localStorage.setItem(backupKey, value);
                 if (import.meta.dev) logger.debug(`[TarkovStore] Data backed up to ${backupKey}`);
-                localStorage.removeItem('progress');
+                localStorage.removeItem(STORAGE_KEYS.progress);
               } catch (e) {
                 logger.error('[TarkovStore] Error backing up/clearing localStorage:', e);
               }
@@ -645,6 +647,10 @@ export async function initializeTarkovSync() {
   const tarkovStore = useTarkovStore();
   const { $supabase } = useNuxtApp();
   if (import.meta.client && $supabase.user.loggedIn) {
+    if (syncController) {
+      logger.debug('[TarkovStore] Supabase sync already initialized, skipping');
+      return;
+    }
     logger.debug('[TarkovStore] Setting up Supabase sync and listener');
     // Helper to check if data has meaningful progress
     const hasProgress = (data: unknown) => {
@@ -662,7 +668,7 @@ export async function initializeTarkovSync() {
           Object.keys(state.pve.hideoutModules || {}).length > 0);
       return pvpHasData || pveHasData;
     };
-    const loadData = async () => {
+    const loadData = async (): Promise<{ ok: boolean; hadRemoteData: boolean }> => {
       // Get current localStorage state (loaded by persist plugin)
       const localState = tarkovStore.$state;
       const hasLocalProgress = hasProgress(localState);
@@ -695,10 +701,11 @@ export async function initializeTarkovSync() {
         error: error?.code,
         errorMessage: error?.message,
       });
+      const hadRemoteData = Boolean(data);
       // Handle query errors (but not "no rows" which is expected for new users)
       if (error && error.code !== 'PGRST116') {
         logger.error('[TarkovStore] Error loading data from Supabase:', error);
-        return;
+        return { ok: false, hadRemoteData };
       }
       // Normalize Supabase data with defaults for safety
       const normalizedRemote = data
@@ -718,13 +725,17 @@ export async function initializeTarkovSync() {
             localScore,
             remoteScore,
           });
-          await $supabase.client.from('user_progress').upsert({
+          const { error: upsertError } = await $supabase.client.from('user_progress').upsert({
             user_id: $supabase.user.id,
             current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
             game_edition: localState.gameEdition || defaultState.gameEdition,
             pvp_data: localState.pvp || defaultState.pvp,
             pve_data: localState.pve || defaultState.pve,
           });
+          if (upsertError) {
+            logger.error('[TarkovStore] Error syncing local progress to Supabase:', upsertError);
+            return { ok: false, hadRemoteData };
+          }
         } else {
           logger.debug('[TarkovStore] Loading data from Supabase (user exists in DB)');
           tarkovStore.$patch(normalizedRemote!);
@@ -739,38 +750,68 @@ export async function initializeTarkovSync() {
           pvp_data: localState.pvp || defaultState.pvp,
           pve_data: localState.pve || defaultState.pve,
         };
-        await $supabase.client.from('user_progress').upsert(migrateData);
+        const { error: upsertError } = await $supabase.client
+          .from('user_progress')
+          .upsert(migrateData);
+        if (upsertError) {
+          logger.error('[TarkovStore] Error migrating local data to Supabase:', upsertError);
+          return { ok: false, hadRemoteData };
+        }
         logger.debug('[TarkovStore] Migration complete');
       } else {
         // Truly new user - no data anywhere
         logger.debug('[TarkovStore] New user - no existing progress found');
       }
-      logger.debug('[TarkovStore] Initial load complete, sync enabled');
+      logger.debug('[TarkovStore] Initial load complete');
+      return { ok: true, hadRemoteData };
     };
     // Wait for data load to complete BEFORE enabling sync
     // This prevents race conditions and overwriting server data with empty local state
-    await loadData();
+    const loadResult = await loadData();
+    if (!loadResult.ok) {
+      logger.error('[TarkovStore] Initial load failed; sync not started');
+      throw new Error('Supabase initial load failed');
+    }
     // Repair failed task states for existing users (runs once after data load)
     // This fixes data for users who completed tasks before the "failed alternatives" feature
     tarkovStore.repairFailedTaskStates();
     tarkovStore.repairCompletedTaskObjectives();
-    syncController = useSupabaseSync({
-      store: tarkovStore,
-      table: 'user_progress',
-      debounceMs: 250,
-      transform: (state: unknown) => {
-        const userState = state as UserState;
-        return {
-          user_id: $supabase.user.id,
-          current_game_mode: userState.currentGameMode || GAME_MODES.PVP,
-          game_edition:
-            typeof userState.gameEdition === 'string'
-              ? parseInt(userState.gameEdition)
-              : userState.gameEdition,
-          pvp_data: userState.pvp || {},
-          pve_data: userState.pve || {},
-        };
-      },
-    });
+    const startSync = () => {
+      if (syncController) return;
+      syncController = useSupabaseSync({
+        store: tarkovStore,
+        table: 'user_progress',
+        debounceMs: 250,
+        transform: (state: unknown) => {
+          const userState = state as UserState;
+          return {
+            user_id: $supabase.user.id,
+            current_game_mode: userState.currentGameMode || GAME_MODES.PVP,
+            game_edition:
+              typeof userState.gameEdition === 'string'
+                ? parseInt(userState.gameEdition)
+                : userState.gameEdition,
+            pvp_data: userState.pvp || {},
+            pve_data: userState.pve || {},
+          };
+        },
+      });
+    };
+    const shouldStartSyncNow = loadResult.hadRemoteData || hasProgress(tarkovStore.$state);
+    if (shouldStartSyncNow) {
+      startSync();
+    } else {
+      logger.debug('[TarkovStore] Delaying sync until progress exists');
+      const stopWatch = watch(
+        () => tarkovStore.$state,
+        (state) => {
+          if (hasProgress(state)) {
+            startSync();
+            stopWatch();
+          }
+        },
+        { deep: true }
+      );
+    }
   }
 }

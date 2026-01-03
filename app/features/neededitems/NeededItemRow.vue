@@ -83,7 +83,7 @@
                   <div class="flex flex-col items-center">
                     <!-- Item image -->
                     <div
-                      class="bg-surface-elevated flex aspect-video w-full items-center justify-center"
+                      class="bg-surface-elevated flex aspect-video min-h-25 w-full items-center justify-center"
                     >
                       <GameItem
                         v-if="imageItem"

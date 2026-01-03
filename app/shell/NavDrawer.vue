@@ -25,7 +25,7 @@
         class="group mt-1 flex flex-col items-center px-3 py-1.5 transition-opacity hover:opacity-90"
       >
         <div
-          :class="isCollapsed ? 'w-8' : 'w-[130px]'"
+          :class="isCollapsed ? 'w-8' : 'w-32.5'"
           class="relative mx-auto transition-all duration-200"
         >
           <NuxtImg

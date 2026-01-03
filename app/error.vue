@@ -46,7 +46,7 @@
       </div>
       <!-- Loot Mini-Game Area -->
       <div
-        class="bg-surface-900/50 mx-auto min-h-[100px] w-full max-w-xs rounded-lg border border-white/5 p-3 backdrop-blur-sm sm:min-h-[140px] sm:max-w-sm sm:p-4 lg:min-h-[180px] lg:max-w-md lg:p-6"
+        class="bg-surface-900/50 mx-auto min-h-25 w-full max-w-xs rounded-lg border border-white/5 p-3 backdrop-blur-sm sm:min-h-35 sm:max-w-sm sm:p-4 lg:min-h-45 lg:max-w-md lg:p-6"
       >
         <transition name="fade" mode="out-in">
           <!-- State: Initial -->

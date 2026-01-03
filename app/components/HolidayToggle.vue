@@ -6,7 +6,7 @@
         class="group flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110"
         :class="
           enabled
-            ? 'bg-gradient-to-br from-red-600 to-green-600 ring-2 ring-white/30'
+            ? 'bg-linear-to-br from-red-600 to-green-600 ring-2 ring-white/30'
             : 'bg-surface-800 hover:bg-surface-700 ring-1 ring-white/10'
         "
         :aria-label="enabled ? $t('holiday.disable') : $t('holiday.enable')"

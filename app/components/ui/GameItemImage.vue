@@ -93,9 +93,7 @@
   });
   const imageElementClasses = ['rounded'];
   const imageTileClasses = computed(() => {
-    const classes = [...imageElementClasses];
-    // Border logic is handled by bg-stash-cell, but we keep this for consistency if we add more
-    return classes;
+    return [...imageElementClasses];
   });
   const handleImgError = () => {
     console.warn(`[GameItemImage] Failed to load image: ${props.src}`);

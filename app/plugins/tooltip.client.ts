@@ -15,8 +15,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
     updated(el, binding) {
       if (binding.value !== binding.oldValue) {
-        // Debounce simple text updates might be needed if they happen too fast, 
-        // but for now simple update is fine.
         updateTooltipContent(el, binding.value);
       }
     },
@@ -109,7 +107,6 @@ function createTooltip(el: HTMLElement, value: string | TooltipOptions) {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
-    // Update content and options fresh on show in case they changed without binding update (unlikely but safe)
     tooltip.style.display = 'block';
     // Ensure we don't have duplicate autoUpdate loops
     if (cleanup) {

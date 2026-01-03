@@ -4,12 +4,13 @@
   import { useSystemStoreWithSupabase } from '@/stores/useSystemStore';
   import type { PurgeCacheResponse } from '@/types/edge';
   import { logger } from '@/utils/logger';
+  import { STORAGE_KEYS } from '@/utils/storageKeys';
   const { purgeCache } = useEdgeFunctions();
   const toast = useToast();
   const { $supabase } = useNuxtApp();
   const { systemStore, hasInitiallyLoaded } = useSystemStoreWithSupabase();
   const { locale } = useI18n({ useScope: 'global' });
-  const LAST_PURGE_STORAGE_KEY = 'tt:admin:last-purge';
+  const LAST_PURGE_STORAGE_KEY = STORAGE_KEYS.adminLastPurge;
   const LAST_PURGE_TTL_MS = 1000 * 60 * 60 * 24 * 7;
   interface LastPurgeEntry {
     type: string;

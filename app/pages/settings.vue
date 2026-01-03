@@ -382,7 +382,7 @@
             :title="$t('page.settings.card.apitokens.not_logged_in')"
           />
           <div
-            class="from-primary-500/10 via-primary-500/5 to-primary-500/10 absolute inset-0 z-10 flex items-center justify-center bg-black/15 bg-gradient-to-b text-center backdrop-blur-[2px]"
+            class="from-primary-500/10 via-primary-500/5 to-primary-500/10 absolute inset-0 z-10 flex items-center justify-center bg-black/15 bg-linear-to-b text-center backdrop-blur-[2px]"
           >
             <div class="rounded-lg bg-white/80 px-4 py-3 shadow-lg shadow-black/5 backdrop-blur-md dark:bg-black/55 dark:shadow-black/40">
               <div class="text-xl font-semibold text-gray-900 dark:text-white">Work in Progress</div>
