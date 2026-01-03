@@ -6,6 +6,7 @@ import es from '@/locales/es.json5';
 import fr from '@/locales/fr.json5';
 import ru from '@/locales/ru.json5';
 import uk from '@/locales/uk.json5';
+import zh from '@/locales/zh.json5';
 import { logger } from '@/utils/logger';
 import { STORAGE_KEYS } from '@/utils/storageKeys';
 const messages = {
@@ -15,6 +16,7 @@ const messages = {
   fr,
   ru,
   uk,
+  zh,
 };
 // Explicitly type the combined messages structure
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
