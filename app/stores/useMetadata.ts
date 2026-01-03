@@ -342,6 +342,15 @@ export const useMetadataStore = defineStore('metadata', {
         try {
           this.updateLanguageAndGameMode();
           await this.loadStaticMapData();
+          // Quick cache check: if critical data is cached, set initialized=true immediately
+          // This prevents the loading screen from showing when we have valid cached data
+          if (typeof window !== 'undefined') {
+            const hasCachedData = await this.checkCriticalCacheExists();
+            if (hasCachedData) {
+              this.initialized = true;
+              logger.debug('[MetadataStore] Critical cache exists, skipping loading screen');
+            }
+          }
           await this.fetchAllData();
           this.initialized = true;
           this.initializationFailed = false;
@@ -381,6 +390,30 @@ export const useMetadataStore = defineStore('metadata', {
     async loadStaticMapData() {
       if (!this.staticMapData) {
         this.staticMapData = mapsData as unknown as StaticMapData;
+      }
+    },
+    /**
+     * Quick check if critical cached data exists (without loading it)
+     * Used to determine if we can skip the loading screen
+     */
+    async checkCriticalCacheExists(): Promise<boolean> {
+      try {
+        const apiGameMode =
+          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+          API_GAME_MODES[GAME_MODES.PVP];
+        // Check all critical cache entries in parallel
+        const [tasksCore, hideout, prestige, editions] = await Promise.all([
+          getCachedData<TarkovTasksCoreQueryResult>('tasks-core' as CacheType, apiGameMode, this.languageCode),
+          getCachedData<TarkovHideoutQueryResult>('hideout' as CacheType, apiGameMode, this.languageCode),
+          getCachedData<TarkovPrestigeQueryResult>('prestige' as CacheType, 'all', this.languageCode),
+          getCachedData<{ editions: GameEdition[] }>('editions' as CacheType, 'all', 'en'),
+        ]);
+        const hasCriticalCache = !!(tasksCore && hideout && prestige && editions);
+        logger.debug(`[MetadataStore] Critical cache check: ${hasCriticalCache ? 'ALL PRESENT' : 'MISSING'}`);
+        return hasCriticalCache;
+      } catch (err) {
+        logger.warn('[MetadataStore] Error checking critical cache:', err);
+        return false;
       }
     },
     /**
