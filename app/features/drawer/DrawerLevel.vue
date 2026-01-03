@@ -279,7 +279,10 @@
   }
 </script>
 <style>
-  /* Hide spin buttons for number input */
+  /* Number Input Spinner Removal
+     !important required: Browsers apply spinner buttons via user-agent stylesheets
+     with high specificity. These declarations hide the native spin buttons across
+     WebKit (Chrome, Safari, Edge) and Firefox to provide a clean level display. */
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none !important;

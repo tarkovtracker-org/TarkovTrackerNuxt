@@ -21,6 +21,9 @@ a {
   cursor: pointer;
 }
 
+/* Disabled element cursor override
+   !important required: Nuxt UI and Leaflet set their own cursor styles.
+   This ensures consistent disabled state appearance across all interactive elements. */
 button:disabled,
 [role='button'][aria-disabled='true'],
 input:disabled,
@@ -45,11 +48,16 @@ select:disabled,
     @apply focus-visible:ring-accent-500 focus:outline-none focus-visible:ring-2;
   }
 
-  /* Global Fixes for Nuxt UI Components */
+  /* Nuxt UI Component Fixes
+     !important required: Nuxt UI sets cursor via inline styles on dropdown options.
+     This ensures clickable options have pointer cursor. */
   [role='option'] {
     cursor: pointer !important;
   }
 
+  /* Nuxt UI Combobox Fix
+     !important required: Nuxt UI applies border-radius via scoped styles.
+     Flat bottom edge needed when dropdown is open. */
   input[role='combobox'] {
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
@@ -846,7 +854,12 @@ select:disabled,
 /* =========================================
    5. VENDOR OVERRIDES
    ========================================= */
-/* Light Mode Leaflet Overrides (when not .dark) */
+
+/* Leaflet Map Library Overrides (Light Mode)
+   !important required throughout: Leaflet applies its own inline styles and
+   high-specificity CSS. Without !important, our theme colors are overridden
+   by Leaflet's default blue/white scheme. These ensure visual consistency
+   with our light mode design system. */
 :root:not(.dark) .leaflet-container {
   background-color: #f3f4f6 !important; /* gray-100 */
   font-family: inherit !important;

@@ -497,8 +497,10 @@
   });
 </script>
 <style>
-  /* Override Leaflet default styles for dark theme */
-  /* Override Leaflet default styles for dark theme */
+  /* Leaflet Map Library Overrides (Dark Mode)
+     !important required throughout this section: Leaflet applies its own inline
+     styles and high-specificity CSS. Without !important, our dark theme colors 
+     are overridden by Leaflet's default light scheme. */
   :root.dark .leaflet-container {
     background-color: var(--color-surface-900);
     font-family: inherit;
@@ -523,12 +525,16 @@
   :root.dark .leaflet-control-zoom a:hover {
     background-color: var(--color-surface-700) !important;
   }
-  /* Extract marker styling */
+
+  /* Extract marker base styling (no !important needed - our own class) */
   .extract-marker {
     background: transparent;
     border: none;
   }
-  /* Reset Leaflet's default tooltip styles so we can use floating-vue styles */
+
+  /* Leaflet Tooltip Reset
+     !important required: Leaflet tooltip has high-specificity default styles.
+     We reset them completely to allow our popup content to style itself. */
   .leaflet-tooltip-reset {
     background: transparent !important;
     border: none !important;
