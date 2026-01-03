@@ -329,6 +329,7 @@ select:disabled,
   --color-entity-kappa: var(--color-entity-twitch);
   --color-entity-discord: #5865f2;
   --color-entity-twitch: #9146ff;
+  --color-entity-github: #181717;
 
   /* --- Task Status --- */
   --color-task-locked: var(--color-gray-400);
@@ -342,7 +343,7 @@ select:disabled,
 
   /* --- Rewards --- */
   --color-reward-item: var(--color-surface-300);
-  --color-reward-item-text: var(--color-surface-500);  /* Semantic text for light mode */
+  --color-reward-item-text: var(--color-surface-500); /* Semantic text for light mode */
   --color-reward-skill: var(--color-success-600);
   --color-reward-trader: var(--color-warning-600);
   --color-reward-xp: var(--color-accent-600);
@@ -414,14 +415,14 @@ select:disabled,
     --color-pve-50: oklch(0.968 0.012 260);
     --color-pve-100: oklch(0.938 0.024 260);
     --color-pve-200: oklch(0.875 0.048 262);
-    --color-pve-300: oklch(0.790 0.072 264);
-    --color-pve-400: oklch(0.680 0.090 266);
-    --color-pve-500: oklch(0.580 0.100 268);
-    --color-pve-600: oklch(0.500 0.090 270);
-    --color-pve-700: oklch(0.420 0.078 272);
-    --color-pve-800: oklch(0.340 0.064 274);
-    --color-pve-900: oklch(0.270 0.050 276);
-    --color-pve-950: oklch(0.200 0.040 278);
+    --color-pve-300: oklch(0.79 0.072 264);
+    --color-pve-400: oklch(0.68 0.09 266);
+    --color-pve-500: oklch(0.58 0.1 268);
+    --color-pve-600: oklch(0.5 0.09 270);
+    --color-pve-700: oklch(0.42 0.078 272);
+    --color-pve-800: oklch(0.34 0.064 274);
+    --color-pve-900: oklch(0.27 0.05 276);
+    --color-pve-950: oklch(0.2 0.04 278);
 
     /* --- Stash Grid Palette (In-Game Inventory Look) --- */
     /* Base Grid Cell - Defined in :root for Theme Switching */
@@ -514,8 +515,8 @@ select:disabled,
   --ui-bg-elevated: #1c1c1f;
   --ui-bg-accented: #242f35;
   --ui-bg-inverted: #ffffff;
-  --ui-text: #f8f8f8;
-  --ui-text-muted: #a1a1aa;
+  --ui-text: rgba(255, 255, 255, 0.9);
+  --ui-text-muted: rgba(255, 255, 255, 0.6);
   --ui-text-highlighted: #9a8866;
   --ui-text-dimmed: #71717a;
   --ui-text-inverted: #f8f8f8;
@@ -531,7 +532,7 @@ select:disabled,
   /* --- Dark Mode Semantic Overrides --- */
   --color-task-complete: var(--color-success-500);
   --color-task-failed: var(--color-error-500);
-  --color-reward-item-text: var(--color-surface-300);  /* Semantic text for dark mode */
+  --color-reward-item-text: var(--color-surface-300); /* Semantic text for dark mode */
 
   /* --- Stash Grid (Dark Mode) --- */
   --color-stash-base: #141414; /* Very dark grey, almost black */
@@ -848,7 +849,6 @@ select:disabled,
     color: var(--color-task-locked);
   }
 }
-
 
 /* =========================================
    5. VENDOR OVERRIDES

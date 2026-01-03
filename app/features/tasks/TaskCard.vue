@@ -12,10 +12,10 @@
         <!-- Left side: Task identity + badges -->
         <div class="flex min-w-0 flex-wrap items-center gap-2">
           <span v-tooltip="task?.name">
-            <router-link
-              :to="`/tasks?task=${task.id}`"
+            <a
+              href="#"
               class="text-accent-700 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 flex min-w-0 items-center gap-2 no-underline"
-              @click.stop
+              @click.stop.prevent="navigateToTask"
             >
               <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-800">
                 <img
@@ -35,7 +35,7 @@
               <span class="min-w-0 truncate font-semibold">
                 {{ task?.name }}
               </span>
-            </router-link>
+            </a>
           </span>
           <!-- External link icons -->
           <div class="flex shrink-0 items-center gap-1.5">
@@ -735,6 +735,17 @@
     if (props.task.wikiLink) {
       window.open(props.task.wikiLink, '_blank');
     }
+  };
+
+  /**
+   * Navigate to single-task view. Uses a timestamp to force re-navigation
+   * even when clicking the same task, ensuring UX setup always runs.
+   */
+  const navigateToTask = () => {
+    router.push({
+      path: '/tasks',
+      query: { task: props.task.id, _t: Date.now().toString() },
+    });
   };
   // Expanded state for recursive cards
   const expandedTasks = ref<Set<string>>(new Set());

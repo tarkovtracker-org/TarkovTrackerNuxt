@@ -98,7 +98,7 @@
 </template>
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { computed, defineAsyncComponent, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute, useRouter } from 'vue-router';
   import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
@@ -186,8 +186,14 @@
     if (!selectedMapData.value) return [];
     const mapId = selectedMapData.value.id;
     const marks: MapObjectiveMark[] = [];
-    // Get objectives from visible tasks that have location data for this map
-    visibleTasks.value.forEach((task) => {
+
+    // In single-task mode, only show objectives for the selected task
+    // Otherwise, show objectives for all visible tasks
+    const tasksToShow = singleTaskId.value
+      ? tasks.value.filter((t) => t.id === singleTaskId.value)
+      : visibleTasks.value;
+
+    tasksToShow.forEach((task) => {
       if (!task.objectives) return;
       const objectiveMaps = metadataStore.objectiveMaps?.[task.id] ?? [];
       const objectiveGps = metadataStore.objectiveGPS?.[task.id] ?? [];
@@ -329,13 +335,106 @@
     const taskExists = tasks.value.some((t) => t.id === taskId);
     return taskExists ? taskId : null;
   });
-  // When entering single-task mode, set secondary view to 'all' so the task is visible
-  watch(singleTaskId, (taskId) => {
-    if (taskId && getTaskSecondaryView.value !== 'all') {
+
+  // Timestamp from route to detect re-clicks on the same task
+  const navigationTimestamp = computed(() => route.query._t as string | undefined);
+
+  // Flag to track when we're programmatically changing filters (to avoid triggering single-task clear)
+  const isProgrammaticFilterChange = ref(false);
+
+  // Store previous view state to restore when exiting single-task mode
+  const previousViewState = ref<{
+    primaryView: string;
+    secondaryView: string;
+    mapView: string;
+    traderView: string;
+  } | null>(null);
+
+  // When entering single-task mode (or re-clicking same task), configure view settings
+  watch([singleTaskId, navigationTimestamp], ([taskId, _timestamp], [oldTaskId, _oldTimestamp]) => {
+    if (!taskId) return;
+
+    isProgrammaticFilterChange.value = true;
+
+    // Scroll to top of page for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Store current view state before changing (only if not already in single-task mode)
+    if (!oldTaskId) {
+      previousViewState.value = {
+        primaryView: getTaskPrimaryView.value,
+        secondaryView: getTaskSecondaryView.value,
+        mapView: getTaskMapView.value,
+        traderView: getTaskTraderView.value,
+      };
+    }
+
+    // Always set secondary view to 'all' so the task is visible regardless of status
+    if (getTaskSecondaryView.value !== 'all') {
       preferencesStore.setTaskSecondaryView('all');
     }
+
+    // Find the task to check for related maps
+    const task = tasks.value.find((t) => t.id === taskId);
+    let targetMap: string | undefined;
+
+    if (task && Array.isArray(task.objectives)) {
+      // Build a map of mapId -> hasIncompleteObjective
+      const mapIncompleteStatus = new Map<string, boolean>();
+      const orderedMapIds: string[] = [];
+
+      for (const obj of task.objectives) {
+        if (!Array.isArray(obj.maps)) continue;
+
+        const isComplete = tarkovStore.isTaskObjectiveComplete(obj.id);
+
+        for (const objMap of obj.maps) {
+          if (!objMap?.id) continue;
+
+          // Track map order (first occurrence)
+          if (!orderedMapIds.includes(objMap.id)) {
+            orderedMapIds.push(objMap.id);
+          }
+
+          // Mark map as having incomplete objective if any objective is incomplete
+          if (!isComplete) {
+            mapIncompleteStatus.set(objMap.id, true);
+          } else if (!mapIncompleteStatus.has(objMap.id)) {
+            mapIncompleteStatus.set(objMap.id, false);
+          }
+        }
+      }
+
+      // Find first map with an incomplete objective, otherwise use first map
+      const firstIncompleteMap = orderedMapIds.find((id) => mapIncompleteStatus.get(id) === true);
+      targetMap = firstIncompleteMap ?? orderedMapIds[0];
+
+      if (targetMap) {
+        // Task has map objectives - switch to maps view
+        preferencesStore.setTaskPrimaryView('maps');
+        preferencesStore.setTaskMapView(targetMap);
+
+        // Update URL with map parameter for persistence (without triggering navigation)
+        const currentQuery = { ...route.query };
+        if (currentQuery.map !== targetMap) {
+          router.replace({ query: { ...currentQuery, map: targetMap } });
+        }
+      } else {
+        // Task has no map objectives - use 'all' view
+        preferencesStore.setTaskPrimaryView('all');
+      }
+    } else {
+      // Task not found or has no objectives - use 'all' view
+      preferencesStore.setTaskPrimaryView('all');
+    }
+
+    // Reset flag after the reactive update propagates
+    nextTick(() => {
+      isProgrammaticFilterChange.value = false;
+    });
   });
-  // Clear single-task filter when user interacts with any filters
+
+  // Clear single-task filter when user interacts with any filter
   watch(
     [
       getTaskPrimaryView,
@@ -346,15 +445,26 @@
       searchQuery,
     ],
     () => {
-      // Skip clearing route if we're currently in single-task mode viewing that task
-      // This prevents the watch from immediately clearing the route when we programmatically
-      // set taskSecondaryView to 'all' upon entering single-task mode
-      if (singleTaskId.value && route.query.task === singleTaskId.value) {
+      // Skip if we're programmatically changing filters upon entering single-task mode
+      if (isProgrammaticFilterChange.value) {
         return;
       }
       // If we're in single-task mode and the user changed a filter, clear the query param
       if (route.query.task) {
-        router.replace({ path: '/tasks', query: {} });
+        // Restore previous view state if available
+        if (previousViewState.value) {
+          isProgrammaticFilterChange.value = true;
+          preferencesStore.setTaskPrimaryView(previousViewState.value.primaryView);
+          preferencesStore.setTaskSecondaryView(previousViewState.value.secondaryView);
+          preferencesStore.setTaskMapView(previousViewState.value.mapView);
+          preferencesStore.setTaskTraderView(previousViewState.value.traderView);
+          previousViewState.value = null;
+          nextTick(() => {
+            isProgrammaticFilterChange.value = false;
+          });
+        }
+        // Use push for browser history support
+        router.push({ path: '/tasks', query: {} });
       }
     }
   );

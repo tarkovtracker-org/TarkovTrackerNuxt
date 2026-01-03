@@ -25,7 +25,7 @@
                   class="group flex items-center gap-2.5 transition-all duration-150 hover:-translate-y-0.5"
                 >
                   <span
-                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--color-entity-discord),transparent_85%)] text-[var(--color-entity-discord)] transition-all duration-150 group-hover:bg-[color-mix(in_srgb,var(--color-entity-discord),black_10%)] group-hover:text-white group-hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--color-entity-discord),transparent_60%)]"
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--color-entity-discord),transparent_85%)] text-[var(--color-entity-discord)] transition-all duration-150 group-hover:bg-[color-mix(in_srgb,var(--color-entity-discord),white_90%)] group-hover:text-[var(--color-entity-discord)] group-hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--color-entity-discord),transparent_60%)] dark:group-hover:bg-[color-mix(in_srgb,var(--color-entity-discord),white_20%)]"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@
                   class="group flex items-center gap-2.5 transition-all duration-150 hover:-translate-y-0.5"
                 >
                   <span
-                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-combined-soft text-content-primary transition-all duration-150 group-hover:bg-surface-combined-highlight group-hover:text-black group-hover:dark:text-white group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--color-entity-github),transparent_85%)] text-[var(--color-entity-github)] transition-all duration-150 group-hover:bg-[color-mix(in_srgb,var(--color-entity-github),white_90%)] group-hover:text-[var(--color-entity-github)] group-hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--color-entity-github),transparent_60%)] dark:bg-white/10 dark:text-white dark:group-hover:bg-white/20 dark:group-hover:text-white dark:group-hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)]"
                   >
                     <UIcon name="i-mdi-github" class="h-5 w-5" />
                   </span>
