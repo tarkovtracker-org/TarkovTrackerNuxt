@@ -9,13 +9,14 @@
     <div class="relative z-10 flex h-full flex-col" :class="isCompact ? 'gap-2' : 'gap-3'">
       <!--1) Header: identity + state -->
       <div class="flex flex-nowrap items-center justify-between gap-3">
-        <div class="flex min-w-0 items-center gap-2">
-            <span v-tooltip="task?.name">
-              <router-link
-                :to="`/tasks?task=${task.id}`"
-                class="text-accent-700 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 flex min-w-0 items-center gap-2 no-underline"
-                @click.stop
-              >
+        <!-- Left side: Task identity + badges -->
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
+          <span v-tooltip="task?.name">
+            <router-link
+              :to="`/tasks?task=${task.id}`"
+              class="text-accent-700 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 flex min-w-0 items-center gap-2 no-underline"
+              @click.stop
+            >
               <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-800">
                 <img
                   v-if="task?.trader?.imageLink"
@@ -31,45 +32,44 @@
                 :alt="task?.factionName"
                 class="h-6 w-6 shrink-0 object-contain invert dark:invert-0"
               />
-              <span class="min-w-0 truncate text-sm font-semibold text-content-primary sm:text-base">
+              <span class="min-w-0 truncate font-semibold">
                 {{ task?.name }}
               </span>
-              </router-link>
-            </span>
+            </router-link>
+          </span>
           <!-- External link icons -->
-          <div class="ml-2 flex shrink-0 items-center gap-1.5">
-              <a
-                v-if="task.wikiLink"
-                v-tooltip="t('page.tasks.questcard.viewOnWiki', 'View on Wiki')"
-                :href="task.wikiLink"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
-                :aria-label="t('page.tasks.questcard.viewOnWiki', 'View on Wiki')"
-                @click.stop
-              >
-                <img src="/img/logos/wikilogo.webp" alt="Wiki" aria-hidden="true" class="h-5 w-5" />
-              </a>
-              <a
-                v-tooltip="t('page.tasks.questcard.viewOnTarkovDev', 'View on tarkov.dev')"
-                :href="tarkovDevTaskUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
-                :aria-label="t('page.tasks.questcard.viewOnTarkovDev', 'View on tarkov.dev')"
-                @click.stop
-              >
-                <img
-                  src="/img/logos/tarkovdevlogo.webp"
-                  alt="tarkov.dev"
-                  aria-hidden="true"
-                  class="h-5 w-5"
-                />
-              </a>
+          <div class="flex shrink-0 items-center gap-1.5">
+            <a
+              v-if="task.wikiLink"
+              v-tooltip="t('page.tasks.questcard.viewOnWiki', 'View on Wiki')"
+              :href="task.wikiLink"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
+              :aria-label="t('page.tasks.questcard.viewOnWiki', 'View on Wiki')"
+              @click.stop
+            >
+              <img src="/img/logos/wikilogo.webp" alt="Wiki" aria-hidden="true" class="h-5 w-5" />
+            </a>
+            <a
+              v-tooltip="t('page.tasks.questcard.viewOnTarkovDev', 'View on tarkov.dev')"
+              :href="tarkovDevTaskUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="focus-visible:ring-accent-500 focus-visible:ring-offset-surface-900 inline-flex items-center justify-center rounded p-1 text-gray-500 transition-colors hover:bg-surface-200 hover:text-content-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:text-gray-400"
+              :aria-label="t('page.tasks.questcard.viewOnTarkovDev', 'View on tarkov.dev')"
+              @click.stop
+            >
+              <img
+                src="/img/logos/tarkovdevlogo.webp"
+                alt="tarkov.dev"
+                aria-hidden="true"
+                class="h-5 w-5"
+              />
+            </a>
           </div>
-        </div>
-        <div class="flex shrink-0 flex-nowrap items-center justify-end gap-2.5">
-          <div class="flex items-center gap-1.5">
+          <!-- Info badges (left-aligned, after task name) -->
+          <div class="flex flex-wrap items-center gap-1.5">
             <!-- Level Badge -->
             <GameBadge
               v-if="(task.minPlayerLevel ?? 0) > 0"
@@ -176,9 +176,10 @@
               icon="i-mdi-progress-check"
               :label="t('page.tasks.questcard.progress', objectiveProgress)"
             />
-</div>
-          
-          <!-- Action buttons in header for consistent positioning -->
+          </div>
+        </div>
+        <!-- Right side: Action buttons -->
+        <div class="flex shrink-0 flex-nowrap items-center justify-end gap-2.5">
           <template v-if="isOurFaction">
             <!-- 1) Locked state: Primary "AVAILABLE" button -->
             <UButton
@@ -218,18 +219,18 @@
             </UButton>
           </template>
           <!-- Menu button -->
-            <span v-if="isOurFaction" v-tooltip="t('page.tasks.questcard.more', 'More')">
-              <UButton
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                class="shrink-0"
-                :aria-label="t('page.tasks.questcard.more', 'More')"
-                @click.stop="openOverflowMenu"
-              >
-                <UIcon name="i-mdi-dots-horizontal" aria-hidden="true" class="h-5 w-5" />
-              </UButton>
-            </span>
+          <span v-if="isOurFaction" v-tooltip="t('page.tasks.questcard.more', 'More')">
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              class="shrink-0"
+              :aria-label="t('page.tasks.questcard.more', 'More')"
+              @click.stop="openOverflowMenu"
+            >
+              <UIcon name="i-mdi-dots-horizontal" aria-hidden="true" class="h-5 w-5" />
+            </UButton>
+          </span>
         </div>
       </div>
       <RelatedTasksRow
@@ -286,8 +287,8 @@
         <!-- Background Icon (The Background) -->
         <div
           v-if="showBackgroundIcon"
-          class="pointer-events-none absolute inset-0 z-0 flex transform items-center justify-center opacity-80"
-          :class="[backgroundIconColor, !isComplete && 'rotate-12']"
+          class="pointer-events-none absolute inset-0 z-0 flex transform items-center justify-center opacity-80 rotate-12"
+          :class="[backgroundIconColor]"
         >
           <UIcon
             :name="backgroundIcon.startsWith('mdi-') ? `i-${backgroundIcon}` : backgroundIcon"

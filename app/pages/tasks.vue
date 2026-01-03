@@ -338,6 +338,24 @@
     }
   });
 
+  // Clear single-task filter when user interacts with any filters
+  watch(
+    [
+      getTaskPrimaryView,
+      getTaskSecondaryView,
+      getTaskMapView,
+      getTaskTraderView,
+      getTaskUserView,
+      searchQuery,
+    ],
+    () => {
+      // If we're in single-task mode and the user changed a filter, clear the query param
+      if (route.query.task) {
+        router.replace({ path: '/tasks', query: {} });
+      }
+    }
+  );
+
   // Clear single task filter and return to normal view
   const clearSingleTaskFilter = () => {
     router.push({ path: '/tasks', query: {} });

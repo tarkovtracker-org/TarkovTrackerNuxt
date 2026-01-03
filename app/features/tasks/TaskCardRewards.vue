@@ -28,6 +28,14 @@
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
         <span>{{ formatNumber(experience) }} XP</span>
       </span>
+      <!-- Skill Rewards -->
+      <template v-for="skill in skillRewards" :key="`skill-${skill.name}`">
+        <span class="badge-soft-accent inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium">
+          <UIcon name="i-mdi-arm-flex" aria-hidden="true" class="h-3.5 w-3.5" />
+          <span>+{{ skill.level }}</span>
+          <span>{{ skill.name }}</span>
+        </span>
+      </template>
       <!-- Trader Unlock -->
       <span
         v-if="displayedTraderUnlock?.name"
@@ -52,14 +60,7 @@
           <span>{{ standing.trader.name }}</span>
         </span>
       </template>
-      <!-- Skill Rewards -->
-      <template v-for="skill in skillRewards" :key="`skill-${skill.name}`">
-        <span class="badge-soft-reward-skill inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium">
-          <UIcon name="i-mdi-arm-flex" aria-hidden="true" class="h-3.5 w-3.5" />
-          <span>+{{ skill.level }}</span>
-          <span>{{ skill.name }}</span>
-        </span>
-      </template>
+
       <!-- Item Rewards Summary -->
         <span
           v-if="itemRewards.length > 0"
