@@ -43,7 +43,7 @@
           <div class="text-base leading-tight font-medium text-content-primary">TarkovTracker.org</div>
         </div>
       </NuxtLink>
-      <div class="mx-3 my-0.5 h-px bg-divider dark:bg-accent-800/40" />
+      <div class="mx-3 my-1 h-px bg-divider dark:bg-accent-800/40" />
       <DrawerLevel :is-collapsed="isCollapsed" />
       <div v-if="!isCollapsed" class="flex flex-col items-center gap-1.5 px-4">
         <!-- Faction and Game Mode Cycling Buttons Row -->
@@ -84,13 +84,9 @@
           {{ currentEditionName }}
         </button>
       </div>
-      <div class="mx-3 my-0.5 h-px bg-divider dark:bg-accent-800/40" />
-      <DrawerLinks :is-collapsed="isCollapsed" />
-      <div class="mx-3 my-0.5 h-px bg-divider dark:bg-accent-800/40" />
+      <DrawerLinks :is-collapsed="isCollapsed" class="mt-1" />
+      <div class="mx-3 my-1 h-px bg-divider dark:bg-accent-800/40" />
       <div class="flex flex-col gap-1">
-        <div v-if="!isCollapsed" class="px-4 py-0.5">
-          <h3 class="text-xs font-semibold tracking-wider text-content-tertiary uppercase">External</h3>
-        </div>
         <ul class="flex flex-col gap-1 px-1">
           <DrawerItem
             avatar="/img/logos/tarkovdevlogo.webp"
