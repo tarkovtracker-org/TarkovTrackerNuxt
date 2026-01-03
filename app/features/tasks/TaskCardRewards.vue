@@ -23,7 +23,7 @@
       <!-- XP Badge -->
       <span
         v-if="preferencesStore.getShowExperienceRewards && experience > 0"
-        class="inline-flex items-center gap-1 rounded bg-accent-600! px-2 py-0.5 text-xs text-white!"
+        class="badge-soft-accent inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium"
       >
         <UIcon name="i-mdi-star" aria-hidden="true" class="h-3.5 w-3.5" />
         <span>{{ formatNumber(experience) }} XP</span>
@@ -31,21 +31,21 @@
       <!-- Trader Unlock -->
       <span
         v-if="displayedTraderUnlock?.name"
-        class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-trader)]! px-2 py-0.5 text-xs text-white!"
+        class="badge-soft-reward-trader inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
       >
-        <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
+        <UIcon name="i-mdi-lock-open-variant" aria-hidden="true" class="h-4 w-4" />
         <span>{{ displayedTraderUnlock.name }}</span>
       </span>
       <!-- Trader Standing Rewards -->
       <template v-for="standing in traderStandingRewards" :key="`standing-${standing.trader.id}`">
-        <span class="inline-flex items-center gap-1.5 rounded bg-surface-600! px-2 py-0.5 text-xs text-white!">
+        <span class="badge-soft-reward-item inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium">
           <UIcon
             name="i-mdi-handshake"
             aria-hidden="true"
-            class="h-4 w-4 text-white!"
+            class="h-4 w-4"
           />
           <span
-            :class="standing.standing >= 0 ? 'text-success-400! font-bold' : 'text-error-400! font-bold'"
+            :class="standing.standing >= 0 ? 'text-success-600 dark:text-success-400 font-bold' : 'text-error-600 dark:text-error-400 font-bold'"
           >
             {{ standing.standing >= 0 ? '+' : '' }}{{ standing.standing.toFixed(2) }}
           </span>
@@ -54,8 +54,8 @@
       </template>
       <!-- Skill Rewards -->
       <template v-for="skill in skillRewards" :key="`skill-${skill.name}`">
-        <span class="inline-flex items-center gap-1.5 rounded bg-[var(--color-reward-skill)]! px-2 py-0.5 text-xs text-white!">
-          <UIcon name="i-mdi-arm-flex" aria-hidden="true" class="h-3.5 w-3.5 text-white!" />
+        <span class="badge-soft-reward-skill inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium">
+          <UIcon name="i-mdi-arm-flex" aria-hidden="true" class="h-3.5 w-3.5" />
           <span>+{{ skill.level }}</span>
           <span>{{ skill.name }}</span>
         </span>
@@ -64,9 +64,9 @@
         <span
           v-if="itemRewards.length > 0"
           v-tooltip="itemRewardsSummaryTooltip"
-          class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
+          class="badge-soft-reward-item inline-flex cursor-help items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
         >
-          <UIcon name="i-mdi-package-variant" aria-hidden="true" class="h-4 w-4 text-white!" />
+          <UIcon name="i-mdi-package-variant" aria-hidden="true" class="h-4 w-4" />
           <span>
             {{
               t(
@@ -81,9 +81,9 @@
       <span
         v-if="offerUnlockRewards.length > 0"
         v-tooltip="offerUnlockSummaryTooltip"
-        class="inline-flex cursor-help items-center gap-1.5 rounded bg-[var(--color-reward-item)]! px-2 py-0.5 text-xs text-white!"
+        class="badge-soft-reward-item inline-flex cursor-help items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
       >
-        <UIcon name="i-mdi-cart-check" aria-hidden="true" class="h-4 w-4 !text-white" />
+        <UIcon name="i-mdi-cart-check" aria-hidden="true" class="h-4 w-4" />
         <span>
           {{
             t(

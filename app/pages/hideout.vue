@@ -77,28 +77,28 @@
       icon: 'mdi-clipboard-check',
       view: 'all',
       count: stationCounts.value.all,
-      badgeColor: 'bg-[var(--color-filter-all)]',
+      badgeColor: 'badge-soft-filter-all',
     },
     {
       title: t('page.hideout.primaryviews.available'),
       icon: 'mdi-tag-arrow-up-outline',
       view: 'available',
       count: stationCounts.value.available,
-      badgeColor: 'bg-accent-500',
+      badgeColor: 'badge-soft-accent',
     },
     {
       title: t('page.hideout.primaryviews.maxed'),
       icon: 'mdi-arrow-collapse-up',
       view: 'maxed',
       count: stationCounts.value.maxed,
-      badgeColor: 'bg-success-600',
+      badgeColor: 'badge-soft-success',
     },
     {
       title: t('page.hideout.primaryviews.locked'),
       icon: 'mdi-lock',
       view: 'locked',
       count: stationCounts.value.locked,
-      badgeColor: 'bg-surface-600',
+      badgeColor: 'badge-soft-surface',
     },
   ]);
   // Handle deep linking to a specific station via ?station=stationId query param

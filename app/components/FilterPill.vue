@@ -21,7 +21,7 @@
     <span
       v-if="count !== undefined || $slots.count"
       :class="[
-        'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold text-white ml-0.5',
+        'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ml-0.5',
         countColorClass
       ]"
     >
@@ -43,9 +43,10 @@ const props = defineProps<{
 }>();
 const countColorClass = computed(() => {
     if (props.countColor) return props.countColor;
-    // Default logic: Primary if active or count > 0, Gray if 0?
-    // Actually existing logic often uses specific colors per type.
-    // Let's stick to a safe default that mimics current behavior if not specified.
-    return (props.count && props.count > 0) || props.active ? 'bg-accent-500' : 'bg-gray-600';
+    // Soft badge styling: transparent tinted backgrounds with vivid text
+    return (props.count && props.count > 0) || props.active 
+      ? 'badge-soft-accent' 
+      : 'badge-soft-surface';
 });
 </script>
+

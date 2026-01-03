@@ -331,10 +331,11 @@ select:disabled,
   --color-task-blocked: var(--color-gray-600);
 
   /* --- Filters --- */
-  --color-filter-all: var(--color-blue-500);
+  --color-filter-all: var(--color-blue-400);
 
   /* --- Rewards --- */
-  --color-reward-item: var(--color-surface-400);
+  --color-reward-item: var(--color-surface-300);
+  --color-reward-item-text: var(--color-surface-500);  /* Semantic text for light mode */
   --color-reward-skill: var(--color-success-600);
   --color-reward-trader: var(--color-warning-600);
   --color-reward-xp: var(--color-accent-600);
@@ -523,6 +524,7 @@ select:disabled,
   /* --- Dark Mode Semantic Overrides --- */
   --color-task-complete: var(--color-success-500);
   --color-task-failed: var(--color-error-500);
+  --color-reward-item-text: var(--color-surface-300);  /* Semantic text for dark mode */
 
   /* --- Stash Grid (Dark Mode) --- */
   --color-stash-base: #141414; /* Very dark grey, almost black */
@@ -727,7 +729,119 @@ select:disabled,
   .fade-leave-to {
     opacity: 0;
   }
+
+  /* --- Soft Badge Utilities --- */
+  /* Light mode: light tinted backgrounds, Dark mode: transparent overlays */
+  .badge-soft-accent {
+    @apply bg-accent-100 text-accent-700 dark:bg-accent-500/20 dark:text-accent-400;
+  }
+  .badge-soft-success {
+    @apply bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400;
+  }
+  .badge-soft-error {
+    @apply bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400;
+  }
+  .badge-soft-warning {
+    @apply bg-warning-100 text-warning-700 dark:bg-warning-500/20 dark:text-warning-400;
+  }
+  .badge-soft-surface {
+    @apply bg-surface-200 text-surface-700 dark:bg-surface-500/20 dark:text-surface-300;
+  }
+  .badge-soft-kappa {
+    background-color: color-mix(in srgb, var(--color-entity-kappa), white 85%);
+    color: var(--color-entity-kappa);
+  }
+  .dark .badge-soft-kappa {
+    background-color: color-mix(in srgb, var(--color-entity-kappa), transparent 80%);
+    color: var(--color-entity-kappa);
+  }
+  .badge-soft-lightkeeper {
+    background-color: color-mix(in srgb, var(--color-entity-lightkeeper), white 85%);
+    color: var(--color-entity-lightkeeper);
+  }
+  .dark .badge-soft-lightkeeper {
+    background-color: color-mix(in srgb, var(--color-entity-lightkeeper), transparent 80%);
+    color: var(--color-entity-lightkeeper);
+  }
+  .badge-soft-reward-item {
+    background-color: color-mix(in srgb, var(--color-reward-item), white 65%);
+    color: var(--color-reward-item-text);
+  }
+  .dark .badge-soft-reward-item {
+    background-color: color-mix(in srgb, var(--color-reward-item), transparent 75%);
+    color: var(--color-reward-item-text);
+  }
+  .badge-soft-reward-skill {
+    background-color: color-mix(in srgb, var(--color-reward-skill), white 85%);
+    color: var(--color-reward-skill);
+  }
+  .dark .badge-soft-reward-skill {
+    background-color: color-mix(in srgb, var(--color-reward-skill), transparent 80%);
+    color: var(--color-reward-skill);
+  }
+  .badge-soft-reward-trader {
+    background-color: color-mix(in srgb, var(--color-reward-trader), white 85%);
+    color: var(--color-reward-trader);
+  }
+  .dark .badge-soft-reward-trader {
+    background-color: color-mix(in srgb, var(--color-reward-trader), transparent 80%);
+    color: var(--color-reward-trader);
+  }
+  .badge-soft-map {
+    @apply bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400;
+  }
+  .badge-soft-filter-all {
+    background-color: color-mix(in srgb, var(--color-filter-all), white 85%);
+    color: var(--color-filter-all);
+  }
+  .dark .badge-soft-filter-all {
+    background-color: color-mix(in srgb, var(--color-filter-all), transparent 80%);
+    color: var(--color-blue-300);
+  }
+
+  /* --- Soft Task Status Badges --- */
+  .badge-soft-task-complete {
+    background-color: color-mix(in srgb, var(--color-task-complete), white 85%);
+    color: var(--color-task-complete);
+  }
+  .dark .badge-soft-task-complete {
+    background-color: color-mix(in srgb, var(--color-task-complete), transparent 80%);
+    color: var(--color-task-complete);
+  }
+  .badge-soft-task-failed {
+    background-color: color-mix(in srgb, var(--color-task-failed), white 85%);
+    color: var(--color-task-failed);
+  }
+  .dark .badge-soft-task-failed {
+    background-color: color-mix(in srgb, var(--color-task-failed), transparent 80%);
+    color: var(--color-task-failed);
+  }
+  .badge-soft-task-blocked {
+    background-color: color-mix(in srgb, var(--color-task-blocked), white 85%);
+    color: var(--color-task-blocked);
+  }
+  .dark .badge-soft-task-blocked {
+    background-color: color-mix(in srgb, var(--color-task-blocked), transparent 80%);
+    color: var(--color-task-blocked);
+  }
+  .badge-soft-task-available {
+    background-color: color-mix(in srgb, var(--color-task-available), white 85%);
+    color: var(--color-task-available);
+  }
+  .dark .badge-soft-task-available {
+    background-color: color-mix(in srgb, var(--color-task-available), transparent 80%);
+    color: var(--color-task-available);
+  }
+  .badge-soft-task-locked {
+    background-color: color-mix(in srgb, var(--color-task-locked), white 85%);
+    color: var(--color-task-locked);
+  }
+  .dark .badge-soft-task-locked {
+    background-color: color-mix(in srgb, var(--color-task-locked), transparent 80%);
+    color: var(--color-task-locked);
+  }
 }
+
 
 /* =========================================
    5. VENDOR OVERRIDES

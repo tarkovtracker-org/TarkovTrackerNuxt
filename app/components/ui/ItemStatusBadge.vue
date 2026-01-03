@@ -1,5 +1,5 @@
 <template>
-  <div class="peer/indicators absolute top-0 left-0 z-40">
+  <div v-if="hasContent" class="peer/indicators absolute top-0 left-0 z-40">
     <div
       class="flex items-center gap-1 px-2 py-1 shadow-lg bg-surface-elevated bg-clip-padding rounded-tl rounded-br-lg"
       :class="[sizeClasses]"
@@ -58,6 +58,11 @@
   const emit = defineEmits<{
     craft: [];
   }>();
+
+  // Hide badge entirely if nothing to show
+  const hasContent = computed(() => {
+    return props.showCount || props.foundInRaid || props.isCraftable || props.isKappaRequired;
+  });
 
   const countTextClasses = computed(() => ({
     'text-content-primary': !props.isComplete,

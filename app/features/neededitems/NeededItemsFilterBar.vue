@@ -11,7 +11,7 @@
         :icon="tab.icon"
         :label="tab.label.toUpperCase()"
         :count="tab.count"
-        :count-color="tab.badgeColor || 'bg-primary-500'"
+        :count-color="tab.badgeColor || 'badge-soft-accent'"
         class="shrink-0"
         label-class="hidden sm:inline text-[clamp(0.625rem,2vw,0.875rem)]"
         @click="$emit('update:modelValue', tab.value)"

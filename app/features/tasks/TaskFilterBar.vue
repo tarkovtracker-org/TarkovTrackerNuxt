@@ -62,7 +62,7 @@
         <FilterPill
           :active="secondaryView === 'all'"
           :count="statusCounts.all"
-          count-color="bg-[var(--color-filter-all)]"
+          count-color="badge-soft-filter-all"
           @click="setSecondaryView('all')"
         >
           <template #icon>
@@ -75,7 +75,7 @@
           :label="t('page.tasks.secondaryviews.available').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.available"
-          count-color="bg-accent-500"
+          count-color="badge-soft-accent"
           @click="setSecondaryView('available')"
         >
             <template #icon>
@@ -87,7 +87,7 @@
           :label="t('page.tasks.secondaryviews.locked').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.locked"
-          count-color="bg-[var(--color-task-locked)]"
+          count-color="badge-soft-surface"
           @click="setSecondaryView('locked')"
         >
             <template #icon>
@@ -99,7 +99,7 @@
           :label="t('page.tasks.secondaryviews.completed').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.completed"
-          count-color="bg-[var(--color-task-complete)]"
+          count-color="badge-soft-success"
           @click="setSecondaryView('completed')"
         >
             <template #icon>
@@ -111,7 +111,7 @@
           :label="t('page.tasks.secondaryviews.failed', 'FAILED').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.failed"
-          count-color="bg-[var(--color-task-failed)]"
+          count-color="badge-soft-error"
           @click="setSecondaryView('failed')"
         >
             <template #icon>
@@ -131,7 +131,7 @@
         >
           {{ currentUserDisplayName.toUpperCase() }}
           <template #badge>
-              <GameBadge size="xs" color="neutral" variant="solid" badge-class="ml-1 !bg-accent-500 !text-white" label="YOU" />
+              <GameBadge size="xs" color="neutral" variant="solid" badge-class="badge-soft-success ml-1" label="YOU" />
           </template>
         </FilterPill>
         <FilterPill
@@ -202,8 +202,8 @@
             </div>
             <span
               :class="[
-                'absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] font-bold text-white',
-                (traderCounts[trader.id] ?? 0) > 0 ? 'bg-accent-500' : 'bg-surface-600',
+                'absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] font-bold',
+                (traderCounts[trader.id] ?? 0) > 0 ? 'badge-soft-accent' : 'badge-soft-surface',
               ]"
             >
               {{ traderCounts[trader.id] ?? 0 }}

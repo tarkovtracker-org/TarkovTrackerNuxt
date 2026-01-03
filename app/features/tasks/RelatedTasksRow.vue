@@ -102,20 +102,20 @@ const getBadgeClass = (task: Task) => {
   const isFailed = tarkovStore.isTaskFailed(task.id);
   const isUnlocked = progressStore.unlockedTasks[task.id]?.self === true;
   const isBlocked = progressStore.invalidTasks?.[task.id]?.self === true;
-  if (isComplete && !isFailed) return 'bg-task-complete text-white';
-  if (isFailed) return 'bg-task-failed text-white';
+  if (isComplete && !isFailed) return 'badge-soft-task-complete';
+  if (isFailed) return 'badge-soft-task-failed';
   // Blocked -> Blocked color
-  if (isBlocked) return 'bg-task-blocked text-white';
+  if (isBlocked) return 'badge-soft-task-blocked';
   // Available (Unlocked & Not Complete) -> Primary
-  if (isUnlocked && !isComplete) return 'bg-task-available text-white';
+  if (isUnlocked && !isComplete) return 'badge-soft-task-available';
   // Locked -> Locked color
-  if (!isUnlocked) return 'bg-task-locked text-white';
+  if (!isUnlocked) return 'badge-soft-task-locked';
   // Default fallback
   switch (props.intent) {
-    case 'error': return 'bg-task-failed text-white';
-    case 'warning': return 'bg-task-locked text-white'; // Locked
-    case 'gray': return 'bg-task-blocked text-white'; // Blocked
-    default: return 'bg-task-available text-white';
+    case 'error': return 'badge-soft-task-failed';
+    case 'warning': return 'badge-soft-task-locked'; // Locked
+    case 'gray': return 'badge-soft-task-blocked'; // Blocked
+    default: return 'badge-soft-task-available';
   }
 };
 const hasSuffix = computed(() => !!slots.suffix);

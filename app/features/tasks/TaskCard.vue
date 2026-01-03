@@ -83,8 +83,8 @@
                 )
               "
               :badge-class="[
-                'cursor-help text-xs !text-white',
-                meetsLevelRequirement ? '!bg-success-600' : '!bg-error-600'
+                'cursor-help text-xs',
+                meetsLevelRequirement ? 'badge-soft-success' : 'badge-soft-error'
               ]"
               :label="t('page.tasks.questcard.levelBadge', { count: task.minPlayerLevel })"
             />
@@ -94,7 +94,7 @@
               variant="solid"
               color="gray"
               :tooltip="task?.map?.name || t('page.tasks.questcard.anyMap', 'Any')"
-              badge-class="inline-flex max-w-[10rem] items-center gap-1 text-xs !bg-green-800 !text-white"
+              badge-class="badge-soft-map inline-flex max-w-[10rem] items-center gap-1 text-xs"
             >
               <UIcon 
                 :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'" 
@@ -111,13 +111,14 @@
               v-if="preferencesStore.getShowRequiredLabels && task.kappaRequired"
               variant="solid"
               color="error"
+              icon="i-mdi-trophy"
               :tooltip="
                 t(
                   'page.tasks.questcard.kappaTooltip',
                   'This quest is required to obtain the Kappa Secure Container'
                 )
               "
-              badge-class="cursor-help text-xs !bg-[var(--color-entity-kappa)] !text-white"
+              badge-class="badge-soft-kappa cursor-help text-xs"
               :label="t('page.tasks.questcard.kappa', 'Kappa')"
             />
 
@@ -126,13 +127,14 @@
               v-if="preferencesStore.getShowRequiredLabels && task.lightkeeperRequired"
               variant="solid"
               color="warning"
+              icon="i-mdi-lighthouse"
               :tooltip="
                 t(
                   'page.tasks.questcard.lightkeeperTooltip',
                   'This quest is required to unlock the Lightkeeper trader'
                 )
               "
-              badge-class="cursor-help text-xs !bg-[var(--color-entity-lightkeeper)] !text-white"
+              badge-class="badge-soft-lightkeeper cursor-help text-xs"
               :label="t('page.tasks.questcard.lightkeeper', 'Lightkeeper')"
             />
 
@@ -141,7 +143,7 @@
               v-if="isFailed"
               variant="solid"
               color="gray"
-              badge-class="text-[11px] !bg-[var(--color-task-failed)] !text-white"
+              badge-class="badge-soft-error text-[11px]"
               :label="t('page.dashboard.stats.failed.stat', 'Failed')"
             />
 
@@ -156,20 +158,20 @@
                   'This quest is permanently blocked and can never be completed due to choices made in other quests'
                 )
               "
-              badge-class="cursor-help text-xs !bg-[var(--color-task-blocked)] !text-white"
+              badge-class="badge-soft-surface cursor-help text-xs"
               :label="t('page.tasks.questcard.blocked', 'Blocked')"
             />
           
-            <!-- Progress Badge -->
+            <!-- Progress Badge (only on available tasks) -->
             <GameBadge
-              v-if="objectiveProgress.total > 0 && !(isInvalid && !isFailed)"
+              v-if="objectiveProgress.total > 0 && !isLocked && !isComplete && !isFailed && !isInvalid"
               variant="solid"
               color="gray"
               :badge-class="[
-                'inline-flex items-center gap-1 text-xs border',
+                'inline-flex items-center gap-1 text-xs',
                 objectiveProgress.done === objectiveProgress.total
-                  ? 'text-success-400 border-success-400'
-                  : 'dark:text-gray-100 dark:border-gray-100'
+                  ? 'badge-soft-success'
+                  : 'badge-soft-reward-item'
               ]"
               icon="i-mdi-progress-check"
               :label="t('page.tasks.questcard.progress', objectiveProgress)"
@@ -178,26 +180,26 @@
           
           <!-- Action buttons in header for consistent positioning -->
           <template v-if="isOurFaction">
-            <!-- 1) Locked state: Green "UNLOCK" button -->
+            <!-- 1) Locked state: Primary "AVAILABLE" button -->
             <UButton
               v-if="isLocked && !isInvalid"
               :size="actionButtonSize"
-              icon="i-mdi-lock-open-variant"
-              color="success"
-              variant="solid"
-              class="shrink-0 !bg-success-600 hover:!bg-success-700 !text-white shadow-sm"
+              icon="i-mdi-clipboard-text"
+              color="neutral"
+              variant="soft"
+              class="shrink-0 badge-soft-task-available font-semibold hover:opacity-90"
               @click.stop="markTaskAvailable()"
             >
-              {{ t('page.tasks.questcard.unlockbutton', 'Unlock').toUpperCase() }}
+              {{ t('page.tasks.questcard.availablebutton', 'Available').toUpperCase() }}
             </UButton>
             <!-- 2) Available state: Green "COMPLETE" button -->
             <UButton
               v-else-if="!isComplete && !isInvalid"
               :size="actionButtonSize"
               icon="i-mdi-check-circle"
-              color="success"
-              :ui="completeButtonUi"
-              class="shrink-0"
+              color="neutral"
+              variant="soft"
+              class="shrink-0 badge-soft-success font-semibold hover:opacity-90"
               @click.stop="markTaskComplete()"
             >
               {{ t('page.tasks.questcard.completebutton', 'Complete').toUpperCase() }}
@@ -207,9 +209,9 @@
               v-else
               :size="actionButtonSize"
               icon="i-mdi-clipboard-text"
-              color="accent"
-              variant="solid"
-              class="shrink-0 shadow-sm"
+              color="neutral"
+              variant="soft"
+              class="shrink-0 badge-soft-task-available font-semibold hover:opacity-90"
               @click.stop="markTaskUncomplete()"
             >
               {{ t('page.tasks.questcard.availablebutton', 'Available').toUpperCase() }}

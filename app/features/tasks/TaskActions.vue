@@ -77,7 +77,7 @@
   const preferencesStore = usePreferencesStore();
   const formatNumber = useLocaleNumberFormatter();
   const completeButtonUi = {
-    base: 'bg-success-500 hover:bg-success-600 active:bg-success-700 text-white border border-success-700',
+    base: 'badge-soft-success font-semibold',
   };
   defineProps({
     task: { type: Object, required: true },

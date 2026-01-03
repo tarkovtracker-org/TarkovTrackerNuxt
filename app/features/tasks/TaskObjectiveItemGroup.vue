@@ -19,27 +19,30 @@
         ]"
         @click.stop="toggleCountForRow(row)"
       >
-        <GameItem
-          v-if="row.meta.item || row.meta.itemIcon"
-          :item="row.meta.item"
-          :src="row.meta.itemIcon"
-          :item-name="row.meta.itemName"
-          :background-color="row.meta.backgroundColor"
-          size="medium"
-          simple-mode
-          class="shrink-0"
-        />
+        <div v-if="row.meta.item || row.meta.itemIcon" class="relative shrink-0">
+          <ItemStatusBadge
+            :current-count="row.currentCount"
+            :needed-count="row.meta.neededCount"
+            :is-complete="row.allComplete"
+            :found-in-raid="row.meta.foundInRaid"
+            :is-kappa-required="false"
+            :show-count="false"
+            size="sm"
+          />
+          <GameItem
+            :item="row.meta.item"
+            :src="row.meta.itemIcon"
+            :item-name="row.meta.itemName"
+            :background-color="row.meta.backgroundColor"
+            size="medium"
+            simple-mode
+          />
+        </div>
         <span
-          v-tooltip="row.meta.itemName"
+          v-tooltip="row.meta.itemFullName"
           class="max-w-[12rem] truncate text-xs font-medium text-gray-900 dark:text-gray-100"
         >
           {{ row.meta.itemName }}
-        </span>
-        <span
-          v-if="row.meta.foundInRaid"
-          class="rounded bg-yellow-500/20 px-1 py-0.5 text-[10px] font-bold text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300"
-        >
-          FiR
         </span>
         <!-- Single set of controls per item - updates all related objectives together -->
         <span v-if="row.meta.neededCount > 1" @click.stop>
@@ -71,7 +74,7 @@
             :disabled="isParentTaskLocked"
             :class="
               row.allComplete
-                ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
+                ? 'badge-soft-success'
                 : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
             "
             @click="toggleCountForRow(row)"
@@ -90,6 +93,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
   import ObjectiveCountControls from '@/features/tasks/ObjectiveCountControls.vue';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { useProgressStore } from '@/stores/useProgress';
@@ -109,6 +113,7 @@
     neededCount: number;
     currentCount: number;
     itemName: string;
+    itemFullName: string;
     itemIcon?: string;
     backgroundColor?: string;
     foundInRaid: boolean;
@@ -153,6 +158,11 @@
           item?.name ||
           objective.description ||
           t('page.tasks.questcard.item', 'Item'),
+        itemFullName:
+          item?.name ||
+          item?.shortName ||
+          objective.description ||
+          t('page.tasks.questcard.item', 'Item'),
         itemIcon: item?.image512pxLink || item?.image8xLink || undefined,
         backgroundColor: item?.backgroundColor,
         foundInRaid: full?.foundInRaid === true || objective.foundInRaid === true,
@@ -167,6 +177,7 @@
         neededCount: objective.count ?? 1,
         currentCount: tarkovStore.getObjectiveCount(objective.id),
         itemName: objective.description || t('page.tasks.questcard.item', 'Item'),
+        itemFullName: objective.description || t('page.tasks.questcard.item', 'Item'),
         itemIcon: undefined,
         backgroundColor: undefined,
         foundInRaid: objective.foundInRaid === true,

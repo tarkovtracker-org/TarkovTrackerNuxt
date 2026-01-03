@@ -192,7 +192,7 @@ export const usePreferencesStore = defineStore('preferences', {
     getHideoutPrimaryView: (state) => {
       const valid = ['all', 'available', 'maxed', 'locked'];
       const val = state.hideoutPrimaryView;
-      return val && valid.includes(val) ? val : 'all';
+      return val && valid.includes(val) ? val : 'available';
     },
     getLocaleOverride: (state) => {
       return state.localeOverride ?? null;

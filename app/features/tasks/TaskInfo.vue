@@ -93,14 +93,16 @@
             v-if="task.kappaRequired"
             variant="solid"
             color="gray"
-            badge-class="!bg-[var(--color-entity-kappa)] !text-white"
+            icon="i-mdi-trophy"
+            badge-class="badge-soft-kappa"
             :label="t('page.tasks.questcard.kapparequired', 'KAPPA REQUIRED')"
           />
           <GameBadge
             v-if="task.lightkeeperRequired"
             variant="solid"
             color="gray"
-            badge-class="!bg-[var(--color-entity-lightkeeper)] !text-white"
+            icon="i-mdi-lighthouse"
+            badge-class="badge-soft-lightkeeper"
             :label="t('page.tasks.questcard.lightkeeperrequired', 'LIGHTKEEPER REQUIRED')"
           />
         </div>

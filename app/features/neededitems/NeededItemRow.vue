@@ -172,7 +172,7 @@
                           class="flex h-12 w-12 items-center justify-center rounded-lg border transition-colors"
                           :class="
                             isCollected
-                              ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
+                              ? 'badge-soft-success'
                               : 'bg-surface-elevated text-content-secondary hover:bg-surface-hover border-base hover:text-content-primary'
                           "
                           :aria-label="
@@ -245,7 +245,7 @@
                     class="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors"
                     :class="
                       isCollected
-                        ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
+                        ? 'badge-soft-success'
                         : 'bg-surface-elevated text-content-secondary hover:bg-surface-hover border-base hover:text-content-primary'
                     "
                     :aria-label="

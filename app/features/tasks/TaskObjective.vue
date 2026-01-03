@@ -63,7 +63,7 @@
             :disabled="isParentTaskLocked"
             :class="[
               isComplete
-                ? 'bg-success-600 border-success-500 hover:bg-success-500 text-white'
+                ? 'badge-soft-success'
                 : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10',
             ]"
             @click="toggleObjectiveCompletion()"
