@@ -1,6 +1,7 @@
 import { getCurrentInstance, readonly, ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { logger } from '@/utils/logger';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
 // Global flag to track i18n readiness
 let i18nReady = false;
 // Module-scoped writable ref for fallback locale (internal, shared across all callers)
@@ -10,7 +11,7 @@ let cachedFallbackLocale: Ref<string> | null = null;
 // Storage event listener to update cached locale when localStorage changes
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
-    if (event.key === 'preferences' && cachedFallbackLocale) {
+    if (event.key === STORAGE_KEYS.preferences && cachedFallbackLocale) {
       const savedLocale = getSavedLocale();
       const newValue = savedLocale || getBrowserLanguage();
       logger.debug('[i18nHelpers] Storage event detected, updating cached locale:', newValue);
@@ -42,7 +43,7 @@ function getSavedLocale(): string | null {
   try {
     // All localStorage access is inside try-catch to handle SecurityError
     // that can occur in some browsers (e.g., Safari private browsing)
-    const savedPrefs = window.localStorage?.getItem('preferences');
+    const savedPrefs = window.localStorage?.getItem(STORAGE_KEYS.preferences);
     if (savedPrefs) {
       return JSON.parse(savedPrefs)?.localeOverride ?? null;
     }

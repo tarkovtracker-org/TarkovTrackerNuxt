@@ -3,8 +3,11 @@ export interface SupabaseUser {
   id: string | null;
   email: string | null;
   loggedIn: boolean;
+  provider?: string | null;
+  providers?: string[] | null;
   app_metadata?: {
     provider?: string;
+    providers?: string[];
     [key: string]: unknown;
   };
   user_metadata?: {
@@ -25,7 +28,7 @@ export interface SupabasePlugin {
   client: SupabaseClient;
   user: SupabaseUser;
   signInWithOAuth: (
-    provider: 'twitch' | 'discord',
+    provider: 'twitch' | 'discord' | 'google' | 'github',
     options?: { skipBrowserRedirect?: boolean; redirectTo?: string }
   ) => Promise<{ url?: string }>;
   signOut: () => Promise<void>;

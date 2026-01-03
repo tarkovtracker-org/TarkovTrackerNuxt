@@ -22,7 +22,7 @@
                 <NuxtImg
                   v-if="!factionImageLoadFailed"
                   :src="pmcFactionIcon"
-                  class="absolute top-0 left-0 z-20 mt-1 max-w-[48px] px-1 opacity-0 invert transition-opacity duration-1000 ease-in-out group-hover:opacity-100"
+                  class="absolute top-0 left-0 z-20 mt-1 max-w-12 px-1 opacity-0 invert transition-opacity duration-1000 ease-in-out group-hover:opacity-100"
                   width="48"
                   height="48"
                   @error="handleFactionImageError"
@@ -30,7 +30,7 @@
                 <NuxtImg
                   v-if="!groupImageLoadFailed"
                   :src="groupIcon"
-                  class="absolute top-0 left-0 z-10 max-w-[48px] opacity-100 transition-opacity duration-1000 ease-in-out group-hover:opacity-0"
+                  class="absolute top-0 left-0 z-10 max-w-12 opacity-100 transition-opacity duration-1000 ease-in-out group-hover:opacity-0"
                   width="48"
                   height="48"
                   @error="handleGroupImageError"
@@ -151,7 +151,7 @@
         </div>
         <!-- XP Progress Display -->
         <div
-          class="hover:border-primary/30 mt-1.5 cursor-pointer rounded border border-white/5 bg-white/[0.02] px-2 py-1 transition-all hover:bg-white/[0.04]"
+          class="hover:border-primary/30 mt-1.5 cursor-pointer rounded border border-white/5 bg-white/2 px-2 py-1 transition-all hover:bg-white/4"
           @click="navigateToSettings"
         >
           <div class="mb-0.5 flex items-center justify-between text-[0.6rem]">

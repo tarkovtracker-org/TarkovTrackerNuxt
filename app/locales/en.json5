@@ -500,6 +500,8 @@
       card_subtitle: 'Track your progress, share with friends, and coordinate raids',
       continue_twitch: 'Continue with Twitch',
       continue_discord: 'Continue with Discord',
+      continue_google: 'Continue with Google',
+      continue_github: 'Continue with GitHub',
       privacy_policy: 'Privacy Policy',
       terms_of_service: 'Terms of Service',
     },

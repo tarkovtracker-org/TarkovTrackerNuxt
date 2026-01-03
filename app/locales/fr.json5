@@ -414,6 +414,8 @@
       card_subtitle: 'Suivez votre progression, partagez avec vos amis et coordonnez vos raids',
       continue_twitch: 'Continuer avec Twitch',
       continue_discord: 'Continuer avec Discord',
+      continue_google: 'Continuer avec Google',
+      continue_github: 'Continuer avec GitHub',
       privacy_policy: 'Politique de confidentialité',
       terms_of_service: "Conditions d'utilisation",
     },

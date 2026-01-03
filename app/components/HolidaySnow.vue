@@ -1,5 +1,5 @@
 <template>
-  <div class="pointer-events-none fixed inset-0 z-[100] overflow-hidden" aria-hidden="true">
+  <div class="pointer-events-none fixed inset-0 z-100 overflow-hidden" aria-hidden="true">
     <div
       v-for="i in snowflakeCount"
       :key="i"

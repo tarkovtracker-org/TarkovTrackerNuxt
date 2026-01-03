@@ -107,7 +107,7 @@
               size="xs"
               color="neutral"
               variant="soft"
-              class="inline-flex max-w-[10rem] items-center gap-1 text-[11px]"
+              class="inline-flex max-w-40 items-center gap-1 text-[11px]"
             >
               <UIcon
                 :name="task?.map?.name ? 'i-mdi-map-marker' : 'i-mdi-earth'"

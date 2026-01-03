@@ -1,0 +1,22 @@
+name = "api-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+routes = [
+  { pattern = "tarkovtracker.org/api/v2/*", zone_name = "tarkovtracker.org" },
+  { pattern = "www.tarkovtracker.org/api/v2/*", zone_name = "tarkovtracker.org" },
+]
+
+[dev]
+port = 8787
+local_protocol = "http"
+ip = "0.0.0.0"
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "API_GATEWAY_KV"
+id = "1fb2cf9cc958412c97439298532e367d"
+
+[vars]
+ALLOWED_ORIGIN = "https://tarkovtracker.org,https://www.tarkovtracker.org,http://localhost:3000"

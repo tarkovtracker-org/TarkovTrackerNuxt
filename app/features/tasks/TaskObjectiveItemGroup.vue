@@ -25,7 +25,7 @@
           class="h-16 w-16 shrink-0 rounded-sm object-contain"
         />
         <AppTooltip :text="row.meta.itemName">
-          <span class="max-w-[12rem] truncate text-xs font-medium text-gray-100">
+          <span class="max-w-48 truncate text-xs font-medium text-gray-100">
             {{ row.meta.itemName }}
           </span>
         </AppTooltip>

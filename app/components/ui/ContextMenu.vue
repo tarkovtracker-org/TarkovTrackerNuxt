@@ -11,7 +11,7 @@
       <div
         v-if="visible"
         ref="menuRef"
-        class="context-menu fixed z-9999 min-w-[180px] overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+        class="context-menu fixed z-9999 min-w-45 overflow-hidden rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
         :style="{ top: `${y}px`, left: `${x}px` }"
         @click.stop
       >

@@ -121,7 +121,7 @@
           <label class="text-surface-200 text-sm font-semibold">
             {{ $t('settings.experience.set_total_xp', 'Set Total XP') }}
           </label>
-          <div class="flex items-center gap-2 max-w-xs">
+          <div class="flex max-w-xs items-center gap-2">
             <UInput
               v-model.number="manualXPInput"
               type="number"

@@ -18,6 +18,8 @@ export interface HydratableUser {
   lastLoginAt?: string | null;
   createdAt?: string | null;
   provider?: string | null;
+  /** All linked OAuth providers for this account */
+  providers?: string[] | null;
 }
 /**
  * Helper to safely extract a string value from user metadata
@@ -111,6 +113,18 @@ export function hydrateUserFromSession(user: HydratableUser, sessionUser: User |
   user.email = typeof sessionUser.email === 'string' ? sessionUser.email : null;
   if ('provider' in user) {
     user.provider = provider;
+  }
+  // Extract providers array (all linked OAuth providers)
+  if ('providers' in user) {
+    const providersArray = appMetadata.providers;
+    if (Array.isArray(providersArray)) {
+      user.providers = providersArray.filter((p): p is string => typeof p === 'string');
+    } else if (provider) {
+      // Fallback to single provider if providers array not available
+      user.providers = [provider];
+    } else {
+      user.providers = null;
+    }
   }
   let username: string | null = null;
   let displayName: string | null = null;

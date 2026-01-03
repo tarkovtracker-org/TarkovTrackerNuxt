@@ -235,11 +235,7 @@ export default defineEventHandler(async (event) => {
   const effectiveAllowedHosts = [...allowedHosts];
   if (effectiveAllowedHosts.length === 0 && !isDevelopment) {
     // Default production hosts
-    effectiveAllowedHosts.push(
-      'tarkovtracker.org',
-      'www.tarkovtracker.org',
-      'dev.tarkovtracker.org'
-    );
+    effectiveAllowedHosts.push('tarkovtracker.org', 'www.tarkovtracker.org');
   }
   // === SECURITY CHECK 1: Host Header Validation ===
   const hostHeader = getRequestHeader(event, 'host');

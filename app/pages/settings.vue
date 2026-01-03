@@ -381,16 +381,6 @@
             icon="i-mdi-lock"
             :title="$t('page.settings.card.apitokens.not_logged_in')"
           />
-          <div
-            class="from-primary-500/10 via-primary-500/5 to-primary-500/10 absolute inset-0 z-10 flex items-center justify-center bg-black/15 bg-gradient-to-b text-center backdrop-blur-[2px]"
-          >
-            <div class="rounded-lg bg-black/55 px-4 py-3 shadow-lg shadow-black/40">
-              <div class="text-xl font-semibold text-white">Work in Progress</div>
-              <div class="mt-1 text-sm text-slate-200">
-                API Tokens is not ready yet. Check back soon.
-              </div>
-            </div>
-          </div>
         </div>
       </template>
     </GenericCard>

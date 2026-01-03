@@ -372,6 +372,8 @@
       card_subtitle: 'Rastrea tu progreso, comparte con amigos y coordina incursiones',
       continue_twitch: 'Continuar con Twitch',
       continue_discord: 'Continuar con Discord',
+      continue_google: 'Continuar con Google',
+      continue_github: 'Continuar con GitHub',
       privacy_policy: 'Política de privacidad',
       terms_of_service: 'Términos de servicio',
     },

@@ -1,6 +1,7 @@
 import type { TarkovTaskObjectivesQueryResult } from '~/types/tarkov';
 import { createTarkovFetcher, edgeCache } from '~/server/utils/edgeCache';
 import { createLogger } from '~/server/utils/logger';
+import { applyOverlay } from '~/server/utils/overlay';
 import { TARKOV_TASKS_OBJECTIVES_QUERY } from '~/server/utils/tarkov-queries';
 import { API_SUPPORTED_LANGUAGES } from '~/utils/constants';
 type TarkovGraphqlResponse<T> = {
@@ -101,7 +102,12 @@ export default defineEventHandler(async (event) => {
       }
       throw error;
     }
-    return rawResponse;
+    try {
+      return await applyOverlay(rawResponse);
+    } catch (overlayError) {
+      logger.error('Failed to apply overlay:', overlayError);
+      throw overlayError;
+    }
   };
   return await edgeCache(event, cacheKey, fetcher, CACHE_TTL, { cacheKeyPrefix: 'tarkov' });
 });

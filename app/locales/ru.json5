@@ -394,6 +394,8 @@
       card_subtitle: 'Отслеживайте свой прогресс, делитесь с друзьями и координируйте рейды',
       continue_twitch: 'Продолжить с Twitch',
       continue_discord: 'Продолжить с Discord',
+      continue_google: 'Продолжить с Google',
+      continue_github: 'Продолжить с GitHub',
       privacy_policy: 'Политика конфиденциальности',
       terms_of_service: 'Условия использования',
     },

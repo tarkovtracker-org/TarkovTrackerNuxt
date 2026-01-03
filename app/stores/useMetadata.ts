@@ -342,6 +342,15 @@ export const useMetadataStore = defineStore('metadata', {
         try {
           this.updateLanguageAndGameMode();
           await this.loadStaticMapData();
+          // Quick cache check: if critical data is cached, set initialized=true immediately
+          // This prevents the loading screen from showing when we have valid cached data
+          if (typeof window !== 'undefined') {
+            const hasCachedData = await this.checkCriticalCacheExists();
+            if (hasCachedData) {
+              this.initialized = true;
+              logger.debug('[MetadataStore] Critical cache exists, skipping loading screen');
+            }
+          }
           await this.fetchAllData();
           this.initialized = true;
           this.initializationFailed = false;
@@ -381,6 +390,30 @@ export const useMetadataStore = defineStore('metadata', {
     async loadStaticMapData() {
       if (!this.staticMapData) {
         this.staticMapData = mapsData as unknown as StaticMapData;
+      }
+    },
+    /**
+     * Quick check if critical cached data exists (without loading it)
+     * Used to determine if we can skip the loading screen
+     */
+    async checkCriticalCacheExists(): Promise<boolean> {
+      try {
+        const apiGameMode =
+          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+          API_GAME_MODES[GAME_MODES.PVP];
+        // Check all critical cache entries in parallel
+        const [tasksCore, hideout, prestige, editions] = await Promise.all([
+          getCachedData<TarkovTasksCoreQueryResult>('tasks-core' as CacheType, apiGameMode, this.languageCode),
+          getCachedData<TarkovHideoutQueryResult>('hideout' as CacheType, apiGameMode, this.languageCode),
+          getCachedData<TarkovPrestigeQueryResult>('prestige' as CacheType, 'all', this.languageCode),
+          getCachedData<{ editions: GameEdition[] }>('editions' as CacheType, 'all', 'en'),
+        ]);
+        const hasCriticalCache = !!(tasksCore && hideout && prestige && editions);
+        logger.debug(`[MetadataStore] Critical cache check: ${hasCriticalCache ? 'ALL PRESENT' : 'MISSING'}`);
+        return hasCriticalCache;
+      } catch (err) {
+        logger.warn('[MetadataStore] Error checking critical cache:', err);
+        return false;
       }
     },
     /**
@@ -466,14 +499,13 @@ export const useMetadataStore = defineStore('metadata', {
      * Uses IndexedDB cache for client-side persistence
      */
     async fetchTasksCoreData(forceRefresh = false) {
-      this.loading = true;
       this.error = null;
-      try {
-        const apiGameMode =
-          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
-          API_GAME_MODES[GAME_MODES.PVP];
-        // Step 1: Check IndexedDB cache (unless forcing refresh)
-        if (!forceRefresh && typeof window !== 'undefined') {
+      const apiGameMode =
+        API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+        API_GAME_MODES[GAME_MODES.PVP];
+      // Step 1: Check IndexedDB cache BEFORE setting loading state (unless forcing refresh)
+      if (!forceRefresh && typeof window !== 'undefined') {
+        try {
           const cached = await getCachedData<TarkovTasksCoreQueryResult>(
             'tasks-core' as CacheType,
             apiGameMode,
@@ -484,11 +516,16 @@ export const useMetadataStore = defineStore('metadata', {
               `[MetadataStore] Task core loaded from cache: ${this.languageCode}-${apiGameMode}`
             );
             this.processTasksCoreData(cached);
-            this.loading = false;
             return;
           }
+        } catch (cacheErr) {
+          logger.warn('[MetadataStore] Cache read failed, falling back to server:', cacheErr);
         }
-        // Step 2: Fetch from server API
+      }
+      // Step 2: Only set loading=true when we actually need to fetch from server
+      this.loading = true;
+      try {
+        // Fetch from server API
         logger.debug(
           `[MetadataStore] Fetching task core from server: ${this.languageCode}-${apiGameMode}`
         );
@@ -663,15 +700,14 @@ export const useMetadataStore = defineStore('metadata', {
      * Uses IndexedDB cache for client-side persistence
      */
     async fetchHideoutData(forceRefresh = false) {
-      this.hideoutLoading = true;
       this.hideoutError = null;
-      try {
-        const apiGameMode =
-          API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
-          API_GAME_MODES[GAME_MODES.PVP];
-        // Step 1: Check IndexedDB cache (unless forcing refresh)
-        // Hideout data IS language-specific (station names, descriptions, item names, etc.)
-        if (!forceRefresh && typeof window !== 'undefined') {
+      const apiGameMode =
+        API_GAME_MODES[this.currentGameMode as keyof typeof API_GAME_MODES] ||
+        API_GAME_MODES[GAME_MODES.PVP];
+      // Step 1: Check IndexedDB cache BEFORE setting loading state (unless forcing refresh)
+      // Hideout data IS language-specific (station names, descriptions, item names, etc.)
+      if (!forceRefresh && typeof window !== 'undefined') {
+        try {
           const cached = await getCachedData<TarkovHideoutQueryResult>(
             'hideout' as CacheType,
             apiGameMode,
@@ -682,11 +718,16 @@ export const useMetadataStore = defineStore('metadata', {
               `[MetadataStore] Hideout loaded from cache: ${this.languageCode}-${apiGameMode}`
             );
             this.processHideoutData(cached);
-            this.hideoutLoading = false;
             return;
           }
+        } catch (cacheErr) {
+          logger.warn('[MetadataStore] Hideout cache read failed, falling back to server:', cacheErr);
         }
-        // Step 2: Fetch from server API
+      }
+      // Step 2: Only set loading=true when we actually need to fetch from server
+      this.hideoutLoading = true;
+      try {
+        // Fetch from server API
         logger.debug(
           `[MetadataStore] Fetching hideout from server: ${this.languageCode}-${apiGameMode}`
         );
@@ -730,11 +771,10 @@ export const useMetadataStore = defineStore('metadata', {
      * Items are language-specific but not game-mode specific
      */
     async fetchItemsData(forceRefresh = false) {
-      this.itemsLoading = true;
       this.itemsError = null;
-      try {
-        // Step 1: Check IndexedDB cache (unless forcing refresh)
-        if (!forceRefresh && typeof window !== 'undefined') {
+      // Step 1: Check IndexedDB cache BEFORE setting loading state (unless forcing refresh)
+      if (!forceRefresh && typeof window !== 'undefined') {
+        try {
           const cached = await getCachedData<TarkovItemsQueryResult>(
             'items' as CacheType,
             'all',
@@ -744,11 +784,16 @@ export const useMetadataStore = defineStore('metadata', {
             logger.debug(`[MetadataStore] Items loaded from cache: ${this.languageCode}`);
             this.items = cached.items || [];
             this.hydrateTaskItems();
-            this.itemsLoading = false;
             return;
           }
+        } catch (cacheErr) {
+          logger.warn('[MetadataStore] Items cache read failed, falling back to server:', cacheErr);
         }
-        // Step 2: Fetch from server API
+      }
+      // Step 2: Only set loading=true when we actually need to fetch from server
+      this.itemsLoading = true;
+      try {
+        // Fetch from server API
         logger.debug(`[MetadataStore] Fetching items from server: ${this.languageCode}`);
         const response = (await $fetch<{
           data: TarkovItemsQueryResult;
@@ -790,11 +835,10 @@ export const useMetadataStore = defineStore('metadata', {
      * Prestige is language-specific but NOT game-mode specific
      */
     async fetchPrestigeData(forceRefresh = false) {
-      this.prestigeLoading = true;
       this.prestigeError = null;
-      try {
-        // Step 1: Check IndexedDB cache (unless forcing refresh)
-        if (!forceRefresh && typeof window !== 'undefined') {
+      // Step 1: Check IndexedDB cache BEFORE setting loading state (unless forcing refresh)
+      if (!forceRefresh && typeof window !== 'undefined') {
+        try {
           const cached = await getCachedData<TarkovPrestigeQueryResult>(
             'prestige' as CacheType,
             'all',
@@ -803,11 +847,16 @@ export const useMetadataStore = defineStore('metadata', {
           if (cached) {
             logger.debug(`[MetadataStore] Prestige loaded from cache: ${this.languageCode}`);
             this.prestigeLevels = cached.prestige || [];
-            this.prestigeLoading = false;
             return;
           }
+        } catch (cacheErr) {
+          logger.warn('[MetadataStore] Prestige cache read failed, falling back to server:', cacheErr);
         }
-        // Step 2: Fetch from server API
+      }
+      // Step 2: Only set loading=true when we actually need to fetch from server
+      this.prestigeLoading = true;
+      try {
+        // Fetch from server API
         logger.debug(`[MetadataStore] Fetching prestige from server: ${this.languageCode}`);
         const response = (await $fetch<{
           data: TarkovPrestigeQueryResult;
@@ -848,11 +897,10 @@ export const useMetadataStore = defineStore('metadata', {
      * Uses IndexedDB cache for client-side persistence
      */
     async fetchEditionsData(forceRefresh = false) {
-      this.editionsLoading = true;
       this.editionsError = null;
-      try {
-        // Step 1: Check IndexedDB cache (unless forcing refresh)
-        if (!forceRefresh && typeof window !== 'undefined') {
+      // Step 1: Check IndexedDB cache BEFORE setting loading state (unless forcing refresh)
+      if (!forceRefresh && typeof window !== 'undefined') {
+        try {
           const cached = await getCachedData<{ editions: GameEdition[] }>(
             'editions' as CacheType,
             'all',
@@ -861,11 +909,16 @@ export const useMetadataStore = defineStore('metadata', {
           if (cached?.editions) {
             logger.debug('[MetadataStore] Editions loaded from cache');
             this.editions = cached.editions;
-            this.editionsLoading = false;
             return;
           }
+        } catch (cacheErr) {
+          logger.warn('[MetadataStore] Editions cache read failed, falling back to server:', cacheErr);
         }
-        // Step 2: Fetch directly from GitHub overlay
+      }
+      // Step 2: Only set loading=true when we actually need to fetch from server
+      this.editionsLoading = true;
+      try {
+        // Fetch directly from GitHub overlay
         logger.debug('[MetadataStore] Fetching editions from GitHub overlay');
         const OVERLAY_URL =
           'https://raw.githubusercontent.com/tarkovtracker-org/tarkov-data-overlay/main/dist/overlay.json';

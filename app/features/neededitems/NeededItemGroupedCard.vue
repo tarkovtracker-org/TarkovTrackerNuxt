@@ -49,7 +49,10 @@
     >
       <!-- Tasks section -->
       <div v-if="activeFilter !== 'hideout'" class="bg-gray-800 p-2">
-        <div v-if="activeFilter === 'all' || activeFilter === 'completed'" class="mb-1.5 flex items-center gap-1 text-gray-400">
+        <div
+          v-if="activeFilter === 'all' || activeFilter === 'completed'"
+          class="mb-1.5 flex items-center gap-1 text-gray-400"
+        >
           <UIcon name="i-mdi-clipboard-list" class="h-3.5 w-3.5" />
           <span class="font-medium">Tasks</span>
         </div>
@@ -108,7 +111,10 @@
       </div>
       <!-- Hideout section -->
       <div v-if="activeFilter !== 'tasks'" class="bg-gray-800 p-2">
-        <div v-if="activeFilter === 'all' || activeFilter === 'completed'" class="mb-1.5 flex items-center gap-1 text-gray-400">
+        <div
+          v-if="activeFilter === 'all' || activeFilter === 'completed'"
+          class="mb-1.5 flex items-center gap-1 text-gray-400"
+        >
           <UIcon name="i-mdi-home" class="h-3.5 w-3.5" />
           <span class="font-medium">Hideout</span>
         </div>

@@ -139,12 +139,25 @@
                 <div>
                   <div class="mb-2 flex items-center">
                     <UIcon name="i-mdi-login" class="mr-2 h-4.5 w-4.5 text-gray-400" />
-                    <span class="flex items-center text-sm">
-                      <span class="mr-2 text-gray-400">Auth Method:</span>
-                      <UBadge size="xs" :color="providerColor" variant="solid" class="text-white">
-                        <UIcon :name="providerIcon" class="mr-1 h-4 w-4" />
-                        {{ providerLabel }}
-                      </UBadge>
+                    <span class="flex flex-wrap items-center gap-1 text-sm">
+                      <span class="mr-1 text-gray-400">Auth Method:</span>
+                      <template v-if="providers.length > 0">
+                        <UBadge
+                          v-for="p in providers"
+                          :key="p"
+                          size="xs"
+                          :color="getProviderColor(p)"
+                          variant="solid"
+                          :class="[
+                            'text-white',
+                            p === 'github' && 'bg-[#24292e]! text-white!',
+                          ]"
+                        >
+                          <UIcon :name="getProviderIcon(p)" class="mr-1 h-4 w-4" />
+                          {{ getProviderLabel(p) }}
+                        </UBadge>
+                      </template>
+                      <span v-else class="text-gray-500">Unknown</span>
                     </span>
                   </div>
                   <div class="flex items-center">
@@ -380,33 +393,50 @@
     return Boolean($supabase?.user?.loggedIn);
   });
   // Safely extract provider information with proper typing
-  type AuthProvider = 'discord' | 'twitch' | null;
-  interface SupabaseUserWithProvider {
-    app_metadata?: { provider?: string };
-    provider?: string;
+  type AuthProvider = 'discord' | 'twitch' | 'google' | 'github';
+  interface UserWithProviders {
+    providers?: string[] | null;
+    provider?: string | null;
   }
-  const provider = computed<AuthProvider>(() => {
-    if (!$supabase?.user) return null;
-    const user = $supabase.user as SupabaseUserWithProvider;
-    const providerValue = user.app_metadata?.provider || user.provider;
-    if (providerValue === 'discord' || providerValue === 'twitch') {
-      return providerValue;
+  const providers = computed<AuthProvider[]>(() => {
+    if (!$supabase?.user) return [];
+    const user = $supabase.user as UserWithProviders;
+    // Use the hydrated providers array
+    const providersList = user.providers || [];
+    if (providersList.length > 0) {
+      return providersList.filter(
+        (p: string): p is AuthProvider =>
+          p === 'discord' || p === 'twitch' || p === 'google' || p === 'github'
+      );
     }
-    return null;
+    // Fallback to single provider
+    const providerValue = user.provider;
+    if (
+      providerValue === 'discord' ||
+      providerValue === 'twitch' ||
+      providerValue === 'google' ||
+      providerValue === 'github'
+    ) {
+      return [providerValue];
+    }
+    return [];
   });
-  const providerLabel = computed(() => {
-    if (!provider.value) return 'Unknown';
-    return provider.value.charAt(0).toUpperCase() + provider.value.slice(1);
-  });
-  const providerIcon = computed(() => {
-    if (provider.value === 'discord') return 'i-mdi-discord';
-    if (provider.value === 'twitch') return 'i-mdi-twitch';
+  const getProviderIcon = (provider: AuthProvider) => {
+    if (provider === 'discord') return 'i-mdi-discord';
+    if (provider === 'twitch') return 'i-mdi-twitch';
+    if (provider === 'google') return 'i-mdi-google';
+    if (provider === 'github') return 'i-mdi-github';
     return 'i-mdi-account';
-  });
-  const providerColor = computed(() => {
-    if (provider.value === 'discord') return 'primary';
+  };
+  const getProviderColor = (provider: AuthProvider) => {
+    if (provider === 'discord') return 'primary';
+    if (provider === 'google') return 'error';
+    if (provider === 'github') return 'neutral';
     return 'secondary';
-  });
+  };
+  const getProviderLabel = (provider: AuthProvider) => {
+    return provider.charAt(0).toUpperCase() + provider.slice(1);
+  };
   const hasOwnedTeams = computed(() => {
     if (!isLoggedIn.value) return false;
     return teamStore.$state.team && teamStore.$state.team.owner === $supabase.user.id;
@@ -440,12 +470,23 @@
     isDeleting.value = true;
     deleteError.value = '';
     try {
-      const { data: sessionData } = await $supabase.client.auth.getSession();
+      const { data: sessionData, error: sessionError } = await $supabase.client.auth.getSession();
+      if (sessionError) {
+        logger.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
       if (!sessionData.session) {
         throw new Error('You must be logged in to delete your account.');
       }
+      // Refresh the session to ensure we have a valid token
+      const { error: refreshError } = await $supabase.client.auth.refreshSession();
+      if (refreshError) {
+        logger.warn('Session refresh warning:', refreshError);
+        // Continue anyway - the existing session might still be valid
+      }
       const { data, error } = await $supabase.client.functions.invoke('account-delete');
       if (error) {
+        logger.error('Edge function error:', error);
         throw error;
       }
       if (data?.success) {

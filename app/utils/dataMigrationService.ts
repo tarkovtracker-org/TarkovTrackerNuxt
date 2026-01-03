@@ -8,6 +8,7 @@ import {
   normalizePMCFaction,
 } from '@/utils/constants';
 import { logger } from '@/utils/logger';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
 // import { defaultState, migrateToGameModeStructure } from "@/stores/progressState";
 // Compute default edition index once at module scope (constant value)
 const DEFAULT_EDITION_INDEX = Math.max(
@@ -51,7 +52,7 @@ export interface ProgressData {
   sourceDomain?: string;
   [key: string]: unknown;
 }
-const LOCAL_PROGRESS_KEY = 'progress';
+const LOCAL_PROGRESS_KEY = STORAGE_KEYS.progress;
 /**
  * Service to handle migration of local data to a user's Supabase account
  * Also includes validation utilities for progress data
@@ -382,7 +383,7 @@ export default class DataMigrationService {
         return false;
       }
       // Backup local data
-      const backupKey = `progress_backup_${new Date().toISOString()}`;
+      const backupKey = `${STORAGE_KEYS.progressBackupPrefix}${new Date().toISOString()}`;
       try {
         localStorage.setItem(backupKey, JSON.stringify(localData));
       } catch (backupError) {

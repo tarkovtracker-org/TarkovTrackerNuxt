@@ -448,6 +448,8 @@
       card_subtitle: 'Verfolge deinen Fortschritt, teile mit Freunden und koordiniere Raids',
       continue_twitch: 'Mit Twitch fortfahren',
       continue_discord: 'Mit Discord fortfahren',
+      continue_google: 'Mit Google fortfahren',
+      continue_github: 'Mit GitHub fortfahren',
       privacy_policy: 'Datenschutzrichtlinie',
       terms_of_service: 'Nutzungsbedingungen',
     },

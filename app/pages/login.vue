@@ -26,7 +26,7 @@
             variant="solid"
             class="flex h-12 w-full items-center justify-center border-none bg-[#9146FF] text-white transition-colors hover:bg-[#9146FF]/90"
             :loading="loading.twitch"
-            :disabled="loading.twitch || loading.discord"
+            :disabled="loading.twitch || loading.discord || loading.google || loading.github"
             @click="signInWithTwitch"
           >
             <UIcon name="i-mdi-twitch" class="mr-3 h-6 w-6 shrink-0 text-white" />
@@ -40,12 +40,40 @@
             variant="solid"
             class="flex h-12 w-full items-center justify-center border-none bg-[#5865F2] text-white transition-colors hover:bg-[#5865F2]/90"
             :loading="loading.discord"
-            :disabled="loading.twitch || loading.discord"
+            :disabled="loading.twitch || loading.discord || loading.google || loading.github"
             @click="signInWithDiscord"
           >
             <UIcon name="i-mdi-controller" class="mr-3 h-6 w-6 shrink-0 text-white" />
             <span class="font-medium whitespace-nowrap text-white">
               {{ $t('page.login.continue_discord') }}
+            </span>
+          </UButton>
+          <UButton
+            block
+            size="xl"
+            variant="solid"
+            class="flex h-12 w-full items-center justify-center border-none bg-white text-gray-700 transition-colors hover:bg-gray-100"
+            :loading="loading.google"
+            :disabled="loading.twitch || loading.discord || loading.google || loading.github"
+            @click="signInWithGoogle"
+          >
+            <UIcon name="i-mdi-google" class="mr-3 h-6 w-6 shrink-0 text-gray-700" />
+            <span class="font-medium whitespace-nowrap text-gray-700">
+              {{ $t('page.login.continue_google') }}
+            </span>
+          </UButton>
+          <UButton
+            block
+            size="xl"
+            variant="solid"
+            class="flex h-12 w-full items-center justify-center border-none bg-[#24292e] text-white transition-colors hover:bg-[#24292e]/90"
+            :loading="loading.github"
+            :disabled="loading.twitch || loading.discord || loading.google || loading.github"
+            @click="signInWithGitHub"
+          >
+            <UIcon name="i-mdi-github" class="mr-3 h-6 w-6 shrink-0 text-white" />
+            <span class="font-medium whitespace-nowrap text-white">
+              {{ $t('page.login.continue_github') }}
             </span>
           </UButton>
         </div>
@@ -90,13 +118,15 @@
   const loading = ref({
     twitch: false,
     discord: false,
+    google: false,
+    github: false,
   });
   const buildCallbackUrl = () => {
     const config = useRuntimeConfig();
     const origin = typeof window !== 'undefined' ? window.location.origin : config.public.appUrl;
     return `${origin}/auth/callback`;
   };
-  const openPopupOrRedirect = (url: string, provider: 'twitch' | 'discord') => {
+  const openPopupOrRedirect = (url: string, provider: 'twitch' | 'discord' | 'google' | 'github') => {
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
@@ -164,6 +194,38 @@
     } catch (error) {
       logger.error('[Login] Discord sign in error:', error);
       loading.value.discord = false;
+    }
+  };
+  const signInWithGoogle = async () => {
+    try {
+      loading.value.google = true;
+      const callbackUrl = buildCallbackUrl();
+      const data = await $supabase.signInWithOAuth('google', {
+        skipBrowserRedirect: true,
+        redirectTo: callbackUrl,
+      });
+      if (data?.url) {
+        openPopupOrRedirect(data.url, 'google');
+      }
+    } catch (error) {
+      logger.error('[Login] Google sign in error:', error);
+      loading.value.google = false;
+    }
+  };
+  const signInWithGitHub = async () => {
+    try {
+      loading.value.github = true;
+      const callbackUrl = buildCallbackUrl();
+      const data = await $supabase.signInWithOAuth('github', {
+        skipBrowserRedirect: true,
+        redirectTo: callbackUrl,
+      });
+      if (data?.url) {
+        openPopupOrRedirect(data.url, 'github');
+      }
+    } catch (error) {
+      logger.error('[Login] GitHub sign in error:', error);
+      loading.value.github = false;
     }
   };
 </script>

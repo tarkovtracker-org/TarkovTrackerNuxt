@@ -4,6 +4,7 @@ import { watch } from 'vue';
 import { useSupabaseSync } from '@/composables/supabase/useSupabaseSync';
 import { pinia as pluginPinia } from '@/plugins/01.pinia.client';
 import { logger } from '@/utils/logger';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { useNuxtApp } from '#imports';
 // Define the state structure
 export interface PreferencesState {
@@ -381,7 +382,7 @@ export const usePreferencesStore = defineStore('preferences', {
   },
   // Enable automatic localStorage persistence
   persist: {
-    key: 'preferences', // LocalStorage key for user preference data
+    key: STORAGE_KEYS.preferences, // LocalStorage key for user preference data
     storage: typeof window !== 'undefined' ? localStorage : undefined,
     // Use serializer instead of paths for selective persistence
     serializer: {

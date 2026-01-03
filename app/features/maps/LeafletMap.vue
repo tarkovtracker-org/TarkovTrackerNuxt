@@ -3,7 +3,7 @@
     <!-- Unavailable map placeholder -->
     <div
       v-if="isMapUnavailable"
-      class="bg-surface-900 flex h-[400px] w-full flex-col items-center justify-center rounded sm:h-[500px] lg:h-[600px]"
+      class="bg-surface-900 flex h-100 w-full flex-col items-center justify-center rounded sm:h-125 lg:h-150"
     >
       <UIcon name="i-mdi-map-marker-off" class="mb-4 h-16 w-16 text-gray-500" />
       <h3 class="mb-2 text-lg font-semibold text-gray-300">Map Not Available</h3>
@@ -17,7 +17,7 @@
       <!-- Floor selector (positioned below Leaflet zoom controls) -->
       <div
         v-if="hasMultipleFloors"
-        class="bg-surface-800/90 absolute top-20 left-2 z-[1000] flex flex-col gap-1 rounded p-1.5"
+        class="bg-surface-800/90 absolute top-20 left-2 z-1000 flex flex-col gap-1 rounded p-1.5"
       >
         <span class="px-1 text-[10px] font-medium tracking-wide text-gray-400 uppercase">
           Floors
@@ -40,12 +40,12 @@
       <!-- Loading indicator -->
       <div
         v-if="isLoading"
-        class="bg-surface-900/50 absolute inset-0 z-[1001] flex items-center justify-center"
+        class="bg-surface-900/50 absolute inset-0 z-1001 flex items-center justify-center"
       >
         <UIcon name="i-mdi-loading" class="text-primary-500 h-8 w-8 animate-spin" />
       </div>
       <!-- Map controls (top right) -->
-      <div class="bg-surface-800/90 absolute top-2 right-2 z-[1000] flex gap-2 rounded p-1.5">
+      <div class="bg-surface-800/90 absolute top-2 right-2 z-1000 flex gap-2 rounded p-1.5">
         <!-- Reset view button -->
         <UButton
           color="primary"
@@ -82,7 +82,7 @@
       <!-- Map container -->
       <div
         ref="mapContainer"
-        class="bg-surface-900 h-[400px] w-full rounded sm:h-[500px] lg:h-[600px]"
+        class="bg-surface-900 h-100 w-full rounded sm:h-125 lg:h-150"
       />
       <!-- Legends Footer -->
       <div class="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-4">
@@ -122,7 +122,6 @@
             <span>Co-op Extract (PMC + Scav)</span>
           </div>
         </div>
-
         <!-- Controls Legend -->
         <div
           class="ml-auto flex flex-wrap-reverse items-center justify-end gap-x-4 gap-y-1 text-[10px] font-medium text-gray-400"

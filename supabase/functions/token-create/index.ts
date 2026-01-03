@@ -8,10 +8,11 @@ import {
   type AuthSuccess,
 } from "../_shared/auth.ts"
 
-const generateToken = () => {
-  const bytes = crypto.getRandomValues(new Uint8Array(32))
+const generateToken = (gameMode: string) => {
+  const bytes = crypto.getRandomValues(new Uint8Array(9))
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
-  return `tt_${hex}`
+  const prefix = gameMode === "pve" ? "PVE" : "PVP"
+  return `${prefix}_${hex}`
 }
 
 const hashToken = async (token: string) => {
@@ -52,7 +53,7 @@ serve(async (req) => {
       return createErrorResponse("gameMode and permissions are required", 400, req)
     }
 
-    if (!tokenValue) tokenValue = generateToken()
+    if (!tokenValue) tokenValue = generateToken(gameMode)
     const tokenHash = await hashToken(tokenValue)
 
     const insertBody: Record<string, unknown> = {
