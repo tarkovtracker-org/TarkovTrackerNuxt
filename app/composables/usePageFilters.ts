@@ -382,9 +382,12 @@ export function usePageFilters<C extends FilterConfig>(
   };
 
   /**
-   * Persist URL params to storage on mount and route changes.
-   * This ensures "last view is remembered" regardless of how user got there
-   * (click, shared link, bookmark, history navigation).
+   * Persist URL params to storage on route changes.
+   * This ensures "last view is remembered" when user explicitly visits a URL with params
+   * (click on filter, shared link, bookmark).
+   * 
+   * IMPORTANT: Only persist explicit URL params. When URL has no params,
+   * we should NOT overwrite stored prefs - the restoration logic will handle it.
    */
   watch(
     () => route.query,
@@ -392,13 +395,21 @@ export function usePageFilters<C extends FilterConfig>(
       for (const [key, paramConfig] of Object.entries(config)) {
         if (paramConfig.onUpdate) {
           const urlValue = route.query[key] as string | undefined;
-          const parsedValue = parseValue(key as keyof C, urlValue);
-          paramConfig.onUpdate(parsedValue);
+          // Only persist if there's an explicit URL value (not empty/undefined)
+          if (urlValue !== undefined && urlValue !== null && urlValue !== '') {
+            const parsedValue = parseValue(key as keyof C, urlValue);
+            paramConfig.onUpdate(parsedValue);
+            console.log(`[usePageFilters] persisted ${key}=${parsedValue}`);
+          }
         }
       }
     },
     { immediate: true }
   );
+
+  // NOTE: Preference restoration is now handled by nav links pre-computing URLs
+  // with stored preferences (via getPreferredNavUrl in DrawerItem.vue).
+  // This eliminates the "one-two" flash and avoids history manipulation issues.
 
   return {
     filters,

@@ -1,10 +1,10 @@
 <template>
   <li>
-    <!-- Internal navigation link - middleware handles preference restoration -->
+    <!-- Internal navigation link - URL includes stored preferences to avoid flash -->
     <component
       :is="linkComponent"
       v-if="props.to && !props.href"
-      :to="props.to"
+      :to="computedNavUrl"
       class="group flex cursor-pointer items-center rounded-md px-3 py-2.5 text-base font-medium transition-colors duration-150"
       :class="[
         isActive
@@ -119,6 +119,7 @@
   import { computed, resolveComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
+  import { getPreferredNavUrl } from '@/composables/usePageFilterRegistry';
   
   const { t } = useI18n({ useScope: 'global' });
   const route = useRoute();
@@ -188,8 +189,23 @@
   });
   
   /**
+   * Compute the navigation URL based on current location:
+   * - If already on this page: return base path (reset to defaults)
+   * - If navigating from elsewhere: include stored preferences in URL
+   * This eliminates the "one-two" flash and allows re-clicking to reset.
+   */
+  const computedNavUrl = computed(() => {
+    if (!props.to) return null;
+    // If already on this page, clicking again should reset to defaults
+    if (route.path === props.to) {
+      return props.to;
+    }
+    // Navigating from another page: include stored filter preferences
+    return getPreferredNavUrl(props.to);
+  });
+  
+  /**
    * Use NuxtLink component for navigation.
-   * Nav links always use clean paths - middleware handles preference restoration.
    */
   const linkComponent = resolveComponent('NuxtLink');
   

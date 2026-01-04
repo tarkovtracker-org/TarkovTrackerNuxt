@@ -412,6 +412,8 @@
   );
 
   // When entering single-task mode, scroll to top and auto-set map view if task has map objectives
+  // IMPORTANT: Use router.replace (not setFilters) to avoid creating duplicate history entries.
+  // The user navigated to /tasks?task=xxx - any auto-adjustments should replace, not push.
   watch(singleTaskId, (taskId, oldTaskId) => {
     if (!taskId) return;
 
@@ -420,13 +422,20 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Auto-set status to 'all' so task is visible regardless of completion state
-    if (filters.status.value !== 'all') {
-      setFilter('status', 'all');
-    }
-
     // Find the task and determine best map to show
     const task = tasks.value.find((t) => t.id === taskId);
+    
+    // Build the replacement query - start with current query params
+    const newQuery: Record<string, string> = {};
+    for (const [key, value] of Object.entries(router.currentRoute.value.query)) {
+      if (typeof value === 'string') {
+        newQuery[key] = value;
+      }
+    }
+    
+    // Always set status to 'all' so task is visible regardless of completion state
+    newQuery.status = 'all';
+    
     if (task && Array.isArray(task.objectives)) {
       const mapIncompleteStatus = new Map<string, boolean>();
       const orderedMapIds: string[] = [];
@@ -466,14 +475,25 @@
 
       if (targetMap) {
         // Task has map objectives - switch to maps view with that map
-        setFilters({ view: 'maps', map: targetMap });
+        newQuery.view = 'maps';
+        newQuery.map = targetMap;
+        // Clear trader param since we're switching to maps view
+        delete newQuery.trader;
       } else {
-        // Task has no map objectives
-        setFilter('view', 'all');
+        // Task has no displayable map objectives
+        newQuery.view = 'all';
+        delete newQuery.map;
+        delete newQuery.trader;
       }
     } else {
-      setFilter('view', 'all');
+      // Task not found or has no objectives
+      newQuery.view = 'all';
+      delete newQuery.map;
+      delete newQuery.trader;
     }
+    
+    // Replace the current URL in place (no new history entry)
+    router.replace({ query: newQuery });
   });
 
   // Clear single task filter
