@@ -80,10 +80,7 @@
         </UButton>
       </div>
       <!-- Map container -->
-      <div
-        ref="mapContainer"
-        class="bg-surface-900 h-100 w-full rounded sm:h-125 lg:h-150"
-      />
+      <div ref="mapContainer" class="bg-surface-900 h-100 w-full rounded sm:h-125 lg:h-150" />
       <!-- Legends Footer -->
       <div class="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-4">
         <!-- Main Objective Legend -->

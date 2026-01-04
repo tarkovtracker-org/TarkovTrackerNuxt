@@ -100,6 +100,20 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
   const teamStore = useTeamStore();
   const { $supabase } = useNuxtApp();
   const teamChannel = ref<RealtimeChannel | null>(null);
+  let lastMembersRefreshAt = 0;
+  let refreshInFlight: Promise<void> | null = null;
+  let lastProgressSnapshot: {
+    mode: 'pvp' | 'pve';
+    displayName: string | null;
+    level: number | null;
+    tasksCompleted: number;
+  } | null = null;
+  let taskBroadcastInitialized = false;
+  const pendingTaskUpdates = new Map<
+    string,
+    { userId: string; gameMode: 'pvp' | 'pve'; taskId: string; complete: boolean; failed: boolean }
+  >();
+  let taskBroadcastTimer: ReturnType<typeof setTimeout> | null = null;
   // Computed reference to the team document based on system store
   const teamFilter = computed(() => {
     const currentSystemStateTeam = getTeamIdFromSystemStore(systemStore);
@@ -146,7 +160,15 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
       teamChannel.value = null;
     }
   };
-  const refreshMembers = async () => {
+  const refreshMembers = async (force = false) => {
+    if (refreshInFlight) {
+      await refreshInFlight;
+      return;
+    }
+    const now = Date.now();
+    if (!force && now - lastMembersRefreshAt < 2000) {
+      return;
+    }
     const currentTeamId = getTeamIdFromSystemStore(systemStore);
     if (!currentTeamId) {
       teamStore.$patch((state) => {
@@ -157,14 +179,20 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
       return;
     }
     try {
-      const { getTeamMembers } = useEdgeFunctions();
-      const result = await getTeamMembers(currentTeamId);
-      teamStore.$patch((state) => {
-        state.members = result?.members || [];
-        state.memberProfiles = result?.profiles || {};
-      });
+      refreshInFlight = (async () => {
+        const { getTeamMembers } = useEdgeFunctions();
+        const result = await getTeamMembers(currentTeamId);
+        teamStore.$patch((state) => {
+          state.members = result?.members || [];
+          state.memberProfiles = result?.profiles || {};
+        });
+      })();
+      await refreshInFlight;
     } catch (error) {
       logger.warn('[TeamStore] Failed to load team members:', error);
+    } finally {
+      lastMembersRefreshAt = Date.now();
+      refreshInFlight = null;
     }
   };
   const setupMembershipSubscription = () => {
@@ -236,7 +264,7 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
   watch(
     teamFilter,
     async () => {
-      await refreshMembers();
+      await refreshMembers(true);
       setupMembershipSubscription();
     },
     { immediate: true }
@@ -266,6 +294,23 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
       if (!currentTeamId || !teamChannel.value || !$supabase.user?.id) {
         return;
       }
+      const existingProfile = teamStore.memberProfiles?.[$supabase.user.id as string];
+      const snapshotMatches =
+        lastProgressSnapshot &&
+        lastProgressSnapshot.mode === snapshot.mode &&
+        lastProgressSnapshot.displayName === snapshot.displayName &&
+        lastProgressSnapshot.level === snapshot.level &&
+        lastProgressSnapshot.tasksCompleted === snapshot.tasksCompleted;
+      const profileMatches =
+        existingProfile &&
+        existingProfile.displayName === snapshot.displayName &&
+        existingProfile.level === snapshot.level &&
+        existingProfile.tasksCompleted === snapshot.tasksCompleted &&
+        existingProfile.gameMode === snapshot.mode;
+      if (snapshotMatches && profileMatches) {
+        return;
+      }
+      lastProgressSnapshot = { ...snapshot };
       void teamChannel.value.send({
         type: 'broadcast',
         event: 'progress',
@@ -304,28 +349,49 @@ export function useTeamStoreWithSupabase(): TeamStoreInstance {
       return { mode, taskCompletions: modeState?.taskCompletions || {} };
     },
     (newVal) => {
+      if (!taskBroadcastInitialized) {
+        prevTaskCompletions = { ...newVal.taskCompletions };
+        taskBroadcastInitialized = true;
+        return;
+      }
       const currentTeamId = getTeamIdFromSystemStore(systemStore);
       if (!currentTeamId || !teamChannel.value || !$supabase.user?.id) {
         prevTaskCompletions = { ...newVal.taskCompletions };
         return;
       }
+      const scheduleBroadcastFlush = () => {
+        if (taskBroadcastTimer) return;
+        taskBroadcastTimer = setTimeout(() => {
+          taskBroadcastTimer = null;
+          if (!teamChannel.value) {
+            pendingTaskUpdates.clear();
+            return;
+          }
+          for (const update of pendingTaskUpdates.values()) {
+            void teamChannel.value.send({
+              type: 'broadcast',
+              event: 'task-update',
+              payload: update,
+            });
+          }
+          pendingTaskUpdates.clear();
+        }, 500);
+      };
       // Find changed tasks
       for (const [taskId, completion] of Object.entries(newVal.taskCompletions)) {
         const prev = prevTaskCompletions[taskId];
         if (!prev || prev.complete !== completion?.complete || prev.failed !== completion?.failed) {
-          // Broadcast the change immediately
-          void teamChannel.value.send({
-            type: 'broadcast',
-            event: 'task-update',
-            payload: {
-              userId: $supabase.user.id,
-              gameMode: newVal.mode,
-              taskId,
-              complete: completion?.complete ?? false,
-              failed: completion?.failed ?? false,
-            },
+          pendingTaskUpdates.set(taskId, {
+            userId: $supabase.user.id,
+            gameMode: newVal.mode,
+            taskId,
+            complete: completion?.complete ?? false,
+            failed: completion?.failed ?? false,
           });
         }
+      }
+      if (pendingTaskUpdates.size > 0) {
+        scheduleBroadcastFlush();
       }
       prevTaskCompletions = { ...newVal.taskCompletions };
     },

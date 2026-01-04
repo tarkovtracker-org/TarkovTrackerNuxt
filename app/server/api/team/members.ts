@@ -27,22 +27,29 @@ export default defineEventHandler(async (event) => {
   if (!teamId) {
     throw createError({ statusCode: 400, statusMessage: 'teamId is required' });
   }
-  const authHeader = getRequestHeader(event, 'authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw createError({ statusCode: 401, statusMessage: 'Missing auth token' });
+  const authContextUser = (event.context as { auth?: { user?: { id?: string } } }).auth?.user;
+  let userId = authContextUser?.id || null;
+  if (!userId) {
+    const authHeader = getRequestHeader(event, 'authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw createError({ statusCode: 401, statusMessage: 'Missing auth token' });
+    }
+    // Validate token -> user via auth endpoint
+    const authResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: authHeader,
+        apikey: supabaseAnonKey,
+      },
+    });
+    if (!authResp.ok) {
+      throw createError({ statusCode: 401, statusMessage: 'Invalid token' });
+    }
+    const user = (await authResp.json()) as { id: string };
+    userId = user.id;
   }
-  // Validate token -> user via auth endpoint
-  const authResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: {
-      Authorization: authHeader,
-      apikey: supabaseAnonKey,
-    },
-  });
-  if (!authResp.ok) {
+  if (!userId) {
     throw createError({ statusCode: 401, statusMessage: 'Invalid token' });
   }
-  const user = (await authResp.json()) as { id: string };
-  const userId = user.id;
   // Ensure caller is member
   const membershipResp = await restFetch(
     `team_memberships?team_id=eq.${teamId}&user_id=eq.${userId}&select=user_id&limit=1`

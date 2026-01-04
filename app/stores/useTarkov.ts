@@ -15,6 +15,7 @@ import type { Task } from '@/types/tarkov';
 import { GAME_MODES, type GameMode } from '@/utils/constants';
 import { logger } from '@/utils/logger';
 import { STORAGE_KEYS } from '@/utils/storageKeys';
+import { useToast } from '#imports';
 // Create a type that extends UserState with Pinia store methods
 type TarkovStoreInstance = UserState & {
   $state: UserState;
@@ -640,18 +641,81 @@ export const useTarkovStore = defineStore('swapTarkov', {
 export type TarkovStore = ReturnType<typeof useTarkovStore>;
 // Store reference to sync controller for pause/resume during resets
 let syncController: ReturnType<typeof useSupabaseSync> | null = null;
+let syncUserId: string | null = null;
+let pendingSyncWatchStop: (() => void) | null = null;
+let hasShownLocalIgnoreToast = false;
 export function getSyncController() {
   return syncController;
+}
+export function resetTarkovSync(reason?: string) {
+  if (syncController) {
+    logger.debug(`[TarkovStore] Clearing Supabase sync${reason ? ` (${reason})` : ''}`);
+    syncController.cleanup();
+    syncController = null;
+  }
+  if (pendingSyncWatchStop) {
+    pendingSyncWatchStop();
+    pendingSyncWatchStop = null;
+  }
+  syncUserId = null;
+  hasShownLocalIgnoreToast = false;
 }
 export async function initializeTarkovSync() {
   const tarkovStore = useTarkovStore();
   const { $supabase } = useNuxtApp();
   if (import.meta.client && $supabase.user.loggedIn) {
+    const currentUserId = $supabase.user.id;
     if (syncController) {
-      logger.debug('[TarkovStore] Supabase sync already initialized, skipping');
-      return;
+      if (syncUserId === currentUserId) {
+        logger.debug('[TarkovStore] Supabase sync already initialized, skipping');
+        return;
+      }
+      logger.warn('[TarkovStore] Supabase sync user changed; resetting');
+      resetTarkovSync('user changed');
     }
     logger.debug('[TarkovStore] Setting up Supabase sync and listener');
+    const getLocalStorageMeta = () => {
+      if (typeof window === 'undefined') return null;
+      const raw = localStorage.getItem(STORAGE_KEYS.progress);
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw) as
+          | { _userId?: string | null; _timestamp?: number; data?: unknown }
+          | Record<string, unknown>;
+        if (parsed && typeof parsed === 'object' && 'data' in parsed) {
+          return {
+            storedUserId: (parsed as { _userId?: string | null })._userId ?? null,
+            timestamp:
+              typeof (parsed as { _timestamp?: number })._timestamp === 'number'
+                ? (parsed as { _timestamp?: number })._timestamp
+                : null,
+          };
+        }
+        // Old format without wrapper (treat as guest/unknown)
+        return { storedUserId: null, timestamp: null };
+      } catch {
+        return null;
+      }
+    };
+    const notifyLocalIgnored = (description: string) => {
+      if (!import.meta.client || hasShownLocalIgnoreToast) return;
+      const toast = useToast();
+      toast.add({
+        title: 'Local progress ignored',
+        description,
+        color: 'warning',
+      });
+      hasShownLocalIgnoreToast = true;
+    };
+    const resetStoreToDefault = () => {
+      const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
+      tarkovStore.$patch((state) => {
+        state.currentGameMode = freshDefaultState.currentGameMode;
+        state.gameEdition = freshDefaultState.gameEdition;
+        state.pvp = freshDefaultState.pvp;
+        state.pve = freshDefaultState.pve;
+      });
+    };
     // Helper to check if data has meaningful progress
     const hasProgress = (data: unknown) => {
       const state = data as UserState;
@@ -669,9 +733,32 @@ export async function initializeTarkovSync() {
       return pvpHasData || pveHasData;
     };
     const loadData = async (): Promise<{ ok: boolean; hadRemoteData: boolean }> => {
+      const localMeta = getLocalStorageMeta();
+      const storedUserId = localMeta?.storedUserId ?? null;
+      const localTimestamp = localMeta?.timestamp ?? null;
+      const hasLocalPersistence = Boolean(localMeta);
+      if (storedUserId && storedUserId !== currentUserId) {
+        logger.warn('[TarkovStore] Local progress belongs to a different user; clearing');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEYS.progress);
+        }
+        resetStoreToDefault();
+        notifyLocalIgnored(
+          'Local progress belongs to another account and was not applied to protect your cloud data.'
+        );
+      }
       // Get current localStorage state (loaded by persist plugin)
-      const localState = tarkovStore.$state;
-      const hasLocalProgress = hasProgress(localState);
+      let localState = tarkovStore.$state;
+      let hasLocalProgress = hasProgress(localState);
+      if (hasLocalProgress && !hasLocalPersistence) {
+        logger.warn('[TarkovStore] Local progress exists in memory without persistence; resetting');
+        resetStoreToDefault();
+        localState = tarkovStore.$state;
+        hasLocalProgress = hasProgress(localState);
+        notifyLocalIgnored(
+          'Found temporary local progress that was not saved to your device; cloud progress was kept.'
+        );
+      }
       const progressScore = (state: UserState): number => {
         const scoreMode = (mode: UserProgressData | undefined) => {
           if (!mode) return 0;
@@ -719,8 +806,23 @@ export async function initializeTarkovSync() {
       const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
       const localScore = progressScore(localState);
       if (data) {
+        const remoteUpdatedAt = data.updated_at ? Date.parse(data.updated_at) : null;
+        const localOwnedByUser = storedUserId === currentUserId;
+        if (hasLocalProgress && !localOwnedByUser && storedUserId === null) {
+          notifyLocalIgnored(
+            'Found local guest progress on this device; your cloud progress was kept.'
+          );
+        }
+        let shouldPreferLocal = false;
+        if (localOwnedByUser && localTimestamp && remoteUpdatedAt) {
+          shouldPreferLocal = localTimestamp > remoteUpdatedAt;
+        } else if (localOwnedByUser && localTimestamp && !remoteUpdatedAt) {
+          shouldPreferLocal = localScore > remoteScore;
+        } else if (localOwnedByUser && !localTimestamp && !remoteUpdatedAt) {
+          shouldPreferLocal = localScore > remoteScore;
+        }
         // If local has more progress than remote, protect local and push it to Supabase.
-        if (localScore > remoteScore) {
+        if (shouldPreferLocal) {
           logger.warn('[TarkovStore] Local progress ahead of Supabase; preserving local data', {
             localScore,
             remoteScore,
@@ -740,7 +842,7 @@ export async function initializeTarkovSync() {
           logger.debug('[TarkovStore] Loading data from Supabase (user exists in DB)');
           tarkovStore.$patch(normalizedRemote!);
         }
-      } else if (hasLocalProgress) {
+      } else if (hasLocalProgress && hasLocalPersistence) {
         // No Supabase record at all, but localStorage has progress - migrate it
         logger.debug('[TarkovStore] Migrating localStorage data to Supabase');
         const migrateData = {
@@ -778,10 +880,15 @@ export async function initializeTarkovSync() {
     tarkovStore.repairCompletedTaskObjectives();
     const startSync = () => {
       if (syncController) return;
+      if (pendingSyncWatchStop) {
+        pendingSyncWatchStop();
+        pendingSyncWatchStop = null;
+      }
+      syncUserId = currentUserId ?? null;
       syncController = useSupabaseSync({
         store: tarkovStore,
         table: 'user_progress',
-        debounceMs: 250,
+        debounceMs: 1000,
         transform: (state: unknown) => {
           const userState = state as UserState;
           return {
@@ -807,11 +914,11 @@ export async function initializeTarkovSync() {
         (state) => {
           if (hasProgress(state)) {
             startSync();
-            stopWatch();
           }
         },
         { deep: true }
       );
+      pendingSyncWatchStop = stopWatch;
     }
   }
 }

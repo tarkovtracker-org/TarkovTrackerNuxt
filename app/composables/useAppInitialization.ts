@@ -1,7 +1,7 @@
 import { onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@/stores/usePreferences';
-import { initializeTarkovSync, useTarkovStore } from '@/stores/useTarkov';
+import { initializeTarkovSync, resetTarkovSync, useTarkovStore } from '@/stores/useTarkov';
 import { logger } from '@/utils/logger';
 /**
  * Handles app-level initialization:
@@ -39,9 +39,22 @@ export function useAppInitialization() {
   };
   // React to authentication changes so login-after-load users get sync/migration too
   watch(
-    () => $supabase.user.loggedIn,
-    async (loggedIn) => {
-      if (!loggedIn) return;
+    () => [$supabase.user.loggedIn, $supabase.user.id] as const,
+    async ([loggedIn, userId], previous) => {
+      const [prevLoggedIn, prevUserId] = previous ?? [false, null];
+      if (!loggedIn) {
+        if (prevLoggedIn) {
+          resetTarkovSync('logout');
+        }
+        syncStarted = false;
+        migrationAttempted = false;
+        return;
+      }
+      if (prevUserId && userId && prevUserId !== userId) {
+        resetTarkovSync('user switched');
+        syncStarted = false;
+        migrationAttempted = false;
+      }
       await startSyncIfNeeded();
       await runMigrationIfNeeded();
     },

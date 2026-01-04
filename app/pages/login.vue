@@ -126,7 +126,10 @@
     const origin = typeof window !== 'undefined' ? window.location.origin : config.public.appUrl;
     return `${origin}/auth/callback`;
   };
-  const openPopupOrRedirect = (url: string, provider: 'twitch' | 'discord' | 'google' | 'github') => {
+  const openPopupOrRedirect = (
+    url: string,
+    provider: 'twitch' | 'discord' | 'google' | 'github'
+  ) => {
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;

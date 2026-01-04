@@ -3,9 +3,7 @@ import { reactive } from 'vue';
 import { logger } from '@/utils/logger';
 import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { hydrateUserFromSession } from '@/utils/userHydration';
-
 type OAuthProvider = 'twitch' | 'discord' | 'google' | 'github';
-
 type SupabaseUser = {
   id: string | null;
   loggedIn: boolean;

@@ -403,13 +403,27 @@ export const useMetadataStore = defineStore('metadata', {
           API_GAME_MODES[GAME_MODES.PVP];
         // Check all critical cache entries in parallel
         const [tasksCore, hideout, prestige, editions] = await Promise.all([
-          getCachedData<TarkovTasksCoreQueryResult>('tasks-core' as CacheType, apiGameMode, this.languageCode),
-          getCachedData<TarkovHideoutQueryResult>('hideout' as CacheType, apiGameMode, this.languageCode),
-          getCachedData<TarkovPrestigeQueryResult>('prestige' as CacheType, 'all', this.languageCode),
+          getCachedData<TarkovTasksCoreQueryResult>(
+            'tasks-core' as CacheType,
+            apiGameMode,
+            this.languageCode
+          ),
+          getCachedData<TarkovHideoutQueryResult>(
+            'hideout' as CacheType,
+            apiGameMode,
+            this.languageCode
+          ),
+          getCachedData<TarkovPrestigeQueryResult>(
+            'prestige' as CacheType,
+            'all',
+            this.languageCode
+          ),
           getCachedData<{ editions: GameEdition[] }>('editions' as CacheType, 'all', 'en'),
         ]);
         const hasCriticalCache = !!(tasksCore && hideout && prestige && editions);
-        logger.debug(`[MetadataStore] Critical cache check: ${hasCriticalCache ? 'ALL PRESENT' : 'MISSING'}`);
+        logger.debug(
+          `[MetadataStore] Critical cache check: ${hasCriticalCache ? 'ALL PRESENT' : 'MISSING'}`
+        );
         return hasCriticalCache;
       } catch (err) {
         logger.warn('[MetadataStore] Error checking critical cache:', err);
@@ -721,7 +735,10 @@ export const useMetadataStore = defineStore('metadata', {
             return;
           }
         } catch (cacheErr) {
-          logger.warn('[MetadataStore] Hideout cache read failed, falling back to server:', cacheErr);
+          logger.warn(
+            '[MetadataStore] Hideout cache read failed, falling back to server:',
+            cacheErr
+          );
         }
       }
       // Step 2: Only set loading=true when we actually need to fetch from server
@@ -850,7 +867,10 @@ export const useMetadataStore = defineStore('metadata', {
             return;
           }
         } catch (cacheErr) {
-          logger.warn('[MetadataStore] Prestige cache read failed, falling back to server:', cacheErr);
+          logger.warn(
+            '[MetadataStore] Prestige cache read failed, falling back to server:',
+            cacheErr
+          );
         }
       }
       // Step 2: Only set loading=true when we actually need to fetch from server
@@ -912,7 +932,10 @@ export const useMetadataStore = defineStore('metadata', {
             return;
           }
         } catch (cacheErr) {
-          logger.warn('[MetadataStore] Editions cache read failed, falling back to server:', cacheErr);
+          logger.warn(
+            '[MetadataStore] Editions cache read failed, falling back to server:',
+            cacheErr
+          );
         }
       }
       // Step 2: Only set loading=true when we actually need to fetch from server

@@ -30,7 +30,6 @@
         </span>
       </UButton>
     </div>
-
     <!-- Unified Filter Bar: Search + Filters + Views -->
     <div
       class="flex flex-col gap-3 rounded-lg bg-[hsl(240,5%,5%)] p-3 sm:flex-row sm:items-center sm:p-4"
@@ -60,7 +59,6 @@
           </template>
         </UInput>
       </div>
-
       <!-- Right side controls -->
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <!-- Item count badge -->
@@ -70,10 +68,8 @@
           </template>
           <template v-else>{{ totalCount }} {{ $t('page.neededitems.items', 'items') }}</template>
         </UBadge>
-
         <!-- Divider (hidden on mobile) -->
         <div class="hidden h-6 w-px bg-white/10 sm:block" />
-
         <!-- Filters Popover -->
         <UPopover>
           <UButton
@@ -83,7 +79,9 @@
             size="sm"
             class="shrink-0"
           >
-            <span class="hidden sm:inline">{{ $t('page.neededitems.filters.label', 'Filters') }}</span>
+            <span class="hidden sm:inline">
+              {{ $t('page.neededitems.filters.label', 'Filters') }}
+            </span>
             <UBadge
               v-if="activeFiltersCount > 0"
               color="primary"
@@ -187,10 +185,8 @@
             </div>
           </template>
         </UPopover>
-
         <!-- Divider (hidden on mobile) -->
         <div class="hidden h-6 w-px bg-white/10 sm:block" />
-
         <!-- View Mode Buttons -->
         <div class="flex gap-1">
           <UButton

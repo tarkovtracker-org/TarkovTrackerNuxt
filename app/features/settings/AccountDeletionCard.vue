@@ -148,10 +148,7 @@
                           size="xs"
                           :color="getProviderColor(p)"
                           variant="solid"
-                          :class="[
-                            'text-white',
-                            p === 'github' && 'bg-[#24292e]! text-white!',
-                          ]"
+                          :class="['text-white', p === 'github' && 'bg-[#24292e]! text-white!']"
                         >
                           <UIcon :name="getProviderIcon(p)" class="mr-1 h-4 w-4" />
                           {{ getProviderLabel(p) }}
