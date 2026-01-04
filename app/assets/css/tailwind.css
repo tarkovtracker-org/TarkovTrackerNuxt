@@ -343,9 +343,9 @@ select:disabled,
 
   /* --- Rewards --- */
   --color-reward-item: var(--color-surface-300);
-  --color-reward-item-text: var(--color-surface-500); /* Semantic text for light mode */
+  --color-reward-item-text: var(--color-surface-500);
   --color-reward-skill: var(--color-success-600);
-  --color-reward-trader: var(--color-warning-600);
+  --color-reward-trader: var(--color-warning-500);
   --color-reward-xp: var(--color-accent-600);
 
   /* --- Map Markers --- */
@@ -808,22 +808,20 @@ select:disabled,
   }
 
   /* --- Soft Task Status Badges --- */
+  /* Complete, Failed, Available: Use Tailwind opacity pattern for vibrant colors */
   .badge-soft-task-complete {
-    background-color: color-mix(in srgb, var(--color-task-complete), white 85%);
-    color: var(--color-task-complete);
+    @apply bg-success-100 text-success-700;
   }
   .dark .badge-soft-task-complete {
-    background-color: color-mix(in srgb, var(--color-task-complete), transparent 80%);
-    color: var(--color-task-complete);
+    @apply bg-success-500/20 text-success-400;
   }
   .badge-soft-task-failed {
-    background-color: color-mix(in srgb, var(--color-task-failed), white 85%);
-    color: var(--color-task-failed);
+    @apply bg-error-100 text-error-700;
   }
   .dark .badge-soft-task-failed {
-    background-color: color-mix(in srgb, var(--color-task-failed), transparent 80%);
-    color: var(--color-task-failed);
+    @apply bg-error-500/20 text-error-400;
   }
+  /* Blocked, Locked: Keep color-mix for intentionally muted/gray appearance */
   .badge-soft-task-blocked {
     background-color: color-mix(in srgb, var(--color-task-blocked), white 85%);
     color: var(--color-task-blocked);
@@ -833,12 +831,10 @@ select:disabled,
     color: var(--color-task-blocked);
   }
   .badge-soft-task-available {
-    background-color: color-mix(in srgb, var(--color-task-available), white 85%);
-    color: var(--color-task-available);
+    @apply bg-accent-100 text-accent-700;
   }
   .dark .badge-soft-task-available {
-    background-color: color-mix(in srgb, var(--color-task-available), transparent 80%);
-    color: var(--color-task-available);
+    @apply bg-accent-500/20 text-accent-400;
   }
   .badge-soft-task-locked {
     background-color: color-mix(in srgb, var(--color-task-locked), white 85%);
