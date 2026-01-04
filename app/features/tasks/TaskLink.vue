@@ -75,5 +75,5 @@
     const avatar = props.task?.trader?.imageLink;
     return typeof avatar === 'string' && avatar.trim().length > 0 ? avatar : fallbackAvatar;
   });
-  const taskHref = computed(() => `/tasks?task=${props.task?.id}`);
+  const taskHref = computed(() => `/tasks?task=${props.task?.id}&status=all`);
 </script>

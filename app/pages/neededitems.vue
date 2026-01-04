@@ -108,7 +108,7 @@
   import { computed, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
-  import { useViewState } from '@/composables/useViewState';
+  import { usePageFilters } from '@/composables/usePageFilters';
   import NeededItem from '@/features/neededitems/NeededItem.vue';
   import { isNonFirSpecialEquipment } from '@/features/neededitems/neededItemFilters';
   import NeededItemGroupedCard from '@/features/neededitems/NeededItemGroupedCard.vue';
@@ -132,36 +132,70 @@
   const tarkovStore = useTarkovStore();
   const { neededItemTaskObjectives, neededItemHideoutModules } = storeToRefs(metadataStore);
 
-  // View mode state: 'list' or 'grid'
-  const viewMode = ref<'list' | 'grid'>('grid');
-  // Filter state
+  // URL-based filter state
   type FilterType = 'all' | 'tasks' | 'hideout' | 'completed';
   type FirFilter = 'all' | 'fir' | 'non-fir';
-  const activeFilter = ref<FilterType>('all');
+  type ViewMode = 'list' | 'grid';
 
-  // Browser history support for main filter controls
-  useViewState({
-    params: {
-      filter: {
-        get: () => activeFilter.value,
-        set: (v) => { activeFilter.value = v as FilterType; },
-        default: 'all',
-        validate: (v) => ['all', 'tasks', 'hideout', 'completed'].includes(v),
-      },
-      viewMode: {
-        get: () => viewMode.value,
-        set: (v) => { viewMode.value = v as 'list' | 'grid'; },
-        default: 'grid',
-        validate: (v) => ['list', 'grid'].includes(v),
-      },
+  const { filters, setFilter, debouncedInputs } = usePageFilters({
+    filter: {
+      default: 'all',
+      validate: (v) => ['all', 'tasks', 'hideout', 'completed'].includes(v),
     },
+    viewMode: {
+      default: 'grid',
+      validate: (v) => ['list', 'grid'].includes(v),
+    },
+    fir: {
+      default: 'all',
+      validate: (v) => ['all', 'fir', 'non-fir'].includes(v),
+    },
+    grouped: {
+      default: false,
+      parse: (v) => v === '1',
+      serialize: (v) => v ? '1' : null,
+    },
+    kappa: {
+      default: false,
+      parse: (v) => v === '1',
+      serialize: (v) => v ? '1' : null,
+    },
+    hideSpecial: {
+      default: false,
+      parse: (v) => v === '1',
+      serialize: (v) => v ? '1' : null,
+    },
+    search: { default: '', debounceMs: 300 },
   });
-  const search = ref('');
-  const firFilter = ref<FirFilter>('all');
-  const groupByItem = ref(false);
-  const hideNonFirSpecialEquipment = ref(false);
-  const kappaOnly = ref(false);
-  // Team filter preferences (two-way binding with preferences store)
+
+  // Computed aliases for template bindings
+  const activeFilter = computed({
+    get: () => filters.filter.value as FilterType,
+    set: (v: FilterType) => setFilter('filter', v),
+  });
+  const viewMode = computed({
+    get: () => filters.viewMode.value as ViewMode,
+    set: (v: ViewMode) => setFilter('viewMode', v),
+  });
+  const firFilter = computed({
+    get: () => filters.fir.value as FirFilter,
+    set: (v: FirFilter) => setFilter('fir', v),
+  });
+  const groupByItem = computed({
+    get: () => filters.grouped.value as boolean,
+    set: (v: boolean) => setFilter('grouped', v),
+  });
+  const kappaOnly = computed({
+    get: () => filters.kappa.value as boolean,
+    set: (v: boolean) => setFilter('kappa', v),
+  });
+  const hideNonFirSpecialEquipment = computed({
+    get: () => filters.hideSpecial.value as boolean,
+    set: (v: boolean) => setFilter('hideSpecial', v),
+  });
+  const search = debouncedInputs.search!;
+
+  // Team filter preferences (two-way binding with preferences store - not in URL)
   const hideTeamItems = computed({
     get: () => preferencesStore.itemsTeamAllHidden,
     set: (value) => preferencesStore.setItemsTeamHideAll(value),

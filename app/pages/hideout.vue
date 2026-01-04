@@ -49,10 +49,10 @@
   import { storeToRefs } from 'pinia';
   import { computed, defineAsyncComponent, nextTick, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRouter } from 'vue-router';
   import FilterPill from '@/components/FilterPill.vue';
   import { useHideoutFiltering } from '@/composables/useHideoutFiltering';
-  import { useViewState } from '@/composables/useViewState';
+  import { usePageFilters } from '@/composables/usePageFilters';
   import { useMetadataStore } from '@/stores/useMetadata';
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useProgressStore } from '@/stores/useProgress';
@@ -64,7 +64,6 @@
   });
   const HideoutCard = defineAsyncComponent(() => import('@/features/hideout/HideoutCard.vue'));
   const RefreshButton = defineAsyncComponent(() => import('@/components/ui/RefreshButton.vue'));
-  const route = useRoute();
   const router = useRouter();
   const { t } = useI18n({ useScope: 'global' });
   const metadataStore = useMetadataStore();
@@ -76,16 +75,27 @@
   const { activePrimaryView, isStoreLoading, visibleStations, stationCounts } =
     useHideoutFiltering();
 
-  // Browser history support for view filter
-  useViewState({
-    params: {
-      view: {
-        get: () => preferencesStore.getHideoutPrimaryView,
-        set: (v) => preferencesStore.setHideoutPrimaryView(v),
-        default: 'available',
-        validate: (v) => ['all', 'available', 'maxed', 'locked'].includes(v),
-      },
+  // URL-based filter state
+  const { filters, setFilter } = usePageFilters({
+    view: {
+      default: 'available',
+      validate: (v) => ['all', 'available', 'maxed', 'locked'].includes(v),
     },
+    station: { default: '' }, // Deep-link to specific station
+  });
+
+  // Sync URL filter to activePrimaryView (from useHideoutFiltering)
+  watch(filters.view, (newView) => {
+    if (newView !== activePrimaryView.value) {
+      activePrimaryView.value = newView;
+    }
+  }, { immediate: true });
+
+  // Sync activePrimaryView changes back to URL
+  watch(activePrimaryView, (newView) => {
+    if (newView !== filters.view.value) {
+      setFilter('view', newView);
+    }
   });
   const primaryViews = computed(() => [
     {
@@ -159,8 +169,7 @@
       }
     }, 100);
   };
-  const handleStationQueryParam = () => {
-    const stationId = route.query.station as string;
+  const handleStationQueryParam = (stationId: string) => {
     if (!stationId || isStoreLoading.value) return;
     // Determine station status and set appropriate filter
     const status = getStationStatus(stationId);
@@ -169,15 +178,15 @@
     }
     // Scroll to the station after filters are applied
     scrollToStation(stationId);
-    // Clear the query param to avoid re-triggering on filter changes
-    router.replace({ path: '/hideout', query: {} });
+    // Clear the station param after handling
+    setFilter('station', '');
   };
-  // Watch for station query param and handle it when data is loaded
+  // Watch for station filter and handle it when data is loaded
   watch(
-    [() => route.query.station, isStoreLoading],
-    ([stationQueryParam, loading]) => {
-      if (stationQueryParam && !loading) {
-        handleStationQueryParam();
+    [filters.station, () => isStoreLoading.value],
+    ([stationId, loading]) => {
+      if (stationId && !loading) {
+        handleStationQueryParam(stationId);
       }
     },
     { immediate: true }

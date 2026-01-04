@@ -181,7 +181,7 @@
         <FilterPill
           v-for="mapOption in mapOptions"
           :key="mapOption.value"
-          :active="preferencesStore.getTaskMapView === mapOption.value"
+          :active="mapView === mapOption.value"
           :label="mapOption.label"
           :count="mapOption.count ?? 0"
           label-class="whitespace-nowrap"
@@ -197,7 +197,7 @@
         <FilterPill
           v-for="trader in traders"
           :key="trader.id"
-          :active="preferencesStore.getTaskTraderView === trader.id"
+          :active="traderView === trader.id"
           :label="trader.name"
           :count="traderCounts[trader.id] ?? 0"
           label-class="whitespace-nowrap"
@@ -230,13 +230,23 @@
   import { usePreferencesStore } from '@/stores/usePreferences';
   import { useProgressStore } from '@/stores/useProgress';
   import { useTeamStore } from '@/stores/useTeamStore';
-  defineProps<{
+  const props = defineProps<{
     searchQuery: string;
     singleTaskId: string | null;
+    // Filter values (from URL)
+    primaryView: string;
+    secondaryView: string;
+    mapView: string;
+    traderView: string;
   }>();
-  defineEmits<{
+  const emit = defineEmits<{
     'update:searchQuery': [value: string];
     'clearSingleTask': [];
+    // Filter change events
+    'update:primaryView': [value: string];
+    'update:secondaryView': [value: string];
+    'update:mapView': [value: string];
+    'update:traderView': [value: string];
   }>();
   const { t } = useI18n({ useScope: 'global' });
   const preferencesStore = usePreferencesStore();
@@ -291,33 +301,15 @@
       preferencesStore.getTaskSecondaryView
     );
   });
-  // Primary view (all / maps / traders)
-  const primaryView = computed(() => preferencesStore.getTaskPrimaryView);
+  // Primary view (all / maps / traders) - now from props, emit changes
+  const primaryView = computed(() => props.primaryView);
   const setPrimaryView = (view: string) => {
-    preferencesStore.setTaskPrimaryView(view);
-    // When switching to maps, ensure a map is selected
-    if (view === 'maps' && maps.value.length > 0 && preferencesStore.getTaskMapView === 'all') {
-      const firstMap = maps.value[0];
-      if (firstMap?.id) {
-        preferencesStore.setTaskMapView(firstMap.id);
-      }
-    }
-    // When switching to traders, ensure a trader is selected
-    if (
-      view === 'traders' &&
-      traders.value.length > 0 &&
-      preferencesStore.getTaskTraderView === 'all'
-    ) {
-      const firstTrader = traders.value[0];
-      if (firstTrader?.id) {
-        preferencesStore.setTaskTraderView(firstTrader.id);
-      }
-    }
+    emit('update:primaryView', view);
   };
-  // Secondary view (available / locked / completed)
-  const secondaryView = computed(() => preferencesStore.getTaskSecondaryView);
+  // Secondary view (available / locked / completed) - now from props
+  const secondaryView = computed(() => props.secondaryView);
   const setSecondaryView = (view: string) => {
-    preferencesStore.setTaskSecondaryView(view);
+    emit('update:secondaryView', view);
   };
   // Map selection
   const mapOptions = computed(() => {
@@ -330,13 +322,13 @@
   });
   const onMapSelect = (selected: { label: string; value: string }) => {
     if (selected?.value) {
-      preferencesStore.setTaskMapView(selected.value);
+      emit('update:mapView', selected.value);
     }
   };
   // Trader selection
   const onTraderSelect = (selected: { label: string; value: string }) => {
     if (selected?.value) {
-      preferencesStore.setTaskTraderView(selected.value);
+      emit('update:traderView', selected.value);
     }
   };
   // User view selection (yourself / all team members)

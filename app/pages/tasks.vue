@@ -7,7 +7,15 @@
         <TaskFilterBar
           v-model:search-query="searchQuery"
           :single-task-id="singleTaskId"
+          :primary-view="getTaskPrimaryView"
+          :secondary-view="getTaskSecondaryView"
+          :map-view="getTaskMapView"
+          :trader-view="getTaskTraderView"
           @clear-single-task="clearSingleTaskFilter"
+          @update:primary-view="handlePrimaryViewChange"
+          @update:secondary-view="(v) => setFilters({ status: v, task: null })"
+          @update:map-view="(v) => setFilters({ map: v, task: null })"
+          @update:trader-view="(v) => setFilters({ trader: v, task: null })"
         />
         <!-- Map Display (shown when MAPS view is selected) -->
         <div v-if="showMapDisplay" class="mb-6">
@@ -100,13 +108,13 @@
 </template>
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRouter } from 'vue-router';
   import { useInfiniteScroll } from '@/composables/useInfiniteScroll';
+  import { usePageFilters } from '@/composables/usePageFilters';
   import { useTarkovTime } from '@/composables/useTarkovTime';
   import { useTaskFiltering } from '@/composables/useTaskFiltering';
-  import { useViewState } from '@/composables/useViewState';
   import TaskCard from '@/features/tasks/TaskCard.vue';
   import TaskEmptyState from '@/features/tasks/TaskEmptyState.vue';
   import TaskLoadingState from '@/features/tasks/TaskLoadingState.vue';
@@ -124,16 +132,11 @@
     description:
       'Track your Escape from Tarkov quest progress. View quest objectives, rewards, and dependencies for both PVP and PVE game modes.',
   });
-  const route = useRoute();
   const router = useRouter();
   const { t } = useI18n({ useScope: 'global' });
   const preferencesStore = usePreferencesStore();
   const {
-    getTaskPrimaryView,
-    getTaskSecondaryView,
     getTaskUserView,
-    getTaskMapView,
-    getTaskTraderView,
     getHideNonKappaTasks,
     getShowNonSpecialTasks,
     getShowLightkeeperTasks,
@@ -149,33 +152,77 @@
   const tarkovStore = useTarkovStore();
   const { tarkovTime } = useTarkovTime();
 
-  // Browser history support for main filter bar controls
-  useViewState({
-    params: {
-      view: {
-        get: () => preferencesStore.getTaskPrimaryView,
-        set: (v) => preferencesStore.setTaskPrimaryView(v),
-        default: 'all',
-        validate: (v) => ['all', 'maps', 'traders'].includes(v),
-      },
-      status: {
-        get: () => preferencesStore.getTaskSecondaryView,
-        set: (v) => preferencesStore.setTaskSecondaryView(v),
-        default: 'available',
-        validate: (v) => ['all', 'available', 'locked', 'completed', 'failed'].includes(v),
-      },
-      map: {
-        get: () => preferencesStore.getTaskMapView,
-        set: (v) => preferencesStore.setTaskMapView(v),
-        default: 'all',
-      },
-      trader: {
-        get: () => preferencesStore.getTaskTraderView,
-        set: (v) => preferencesStore.setTaskTraderView(v),
-        default: 'all',
-      },
+  // URL-based filter state (URL is single source of truth)
+  const { filters, setFilter, setFilters, debouncedInputs } = usePageFilters({
+    view: {
+      default: 'all',
+      validate: (v) => ['all', 'maps', 'traders'].includes(v),
     },
+    status: {
+      default: 'available',
+      validate: (v) => ['all', 'available', 'locked', 'completed', 'failed'].includes(v),
+    },
+    map: { default: 'all' },
+    trader: { default: 'all' },
+    task: { default: '' }, // Single-task mode
+    search: { default: '', debounceMs: 300 },
   });
+
+  // Computed aliases for cleaner template/code access
+  const getTaskPrimaryView = filters.view;
+  const getTaskSecondaryView = filters.status;
+  const getTaskMapView = filters.map;
+  const getTaskTraderView = filters.trader;
+  const singleTaskId = computed(() => {
+    const taskId = filters.task.value;
+    if (!taskId) return null;
+    // Validate that the task exists in metadata
+    const taskExists = tasks.value.some((t) => t.id === taskId);
+    return taskExists ? taskId : null;
+  });
+  const searchQuery = debouncedInputs.search!;
+
+  // Handle primary view changes with scoped URL params + localStorage persistence
+  // - URL only contains params relevant to current view
+  // - Switching views saves outgoing state to localStorage and restores incoming state
+  const VIEW_STORAGE_KEYS = {
+    maps: 'tarkovTracker.tasks.lastMap',
+    traders: 'tarkovTracker.tasks.lastTrader',
+  } as const;
+
+  const handlePrimaryViewChange = (view: string) => {
+    const currentView = getTaskPrimaryView.value;
+
+    // Save outgoing view's state to localStorage before switching
+    if (currentView === 'maps' && getTaskMapView.value !== 'all') {
+      localStorage.setItem(VIEW_STORAGE_KEYS.maps, getTaskMapView.value);
+    } else if (currentView === 'traders' && getTaskTraderView.value !== 'all') {
+      localStorage.setItem(VIEW_STORAGE_KEYS.traders, getTaskTraderView.value);
+    }
+
+    // Build updates with ONLY params scoped to the target view
+    // Also clear task param to exit single-task mode
+    const updates: Record<string, string | null> = {
+      view,
+      task: null, // Exit single-task mode
+      // Clear params not relevant to target view
+      map: null,
+      trader: null,
+    };
+
+    // Restore target view's state from localStorage (or use first item as fallback)
+    if (view === 'maps') {
+      const lastMap = localStorage.getItem(VIEW_STORAGE_KEYS.maps);
+      const validMap = lastMap && maps.value.some((m) => m.id === lastMap);
+      updates.map = validMap ? lastMap : maps.value[0]?.id ?? 'all';
+    } else if (view === 'traders') {
+      const lastTrader = localStorage.getItem(VIEW_STORAGE_KEYS.traders);
+      const validTrader = lastTrader && metadataStore.sortedTraders.some((t) => t.id === lastTrader);
+      updates.trader = validTrader ? lastTrader : metadataStore.sortedTraders[0]?.id ?? 'all';
+    }
+
+    setFilters(updates);
+  };
   // Maps with static/fixed raid times (don't follow normal day/night cycle)
   const STATIC_TIME_MAPS: Record<string, string> = {
     '55f2d3fd4bdc2d5f408b4567': '15:28 / 03:28', // Factory
@@ -356,84 +403,49 @@
   const isLoading = computed(
     () => !metadataStore.hasInitialized || tasksLoading.value || reloadingTasks.value
   );
-  // Search state
-  const searchQuery = ref('');
-  // Single-task mode: when ?task=<taskId> is present, show only that task
-  const singleTaskId = computed(() => {
-    const taskId = route.query.task as string | undefined;
-    if (!taskId) return null;
-    // Validate that the task exists in metadata
-    const taskExists = tasks.value.some((t) => t.id === taskId);
-    return taskExists ? taskId : null;
-  });
 
-  // Timestamp from route to detect re-clicks on the same task
-  const navigationTimestamp = computed(() => route.query._t as string | undefined);
-
-  // Flag to track when we're programmatically changing filters (to avoid triggering single-task clear)
-  const isProgrammaticFilterChange = ref(false);
-
-  // Flag to track when a task action is in progress (complete, uncomplete, etc.)
-  // This prevents filter watchers from incorrectly clearing single-task mode
-  const isTaskActionInProgress = ref(false);
-
-  // Store previous view state to restore when exiting single-task mode
-  const previousViewState = ref<{
-    primaryView: string;
-    secondaryView: string;
-    mapView: string;
-    traderView: string;
-  } | null>(null);
-
-  // When entering single-task mode (or re-clicking same task), configure view settings
-  watch([singleTaskId, navigationTimestamp], ([taskId, _timestamp], [oldTaskId, _oldTimestamp]) => {
+  // When entering single-task mode, scroll to top and auto-set map view if task has map objectives
+  watch(singleTaskId, (taskId, oldTaskId) => {
     if (!taskId) return;
 
-    isProgrammaticFilterChange.value = true;
-
-    // Only scroll to top when genuinely entering single-task mode (not on re-clicks or state updates)
+    // Scroll to top when entering single-task mode
     if (!oldTaskId) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Store current view state before changing (only if not already in single-task mode)
-    if (!oldTaskId) {
-      previousViewState.value = {
-        primaryView: getTaskPrimaryView.value,
-        secondaryView: getTaskSecondaryView.value,
-        mapView: getTaskMapView.value,
-        traderView: getTaskTraderView.value,
-      };
+    // Auto-set status to 'all' so task is visible regardless of completion state
+    if (filters.status.value !== 'all') {
+      setFilter('status', 'all');
     }
 
-    // Always set secondary view to 'all' so the task is visible regardless of status
-    if (getTaskSecondaryView.value !== 'all') {
-      preferencesStore.setTaskSecondaryView('all');
-    }
-
-    // Find the task to check for related maps
+    // Find the task and determine best map to show
     const task = tasks.value.find((t) => t.id === taskId);
-    let targetMap: string | undefined;
-
     if (task && Array.isArray(task.objectives)) {
-      // Build a map of mapId -> hasIncompleteObjective
       const mapIncompleteStatus = new Map<string, boolean>();
       const orderedMapIds: string[] = [];
 
       for (const obj of task.objectives) {
         if (!Array.isArray(obj.maps)) continue;
-
         const isComplete = tarkovStore.isTaskObjectiveComplete(obj.id);
+
+        // Cast to access location properties
+        const objectiveWithLocations = obj as typeof obj & {
+          zones?: Array<{ map?: { id: string }; outline?: unknown[]; position?: unknown }>;
+          possibleLocations?: Array<{ map?: { id: string }; positions?: unknown[] }>;
+        };
+
+        // Only consider objectives that have actual displayable location data
+        const hasLocationData = 
+          (Array.isArray(objectiveWithLocations.zones) && objectiveWithLocations.zones.length > 0) ||
+          (Array.isArray(objectiveWithLocations.possibleLocations) && objectiveWithLocations.possibleLocations.length > 0);
+
+        if (!hasLocationData) continue;
 
         for (const objMap of obj.maps) {
           if (!objMap?.id) continue;
-
-          // Track map order (first occurrence)
           if (!orderedMapIds.includes(objMap.id)) {
             orderedMapIds.push(objMap.id);
           }
-
-          // Mark map as having incomplete objective if any objective is incomplete
           if (!isComplete) {
             mapIncompleteStatus.set(objMap.id, true);
           } else if (!mapIncompleteStatus.has(objMap.id)) {
@@ -442,72 +454,24 @@
         }
       }
 
-      // Find first map with an incomplete objective, otherwise use first map
       const firstIncompleteMap = orderedMapIds.find((id) => mapIncompleteStatus.get(id) === true);
-      targetMap = firstIncompleteMap ?? orderedMapIds[0];
+      const targetMap = firstIncompleteMap ?? orderedMapIds[0];
 
       if (targetMap) {
-        // Task has map objectives - switch to maps view
-        preferencesStore.setTaskPrimaryView('maps');
-        preferencesStore.setTaskMapView(targetMap);
-
-        // Update URL with map parameter for persistence (without triggering navigation)
-        const currentQuery = { ...route.query };
-        if (currentQuery.map !== targetMap) {
-          router.replace({ query: { ...currentQuery, map: targetMap } });
-        }
+        // Task has map objectives - switch to maps view with that map
+        setFilters({ view: 'maps', map: targetMap });
       } else {
-        // Task has no map objectives - use 'all' view
-        preferencesStore.setTaskPrimaryView('all');
+        // Task has no map objectives
+        setFilter('view', 'all');
       }
     } else {
-      // Task not found or has no objectives - use 'all' view
-      preferencesStore.setTaskPrimaryView('all');
+      setFilter('view', 'all');
     }
-
-    // Reset flag after the reactive update propagates
-    nextTick(() => {
-      isProgrammaticFilterChange.value = false;
-    });
   });
 
-  // Clear single-task filter when user interacts with any filter
-  watch(
-    [
-      getTaskPrimaryView,
-      getTaskSecondaryView,
-      getTaskMapView,
-      getTaskTraderView,
-      getTaskUserView,
-      searchQuery,
-    ],
-    () => {
-      // Skip if we're programmatically changing filters or if a task action is in progress
-      if (isProgrammaticFilterChange.value || isTaskActionInProgress.value) {
-        return;
-      }
-      // If we're in single-task mode and the user changed a filter, clear the query param
-      if (route.query.task) {
-        // Restore previous view state if available
-        if (previousViewState.value) {
-          isProgrammaticFilterChange.value = true;
-          preferencesStore.setTaskPrimaryView(previousViewState.value.primaryView);
-          preferencesStore.setTaskSecondaryView(previousViewState.value.secondaryView);
-          preferencesStore.setTaskMapView(previousViewState.value.mapView);
-          preferencesStore.setTaskTraderView(previousViewState.value.traderView);
-          previousViewState.value = null;
-          nextTick(() => {
-            isProgrammaticFilterChange.value = false;
-          });
-        }
-        // Use push for browser history support
-        router.push({ path: '/tasks', query: {} });
-      }
-    }
-  );
-  // Clear single task filter and return to normal view
+  // Clear single task filter
   const clearSingleTaskFilter = () => {
-    router.push({ path: '/tasks', query: {} });
+    setFilter('task', '');
   };
   // Filter tasks by search query OR single-task mode
   const filteredTasks = computed(() => {
@@ -638,9 +602,6 @@
     undoKey?: string;
     statusKey?: string;
   }) => {
-    // Mark task action in progress to prevent filter watchers from clearing single-task mode
-    isTaskActionInProgress.value = true;
-
     undoData.value = {
       taskId: event.taskId,
       taskName: event.taskName,
@@ -651,13 +612,6 @@
     } else if (event.statusKey) {
       updateTaskStatus(event.statusKey, event.taskName, true);
     }
-
-    // Reset flag after reactive updates propagate (double nextTick to ensure watcher queue has flushed)
-    nextTick(() => {
-      nextTick(() => {
-        isTaskActionInProgress.value = false;
-      });
-    });
   };
   const undoLastAction = () => {
     if (!undoData.value) return;

@@ -39,7 +39,7 @@
                 <router-link
                   v-for="parent in parentTasks"
                   :key="parent.id"
-                  :to="`/tasks?task=${parent.id}`"
+                  :to="`/tasks?task=${parent.id}&status=all`"
                   class="text-accent-400 hover:text-accent-300"
                   @contextmenu="(e: MouseEvent) => handleTaskContextMenu(e, parent)"
                 >
@@ -71,7 +71,7 @@
                 <router-link
                   v-for="child in childTasks"
                   :key="child.id"
-                  :to="`/tasks?task=${child.id}`"
+                  :to="`/tasks?task=${child.id}&status=all`"
                   class="text-accent-400 hover:text-accent-300"
                   @contextmenu="(e: MouseEvent) => handleTaskContextMenu(e, child)"
                 >
@@ -203,7 +203,7 @@
   };
   const navigateToTask = () => {
     if (selectedTask.value) {
-      router.push(`/tasks?task=${selectedTask.value.id}`);
+      router.push(`/tasks?task=${selectedTask.value.id}&status=all`);
     }
   };
   const openTaskWiki = () => {

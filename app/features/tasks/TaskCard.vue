@@ -728,7 +728,7 @@
   };
   const copyTaskId = () => copyTextToClipboard(props.task.id);
   const copyTaskLink = () => {
-    const href = router.resolve(`/tasks?task=${props.task.id}`).href;
+    const href = router.resolve(`/tasks?task=${props.task.id}&status=all`).href;
     return copyTextToClipboard(`${window.location.origin}${href}`);
   };
   const openTaskWiki = () => {
@@ -738,14 +738,10 @@
   };
 
   /**
-   * Navigate to single-task view. Uses a timestamp to force re-navigation
-   * even when clicking the same task, ensuring UX setup always runs.
+   * Navigate to single-task view with status=all to ensure task is visible.
    */
   const navigateToTask = () => {
-    router.push({
-      path: '/tasks',
-      query: { task: props.task.id, _t: Date.now().toString() },
-    });
+    router.push(`/tasks?task=${props.task.id}&status=all`);
   };
   // Expanded state for recursive cards
   const expandedTasks = ref<Set<string>>(new Set());

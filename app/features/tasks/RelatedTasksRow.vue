@@ -36,7 +36,7 @@
           v-for="task in visibleTasks"
           :key="task.id"
           v-tooltip="task.name"
-          :to="`/tasks?task=${task.id}`"
+          :to="`/tasks?task=${task.id}&status=all`"
           class="inline-flex shrink-0 items-center rounded px-2 py-0.5 text-xs transition-colors hover:opacity-90 no-underline"
           :class="getBadgeClass(task)"
           @click.stop
