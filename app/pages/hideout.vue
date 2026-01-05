@@ -174,8 +174,9 @@
     }
     // Scroll to the station after filters are applied
     scrollToStation(stationId);
-    // Clear the station param after handling
-    setFilter('station', '');
+    // Clear the station param after handling - use replace to avoid extra history entry
+    const { station: _, ...restQuery } = router.currentRoute.value.query;
+    router.replace({ query: restQuery });
   };
   // Watch for station filter and handle it when data is loaded
   watch(

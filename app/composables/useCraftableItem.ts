@@ -13,10 +13,13 @@ export interface UseCraftableItemReturn {
   craftSourceStatuses: ComputedRef<CraftSourceStatus[]>;
   isCraftableAvailable: ComputedRef<boolean>;
   craftStationTargetId: ComputedRef<string>;
+  /** Pre-computed URL for linking to the craft station in hideout */
+  craftStationHref: ComputedRef<string>;
   craftableIconClass: ComputedRef<string>;
   craftableTitle: ComputedRef<string>;
   goToCraftStation: () => Promise<void>;
 }
+
 /**
  * Composable for craftable item logic.
  * Provides craft source information, availability status, and navigation.
@@ -80,6 +83,18 @@ export function useCraftableItem(
       ? 'text-success-600 dark:text-success-400'
       : 'text-surface-400';
   });
+  /**
+   * Pre-computed URL for the craft station in hideout.
+   * Includes the view param based on station availability so the station is visible.
+   */
+  const craftStationHref = computed(() => {
+    if (!craftStationTargetId.value) {
+      return '';
+    }
+    // Set view based on whether the target station is available or locked
+    const view = isCraftableAvailable.value ? 'available' : 'locked';
+    return `/hideout?station=${craftStationTargetId.value}&view=${view}`;
+  });
 const craftableTitle = computed(() => {
     if (!isCraftable.value) {
       return '';
@@ -127,6 +142,7 @@ const craftableTitle = computed(() => {
     craftSourceStatuses,
     isCraftableAvailable,
     craftStationTargetId,
+    craftStationHref,
     craftableIconClass,
     craftableTitle,
     goToCraftStation,
