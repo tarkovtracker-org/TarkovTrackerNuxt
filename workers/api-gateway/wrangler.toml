@@ -27,4 +27,4 @@ tag = "v1"
 new_sqlite_classes = ["ApiGatewayRateLimiter"]
 
 [vars]
-ALLOWED_ORIGIN = "https://tarkovtracker.org,https://www.tarkovtracker.org,http://localhost:3000"
+ALLOWED_ORIGIN = "https://tarkovtracker.org,https://www.tarkovtracker.org,https://tarkov.dev,https://www.tarkov.dev,http://localhost:3000"

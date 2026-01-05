@@ -58,6 +58,8 @@ type RateLimitResult = {
   status?: number;
   message?: string;
 };
+const RATE_LIMIT_TIMEOUT_MS = 3000;
+const RATE_LIMIT_SLOW_MS = 200;
 export class ApiGatewayRateLimiter {
   private data?: RateLimitState;
   constructor(private state: DurableObjectState) {}
@@ -115,10 +117,12 @@ async function rateLimit(
   limit: number,
   windowSec: number
 ): Promise<RateLimitResult> {
+  const action = key.split(':', 1)[0] || 'unknown';
   const id = env.API_GATEWAY_LIMITER.idFromName(key);
   const stub = env.API_GATEWAY_LIMITER.get(id);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 250);
+  const timeout = setTimeout(() => controller.abort(), RATE_LIMIT_TIMEOUT_MS);
+  const startedAt = Date.now();
   try {
     const res = await stub.fetch('https://rate-limit', {
       method: 'POST',
@@ -126,6 +130,10 @@ async function rateLimit(
       body: JSON.stringify({ limit, windowSec }),
       signal: controller.signal,
     });
+    const durationMs = Date.now() - startedAt;
+    if (durationMs >= RATE_LIMIT_SLOW_MS) {
+      console.log('rateLimit slow', { action, durationMs, ok: res.ok });
+    }
     if (!res.ok) {
       return {
         allowed: false,
@@ -152,7 +160,12 @@ async function rateLimit(
     }
     return { allowed: true };
   } catch (error) {
-    console.error('rateLimit error', error);
+    const durationMs = Date.now() - startedAt;
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn('rateLimit timeout', { action, durationMs, timeoutMs: RATE_LIMIT_TIMEOUT_MS });
+    } else {
+      console.error('rateLimit error', { action, durationMs, error });
+    }
     return {
       allowed: false,
       status: 503,
