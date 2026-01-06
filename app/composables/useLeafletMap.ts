@@ -176,9 +176,12 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
       }
     }
   };
+  // Track if mouse down started on map
+  const hadMapMouseDown = ref(false);
   // Restrict dragging to left mouse button only (button 0)
   const onMouseDown = (e: MouseEvent) => {
     if (!mapInstance.value) return;
+    hadMapMouseDown.value = true;
     // Only allow left-click (button 0) to initiate dragging
     if (e.button !== 0) {
       mapInstance.value.dragging.disable();
@@ -186,10 +189,14 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
   };
   const onMouseUp = () => {
     if (!mapInstance.value) return;
-    // Re-enable dragging after mouse release, but only if we weren't in idle mode
-    // (where dragging is disabled to allow smooth scroll-zoom)
-    if (!isIdle.value) {
-      mapInstance.value.dragging.enable();
+    // Only handle if the interaction started on the map
+    if (hadMapMouseDown.value) {
+      hadMapMouseDown.value = false;
+      // Re-enable dragging after mouse release, but only if we weren't in idle mode
+      // (where dragging is disabled to allow smooth scroll-zoom)
+      if (!isIdle.value) {
+        mapInstance.value.dragging.enable();
+      }
     }
   };
   // Idle detection timer
@@ -415,7 +422,7 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
         containerRef.value.addEventListener('wheel', onWheel, { passive: false });
         // Attach mouse handlers to restrict dragging to left-click only
         containerRef.value.addEventListener('mousedown', onMouseDown);
-        containerRef.value.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mouseup', onMouseUp);
       }
     } catch (error) {
       logger.error('Failed to initialize Leaflet map:', error);
@@ -472,8 +479,8 @@ export function useLeafletMap(options: UseLeafletMapOptions): UseLeafletMapRetur
     if (containerRef.value) {
       containerRef.value.removeEventListener('wheel', onWheel);
       containerRef.value.removeEventListener('mousedown', onMouseDown);
-      containerRef.value.removeEventListener('mouseup', onMouseUp);
     }
+    document.removeEventListener('mouseup', onMouseUp);
     svgLayer.value = null;
     objectiveLayer.value = null;
     extractLayer.value = null;

@@ -252,9 +252,6 @@ export const usePreferencesStore = defineStore('preferences', {
       const val = state.hideout.views.primary;
       return val && valid.includes(val) ? val : 'available';
     },
-    getLocaleOverride: (state) => {
-      return state.localeOverride ?? null;
-    },
     // Task filter getters
     getShowNonSpecialTasks: (state) => {
       return state.showNonSpecialTasks ?? true;

@@ -210,7 +210,6 @@
         unlockbutton: 'Freischalten',
         incompletebutton: 'Unvollständig',
         availablebutton: 'Als verfügbar markieren',
-        uncompletebutton: 'Als unvollständig markieren',
         markfailed: 'Als fehlgeschlagen markieren',
         resetfailed: 'Fehlgeschlagen zurücksetzen',
         statuscomplete: '{name} als abgeschlossen markiert',

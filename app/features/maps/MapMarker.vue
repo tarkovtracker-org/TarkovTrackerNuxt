@@ -70,8 +70,8 @@
   });
   const markerColor = computed(() => {
     return props.mark.users.includes('self')
-      ? 'text-[var(--color-map-marker-self)]'
-      : 'text-[var(--color-map-marker-team)]';
+      ? 'text-(--color-map-marker-self)'
+      : 'text-(--color-map-marker-team)';
   });
   const relativeLocation = computed(() => {
     // Add safety check for bounds

@@ -37,14 +37,7 @@
             size="sm"
             @craft="goToCraftStation(row)"
           />
-          <GameItem
-            :item="row.meta.item"
-            :src="row.meta.itemIcon"
-            :item-name="row.meta.itemName"
-            :background-color="row.meta.backgroundColor"
-            size="medium"
-            simple-mode
-          />
+          <GameItem :item="row.meta.item" size="medium" simple-mode />
         </div>
         <span
           v-tooltip="row.meta.itemFullName"

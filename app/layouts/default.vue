@@ -46,7 +46,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, ref, onUnmounted } from 'vue';
+  import { computed, defineAsyncComponent, ref, onUnmounted, watch } from 'vue';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
   import { useAppStore } from '@/stores/useApp';
   import { usePreferencesStore } from '@/stores/usePreferences';

@@ -3,7 +3,6 @@
     type="button"
     :class="[
       'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-      'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
       active
         ? 'bg-accent-100 text-accent-900 dark:bg-accent-500/20 dark:text-accent-100 shadow-sm dark:shadow-none'
         : 'hover-effect text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',

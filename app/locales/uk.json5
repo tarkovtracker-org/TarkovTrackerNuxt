@@ -171,7 +171,6 @@
         unlockbutton: 'Розблокувати',
         incompletebutton: 'Не завершено',
         availablebutton: 'Відзначити Доступним',
-        uncompletebutton: 'Відзначити Незавершене',
         markfailed: 'Mark Failed',
         resetfailed: 'Reset Failed',
         statuscomplete: 'Відзначено {name} як завершено',

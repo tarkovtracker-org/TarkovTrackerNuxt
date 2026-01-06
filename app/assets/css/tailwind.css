@@ -955,8 +955,8 @@ select:disabled,
   /* Ensure active/pressed states might want to hide or darken (optional, keeping simple for now) */
   .hover-effect:active::after {
     background-color: var(--color-hover-tint);
-    opacity: 2; /* Double the tint intesity on press by simple semantic hack or just keep 1? */
-    filter: brightness(0.9);
+    opacity: 1; /* Max intensity */
+    filter: brightness(0.85); /* Darken to create "pressed" effect (simulate double intensity) */
   }
 
   /* Standardized Focus Ring Utility */

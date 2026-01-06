@@ -1,5 +1,5 @@
 <template>
-  <span v-if="foundInRaid" v-tooltip="foundInRaidTitle" class="inline-flex">
+  <span v-if="foundInRaid" v-tooltip="computedFoundInRaidTitle" class="inline-flex">
     <UIcon name="i-mdi-checkbox-marked-circle-outline" :class="firIconClass" />
   </span>
   <button
@@ -51,7 +51,7 @@
   const craftableTitleText = computed(() => {
     return props.craftableTitle || t('page.neededitems.craftable', 'Craftable');
   });
-  const foundInRaidTitle = computed(() => {
+  const computedFoundInRaidTitle = computed(() => {
     return props.foundInRaidTitle || t('page.neededitems.fir_required', 'Found in Raid required');
   });
   const kappaTitleText = computed(() => {
