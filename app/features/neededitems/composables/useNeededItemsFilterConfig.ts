@@ -10,14 +10,14 @@ export function useNeededItemsFilterConfig(): FilterConfig {
   return {
     filter: {
       default: 'all',
-      storedDefault: () => preferencesStore.getNeededTypeView(),
+      storedDefault: () => preferencesStore.getNeededTypeView,
       onUpdate: (v) => preferencesStore.setNeededTypeView(v as string),
       validate: (v) => ['all', 'tasks', 'hideout', 'completed'].includes(v),
     },
     viewMode: {
       default: 'grid',
       storedDefault: () => {
-        const style = preferencesStore.getNeededItemsStyle();
+        const style = preferencesStore.getNeededItemsStyle;
         return ['row', 'mediumCard'].includes(style as string) ? style : null;
       },
       onUpdate: (v) =>
@@ -45,7 +45,7 @@ export function useNeededItemsFilterConfig(): FilterConfig {
     },
     search: {
       default: '',
-      storedDefault: () => preferencesStore.getNeededItemsSearch() ?? '',
+      storedDefault: () => preferencesStore.getNeededItemsSearch ?? '',
       onUpdate: (v) => preferencesStore.setNeededItemsSearch(v as string),
       debounceMs: 300,
     },

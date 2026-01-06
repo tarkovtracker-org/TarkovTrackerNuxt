@@ -11,7 +11,7 @@
   </UApp>
 </template>
 <script setup lang="ts">
-  import { computed, watchEffect, onMounted } from 'vue';
+  import { computed, watchEffect } from 'vue';
   import { useAppInitialization } from '@/composables/useAppInitialization';
   import { useTarkovStore } from '@/stores/useTarkov';
   // Initialize app (auth, locale, migrations)

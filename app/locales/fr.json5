@@ -160,8 +160,8 @@
         },
       },
       settings: {
-        title: 'Task Settings',
-        description: 'Configure task filters and appearance',
+        title: 'Paramètres des tâches',
+        description: 'Configurer les filtres et l\'apparence des tâches',
         tabs: {
           filters: 'Task Filters',
           appearance: 'Appearance',

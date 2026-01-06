@@ -23,6 +23,7 @@
       <div class="bg-surface-elevated w-full max-w-lg rounded-lg px-4 py-2.5 shadow-sm">
         <UInput
           :model-value="searchQuery"
+          :aria-label="$t('page.hideout.search.placeholder', 'Search stations...')"
           :placeholder="$t('page.hideout.search.placeholder', 'Search stations...')"
           icon="i-mdi-magnify"
           size="md"
