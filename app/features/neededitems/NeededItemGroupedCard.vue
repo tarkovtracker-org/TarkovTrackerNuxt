@@ -37,7 +37,7 @@
             :class="
               isComplete
                 ? 'text-success-600 dark:text-success-400'
-                : 'text-primary-400 dark:text-primary-400'
+                : 'text-accent-600 dark:text-accent-400'
             "
           >
             {{ formatCompactNumber(groupedItem.currentCount) }}/{{
