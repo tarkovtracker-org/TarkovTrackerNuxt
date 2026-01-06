@@ -6,6 +6,7 @@
       v-if="props.to && !props.href"
       :to="computedNavUrl"
       class="group flex cursor-pointer items-center rounded-md px-3 py-2.5 text-base font-medium transition-colors duration-150"
+      @click="handleNavClick"
       :class="[
         isActive
           ? 'border-accent-500 bg-accent-100 text-accent-900 dark:bg-accent-500/20 dark:text-accent-100 border-l-2'
@@ -195,6 +196,15 @@
     // Navigating from another page: include stored filter preferences
     return getPreferredNavUrl(props.to);
   });
+  /**
+   * Handle click on navigation link:
+   * If already on the page, scroll to top when resetting.
+   */
+  const handleNavClick = () => {
+    if (route.path === props.to) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
   /**
    * Use NuxtLink component for navigation.
    */
