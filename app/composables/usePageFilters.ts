@@ -121,6 +121,17 @@ export function buildPreferredUrl<C extends FilterConfig>(basePath: string, conf
   return queryString ? `${basePath}?${queryString}` : basePath;
 }
 /**
+ * Options for usePageFilters.
+ */
+export interface UsePageFiltersOptions {
+  /**
+   * Custom function to determine if the current route matches this filter context.
+   * If it returns false, the filters will "freeze" and ignore URL changes.
+   * Defaults to matching the path or name that was active when initialized.
+   */
+  match?: (route: ReturnType<typeof useRoute>) => boolean;
+}
+/**
  * Composable for URL-based filter state management.
  *
  * URL is the single source of truth. Components read from computed refs
@@ -144,13 +155,27 @@ export function buildPreferredUrl<C extends FilterConfig>(basePath: string, conf
  * // Debounced input: v-model="debouncedInputs.search"
  * ```
  */
-export function usePageFilters<C extends FilterConfig>(config: C): UsePageFiltersReturn<C> {
+export function usePageFilters<C extends FilterConfig>(
+  config: C,
+  options: UsePageFiltersOptions = {}
+): UsePageFiltersReturn<C> {
   const route = useRoute();
   const router = useRouter();
-  // Debounce timers for params with debounceMs
-  const debounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-  // Local refs for debounced inputs
-  const debouncedInputRefs: Record<string, Ref<unknown>> = {};
+
+  // Capture the route identity when the composable is initialized.
+  // This allows us to ignore URL changes that occur during navigation away from this page.
+  const initialPath = route.path;
+  const initialName = route.name;
+
+  /**
+   * Determines if the current route matches the context where this composable was created.
+   */
+  const isMatch = () => {
+    if (options.match) return options.match(route);
+    // Default: Match if path is same, or if name is same (names are stable across param changes)
+    return route.path === initialPath || (initialName && route.name === initialName);
+  };
+
   /**
    * Parse a URL string value to typed value using config.
    * URL is the single source of truth - if param is absent, use static default.
@@ -200,15 +225,42 @@ export function usePageFilters<C extends FilterConfig>(config: C): UsePageFilter
     }
     return String(value);
   };
+
+  // Internal reactive state to hold the parsed filter values.
+  // We use this instead of direct computed derived from route.query to allow "freezing" the state.
+  const filterValues = ref<Record<string, unknown>>({});
+
+  // Initialize values from current route
+  for (const key of Object.keys(config)) {
+    filterValues.value[key] = parseValue(key, route.query[key] as string);
+  }
+
+  // Sync internal state with URL query, but only when on the correct route
+  watch(
+    () => route.query,
+    (newQuery) => {
+      if (!isMatch()) return;
+
+      for (const key of Object.keys(config) as Array<keyof C>) {
+        const newValue = parseValue(key, newQuery[key as string] as string | undefined);
+        if (filterValues.value[key as string] !== newValue) {
+          filterValues.value[key as string] = newValue;
+        }
+      }
+    }
+  );
+
+  // Debounce timers for params with debounceMs
+  const debounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+  // Local refs for debounced inputs
+  const debouncedInputRefs: Record<string, Ref<unknown>> = {};
+
   /**
    * Build computed refs for each filter.
    */
   const filters = {} as Filters<C>;
   for (const key of Object.keys(config) as Array<keyof C>) {
-    filters[key] = computed(() => {
-      const urlValue = route.query[key as string] as string | undefined;
-      return parseValue(key, urlValue);
-    }) as Filters<C>[typeof key];
+    filters[key] = computed(() => filterValues.value[key as string]) as Filters<C>[typeof key];
   }
   /**
    * Build debounced input refs for filters with debounceMs.
@@ -359,6 +411,8 @@ export function usePageFilters<C extends FilterConfig>(config: C): UsePageFilter
   watch(
     () => route.query,
     () => {
+      if (!isMatch()) return;
+
       for (const [key, paramConfig] of Object.entries(config)) {
         if (paramConfig.onUpdate) {
           const urlValue = route.query[key] as string | undefined;
