@@ -19,10 +19,12 @@
   // Game mode class toggler for accent color switching
   const tarkovStore = useTarkovStore();
   const gameMode = computed(() => tarkovStore.getCurrentGameMode());
-  onMounted(() => {
-    watchEffect(() => {
-      document.documentElement.classList.toggle('pve-mode', gameMode.value === 'pve');
-    });
+  // Create a watcher that can be stopped
+  const stopThemeWatcher = watchEffect(() => {
+    document.documentElement.classList.toggle('pve-mode', gameMode.value === 'pve');
+  });
+  onUnmounted(() => {
+    stopThemeWatcher();
   });
   const config = useRuntimeConfig();
   const route = useRoute();

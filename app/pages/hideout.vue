@@ -101,7 +101,12 @@
   // Filter config is extracted to useHideoutFilterConfig for sharing with navigation
   const { filters, setFilter, debouncedInputs } = usePageFilters(useHideoutFilterConfig());
   // Computed alias for search input
-  const searchQuery = debouncedInputs.search!;
+  const searchQuery = computed({
+    get: () => debouncedInputs.search?.value ?? '',
+    set: (v) => {
+      if (debouncedInputs.search) debouncedInputs.search.value = v;
+    },
+  });
   // Sync URL filter to activePrimaryView (from useHideoutFiltering)
   watch(
     filters.view,

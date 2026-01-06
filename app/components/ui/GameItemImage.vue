@@ -3,14 +3,14 @@
     :class="[
       'bg-stash-cell relative overflow-hidden rounded',
       containerClasses,
-      imageTileClasses,
+      imageElementClasses,
       'flex items-center justify-center',
     ]"
   >
     <div :class="['overlay-stash-bg absolute inset-0', resolvedBackgroundClass]"></div>
     <img
-      v-if="isVisible && formattedSrc && !hasError"
-      :src="formattedSrc"
+      v-if="isVisible && props.src && !hasError"
+      :src="props.src"
       :alt="alt || itemName || 'Item'"
       :class="[
         'relative z-1 max-h-full max-w-full rounded object-contain p-1',
@@ -59,9 +59,6 @@
     size: 'medium',
     isVisible: true,
   });
-  const formattedSrc = computed(() => {
-    return props.src;
-  });
   const containerClasses = computed(() => {
     // Fluid mode: fills parent container, maintains square aspect ratio
     if (props.size === 'fluid') {
@@ -105,9 +102,6 @@
       hasError.value = false;
     }
   );
-  const imageTileClasses = computed(() => {
-    return [...imageElementClasses];
-  });
   const handleImgError = () => {
     hasError.value = true;
     console.warn(`[GameItemImage] Failed to load image: ${props.src}`);

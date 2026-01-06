@@ -176,12 +176,18 @@
     traders: 'tarkovTracker.tasks.lastTrader',
   } as const;
   const handlePrimaryViewChange = (view: string) => {
-    const currentView = getTaskPrimaryView.value;
-    // Save outgoing view's state to localStorage before switching
-    if (currentView === 'maps' && getTaskMapView.value !== 'all') {
-      localStorage.setItem(VIEW_STORAGE_KEYS.maps, getTaskMapView.value);
-    } else if (currentView === 'traders' && getTaskTraderView.value !== 'all') {
-      localStorage.setItem(VIEW_STORAGE_KEYS.traders, getTaskTraderView.value);
+    if (typeof window !== 'undefined') {
+      const currentView = getTaskPrimaryView.value;
+      try {
+        // Save outgoing view's state to localStorage before switching
+        if (currentView === 'maps' && getTaskMapView.value !== 'all') {
+          localStorage.setItem(VIEW_STORAGE_KEYS.maps, getTaskMapView.value);
+        } else if (currentView === 'traders' && getTaskTraderView.value !== 'all') {
+          localStorage.setItem(VIEW_STORAGE_KEYS.traders, getTaskTraderView.value);
+        }
+      } catch {
+        // Ignore storage errors
+      }
     }
     // Build updates with ONLY params scoped to the target view
     // Also clear task param to exit single-task mode
@@ -194,11 +200,21 @@
     };
     // Restore target view's state from localStorage (or use first item as fallback)
     if (view === 'maps') {
-      const lastMap = localStorage.getItem(VIEW_STORAGE_KEYS.maps);
+      let lastMap = null;
+      if (typeof window !== 'undefined') {
+        try {
+          lastMap = localStorage.getItem(VIEW_STORAGE_KEYS.maps);
+        } catch { /* ignore */ }
+      }
       const validMap = lastMap && maps.value.some((m) => m.id === lastMap);
       updates.map = validMap ? lastMap : (maps.value[0]?.id ?? 'all');
     } else if (view === 'traders') {
-      const lastTrader = localStorage.getItem(VIEW_STORAGE_KEYS.traders);
+      let lastTrader = null;
+      if (typeof window !== 'undefined') {
+         try {
+           lastTrader = localStorage.getItem(VIEW_STORAGE_KEYS.traders);
+         } catch { /* ignore */ }
+      }
       const validTrader =
         lastTrader && metadataStore.sortedTraders.some((t) => t.id === lastTrader);
       updates.trader = validTrader ? lastTrader : (metadataStore.sortedTraders[0]?.id ?? 'all');
@@ -366,7 +382,6 @@
       mergedIds: (map as unknown as { mergedIds?: string[] }).mergedIds || [map.id],
     }));
   });
-  const _lightkeeperTraderId = computed(() => metadataStore.getTraderByName('lightkeeper')?.id);
   const refreshVisibleTasks = () => {
     updateVisibleTasks(
       getTaskPrimaryView.value,

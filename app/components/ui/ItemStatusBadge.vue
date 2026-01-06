@@ -76,6 +76,6 @@
   });
   const kappaKappaIconClass = computed(() => {
     const baseSize = props.size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-    return `${baseSize} text-entity-kappa`;
+    return [baseSize, 'text-entity-kappa'];
   });
 </script>

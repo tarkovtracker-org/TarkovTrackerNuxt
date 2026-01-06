@@ -34,7 +34,7 @@
                   <UIcon
                     v-else
                     :name="props.icon?.startsWith('mdi-') ? `i-${props.icon}` : props.icon"
-                    :class="props.iconColor ? `text-${props.iconColor}` : 'text-content-primary'"
+                    :class="iconColorClass"
                     class="h-[50px] w-[50px] drop-shadow-md"
                   />
                 </span>
@@ -151,5 +151,19 @@
         break;
     }
     return classes;
+  });
+  const iconColorClass = computed(() => {
+    if (!props.iconColor) return 'text-content-primary';
+    const colorMap: Record<string, string> = {
+      primary: 'text-primary-500',
+      secondary: 'text-secondary-500',
+      accent: 'text-accent-500',
+      success: 'text-success-500',
+      warning: 'text-warning-500',
+      error: 'text-error-500',
+      info: 'text-blue-500',
+      gray: 'text-gray-500',
+    };
+    return colorMap[props.iconColor] || 'text-content-primary';
   });
 </script>

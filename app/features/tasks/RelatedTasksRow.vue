@@ -82,7 +82,7 @@
   import { computed, nextTick, onMounted, ref, watch, useSlots } from 'vue';
   import { useProgressStore } from '@/stores/useProgress';
   import { useTarkovStore } from '@/stores/useTarkov';
-  import type { Task } from '@/types/tarkov'; // Extra safety margin for suffix
+  import type { Task } from '@/types/tarkov';
   const props = defineProps<{
     tasks: Task[];
     label: string;
@@ -105,8 +105,8 @@
   const ICON_WIDTH = 20;
   const LABEL_MARGIN = 8;
   const CONTAINER_PADDING = computed(() => (props.expandable ? 16 : 0)); // px-2 * 2 if expandable
+  // Extra safety margin for suffix
   const SUFFIX_MARGIN = 8;
-  // ... (existing imports)
   const tarkovStore = useTarkovStore();
   const progressStore = useProgressStore();
   const slots = useSlots();
@@ -149,6 +149,16 @@
     emit('toggle');
   };
   // --- Measurement Logic ---
+  // Shared canvas context for text measurement
+  let cachedCanvas: HTMLCanvasElement | undefined;
+  let cachedContext: CanvasRenderingContext2D | null | undefined;
+  const getMeasureContext = () => {
+    if (!cachedCanvas) {
+      cachedCanvas = document.createElement('canvas');
+      cachedContext = cachedCanvas.getContext('2d');
+    }
+    return cachedContext;
+  };
   const calculateVisibleItems = () => {
     if (!container.value || !measureSpan.value) return;
     if (props.tasks.length === 0) {
@@ -158,10 +168,12 @@
     // Get font styles
     const style = window.getComputedStyle(measureSpan.value);
     const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const context = getMeasureContext();
     if (!context) return;
-    context.font = font;
+    // Only set font if it changed (optimization)
+    if (context.font !== font) {
+      context.font = font;
+    }
     const measureText = (t: string) => context.measureText(t).width;
     const iconWidth = props.expandable ? ICON_WIDTH : 0;
     const labelTextWidth = measureText(props.label + ': ');

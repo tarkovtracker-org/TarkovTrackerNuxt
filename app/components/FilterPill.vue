@@ -18,7 +18,7 @@
     </span>
     <!-- Count Badge -->
     <span
-      v-if="count !== undefined || $slots.count"
+      v-if="count !== undefined || ($slots.count && $slots.count().length > 0)"
       :class="[
         'ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold',
         countColorClass,

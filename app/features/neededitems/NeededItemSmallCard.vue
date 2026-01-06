@@ -114,7 +114,7 @@
           />
         </template>
         <span v-else class="text-success-600 dark:text-success-400 text-sm font-bold">
-          {{ currentCount }}/{{ neededCount }} ✓
+          {{ _formatNumber(currentCount) }}/{{ _formatNumber(neededCount) }} ✓
         </span>
       </div>
       <!-- For single items, show completed status at bottom if needed or just padding -->

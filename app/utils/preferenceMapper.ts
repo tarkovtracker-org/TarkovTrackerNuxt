@@ -55,6 +55,7 @@ export function flattenPreferences(nested: Record<string, unknown>): FlatPrefere
   const result: FlatPreferences = {};
   const recurse = (obj: Record<string, unknown>, currentPath: string) => {
     for (const key in obj) {
+      if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
       if (key === 'saving') continue; // Don't persist transient state
       const value = obj[key];
       const newPath = currentPath ? `${currentPath}.${key}` : key;
@@ -97,6 +98,11 @@ export function unflattenPreferences(
       for (let i = 0; i < parts.length - 1; i++) {
         const part = parts[i];
         if (!part) continue;
+        // Defensive check: if we encounter a primitive where we expect an object, don't overwrite it
+        if (current[part] !== undefined && typeof current[part] !== 'object') {
+           // Skip this path or log warning. Decided to skip to safe data.
+           continue; 
+        }
         if (!current[part]) current[part] = {};
         current = current[part] as Record<string, unknown>;
       }

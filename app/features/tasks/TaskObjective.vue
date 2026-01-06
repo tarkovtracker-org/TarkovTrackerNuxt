@@ -92,14 +92,6 @@
   const isComplete = computed(() => {
     return tarkovStore.isTaskObjectiveComplete(props.objective.id);
   });
-  const _isTaskUnavailable = computed(() => {
-    const taskId = props.objective.taskId;
-    if (!taskId) return false;
-    // Task is unavailable if it's NOT unlocked AND NOT complete
-    const isUnlocked = progressStore.unlockedTasks[taskId]?.self === true;
-    const isTaskComplete = tarkovStore.isTaskComplete(taskId);
-    return !isUnlocked && !isTaskComplete;
-  });
   const objectiveLabel = computed(() => {
     return props.objective.description || t('page.tasks.questcard.objective', 'Objective');
   });
@@ -114,16 +106,6 @@
   });
   const parentTaskId = computed(() => {
     return fullObjective.value?.taskId ?? props.objective.taskId;
-  });
-  const _isParentTaskComplete = computed(() => {
-    const taskId = parentTaskId.value;
-    if (!taskId) return false;
-    return tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId);
-  });
-  const _isParentTaskFailed = computed(() => {
-    const taskId = parentTaskId.value;
-    if (!taskId) return false;
-    return tarkovStore.isTaskFailed(taskId);
   });
   const isParentTaskLocked = computed(() => {
     const taskId = parentTaskId.value;

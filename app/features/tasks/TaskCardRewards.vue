@@ -251,10 +251,10 @@
     traderUnlockReward?: TraderUnlock | TraderUnlock[] | null;
     itemRewards: ItemReward[];
     offerUnlockRewards: OfferUnlock[];
-    parentTasks: Task[];
-    childTasks: Task[];
-    unlocksNextCount: number;
-    impactCount: number;
+    parentTasks: Task[]; // Future use: showing chain context in rewards
+    childTasks: Task[]; // Future use: showing chain context in rewards
+    unlocksNextCount: number; // Future use
+    impactCount: number; // Future use
   }>();
   defineEmits<{
     'item-context-menu': [event: MouseEvent, item: ItemReward['item']];

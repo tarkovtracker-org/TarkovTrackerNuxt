@@ -13,7 +13,7 @@ export function useTasksFilterConfig(): FilterConfig {
       default: 'all',
       storedDefault: () => preferencesStore.getTaskPrimaryView,
       onUpdate: (v) => preferencesStore.setTaskPrimaryView(v as string),
-      validate: (v) => ['all', 'maps', 'traders'].includes(v),
+      validate: (v) => ['all', 'traders', 'maps'].includes(v),
     },
     // Status filter - always included in nav URLs
     status: {

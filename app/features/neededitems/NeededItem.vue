@@ -1,7 +1,7 @@
 <template>
   <template v-if="props.itemStyle == 'card'">
     <div class="h-full">
-      <NeededItemSmallCard
+      <LazyNeededItemSmallCard
         :need="props.need"
         @decrease-count="decreaseCount()"
         @toggle-count="toggleCount()"
@@ -12,7 +12,7 @@
   </template>
   <template v-else-if="props.itemStyle == 'row'">
     <div class="mb-2 w-full">
-      <NeededItemRow
+      <LazyNeededItemRow
         :need="props.need"
         @decrease-count="decreaseCount()"
         @toggle-count="toggleCount()"
@@ -147,14 +147,11 @@
     }
   };
   const {
-    isCraftable: baseIsCraftable,
+    isCraftable,
     craftableIconClass,
     craftableTitle,
     goToCraftStation,
   } = useCraftableItem(() => item.value?.id);
-  const isCraftable = computed(() => {
-    return baseIsCraftable.value;
-  });
   // Helper functions and data to calculate the item's progress
   // These are passed to the child components via provide/inject
   const currentCount = computed(() => {

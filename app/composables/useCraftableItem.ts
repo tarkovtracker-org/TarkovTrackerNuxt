@@ -126,7 +126,10 @@ export function useCraftableItem(
     try {
       await navigateTo({
         path: '/hideout',
-        query: { station: craftStationTargetId.value },
+        query: { 
+          station: craftStationTargetId.value,
+          view: isCraftableAvailable.value ? 'available' : 'locked' 
+        },
       });
     } catch (error) {
       const stationId = craftStationTargetId.value;

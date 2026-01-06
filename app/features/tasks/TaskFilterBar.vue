@@ -51,21 +51,21 @@
       <!-- Primary View Tabs - centered -->
       <div class="flex items-center justify-center gap-1 justify-self-center">
         <FilterPill
-          :active="primaryView === 'all'"
+          :active="props.primaryView === 'all'"
           icon="i-mdi-checkbox-multiple-marked"
           :label="t('page.tasks.primaryviews.all').toUpperCase()"
           label-class="hidden sm:inline"
           @click="setPrimaryView('all')"
         />
         <FilterPill
-          :active="primaryView === 'traders'"
+          :active="props.primaryView === 'traders'"
           icon="i-mdi-account-group"
           :label="t('page.tasks.primaryviews.traders').toUpperCase()"
           label-class="hidden sm:inline"
           @click="setPrimaryView('traders')"
         />
         <FilterPill
-          :active="primaryView === 'maps'"
+          :active="props.primaryView === 'maps'"
           icon="i-mdi-map"
           :label="t('page.tasks.primaryviews.maps').toUpperCase()"
           label-class="hidden sm:inline"
@@ -82,7 +82,7 @@
       <!-- Status filters (ALL / AVAILABLE / LOCKED / COMPLETED) -->
       <div class="flex items-center gap-1">
         <FilterPill
-          :active="secondaryView === 'all'"
+          :active="props.secondaryView === 'all'"
           :count="statusCounts.all"
           count-color="badge-soft-accent"
           @click="setSecondaryView('all')"
@@ -93,7 +93,7 @@
           <span class="text-xs sm:text-sm">ALL</span>
         </FilterPill>
         <FilterPill
-          :active="secondaryView === 'available'"
+          :active="props.secondaryView === 'available'"
           :label="t('page.tasks.secondaryviews.available').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.available"
@@ -105,7 +105,7 @@
           </template>
         </FilterPill>
         <FilterPill
-          :active="secondaryView === 'locked'"
+          :active="props.secondaryView === 'locked'"
           :label="t('page.tasks.secondaryviews.locked').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.locked"
@@ -117,7 +117,7 @@
           </template>
         </FilterPill>
         <FilterPill
-          :active="secondaryView === 'completed'"
+          :active="props.secondaryView === 'completed'"
           :label="t('page.tasks.secondaryviews.completed').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.completed"
@@ -129,7 +129,7 @@
           </template>
         </FilterPill>
         <FilterPill
-          :active="secondaryView === 'failed'"
+          :active="props.secondaryView === 'failed'"
           :label="t('page.tasks.secondaryviews.failed', 'FAILED').toUpperCase()"
           label-class="text-xs sm:text-sm"
           :count="statusCounts.failed"
@@ -182,7 +182,7 @@
       </div>
     </div>
     <!-- Map selector (shown when MAPS is selected) - Horizontal scrollable -->
-    <div v-if="primaryView === 'maps' && maps.length > 0" class="w-full overflow-x-auto">
+    <div v-if="props.primaryView === 'maps' && maps.length > 0" class="w-full overflow-x-auto">
       <div
         class="bg-surface-elevated flex w-max min-w-full justify-center gap-1 rounded-lg px-4 py-2.5"
       >
@@ -198,7 +198,7 @@
       </div>
     </div>
     <!-- Trader selector (shown when TRADERS is selected) - Horizontal scrollable -->
-    <div v-if="primaryView === 'traders' && traders.length > 0" class="w-full overflow-x-auto">
+    <div v-if="props.primaryView === 'traders' && traders.length > 0" class="w-full overflow-x-auto">
       <div
         class="bg-surface-elevated flex w-max min-w-full justify-center gap-1 rounded-lg px-4 py-2.5"
       >
@@ -314,12 +314,10 @@
     );
   });
   // Primary view (all / maps / traders) - now from props, emit changes
-  const primaryView = computed(() => props.primaryView);
   const setPrimaryView = (view: string) => {
     emit('update:primaryView', view);
   };
   // Secondary view (available / locked / completed) - now from props
-  const secondaryView = computed(() => props.secondaryView);
   const setSecondaryView = (view: string) => {
     emit('update:secondaryView', view);
   };

@@ -80,6 +80,7 @@
     },
   });
   // Select menu UI configuration
+  // Intentional placeholder
   const selectUi = {};
   const selectMenuUi = {
     container: 'z-[9999]',

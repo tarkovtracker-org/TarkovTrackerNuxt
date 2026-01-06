@@ -391,14 +391,6 @@
     });
     return Array.from(ids);
   });
-  const _isParentTaskComplete = computed(() => {
-    return parentTaskIds.value.some(
-      (taskId) => tarkovStore.isTaskComplete(taskId) && !tarkovStore.isTaskFailed(taskId)
-    );
-  });
-  const _isParentTaskFailed = computed(() => {
-    return parentTaskIds.value.some((taskId) => tarkovStore.isTaskFailed(taskId));
-  });
   const isParentTaskLocked = computed(() => {
     if (parentTaskIds.value.length === 0) return false;
     // If ANY associated task is NOT available (locked, complete, failed, or blocked),

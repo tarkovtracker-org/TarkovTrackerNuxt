@@ -173,7 +173,7 @@ function updateTooltipContent(el: HTMLElement, value: string | TooltipOptions) {
     return;
   }
   const options: TooltipOptions = typeof value === 'string' ? { content: value } : value;
-  const contentDiv = instance.tooltip.lastElementChild as HTMLElement; // Content is last child
+  const contentDiv = instance.tooltip.querySelector('div.relative.z-10') as HTMLElement;
   if (options.html) {
     // ⚠️ XSS RISK: Caller must sanitize content if user-generated
     contentDiv.innerHTML = options.content;

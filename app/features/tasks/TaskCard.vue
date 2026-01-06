@@ -455,7 +455,6 @@
   import { useProgressStore } from '@/stores/useProgress';
   import { useTarkovStore } from '@/stores/useTarkov';
   import type { Task } from '@/types/tarkov';
-  import { HOT_WHEELS_TASK_ID } from '@/utils/constants';
   import { getExclusiveEditionsForTask } from '@/utils/editionHelpers';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
   type ContextMenuRef = {
@@ -562,9 +561,6 @@
   const lockedBehind = computed(() => {
     return props.task.successors?.filter((s) => !isTaskSuccessful(s)).length || 0;
   });
-  const _lockedBefore = computed(() => {
-    return props.task.predecessors?.filter((s) => !isTaskSuccessful(s)).length || 0;
-  });
   const parentTasks = computed(() => {
     if (!props.task.parents?.length) return [];
     return props.task.parents
@@ -617,14 +613,7 @@
   const traderUnlockReward = computed(() => props.task.finishRewards?.traderUnlock);
   const itemRewards = computed(() => props.task.finishRewards?.items ?? []);
   const offerUnlockRewards = computed(() => props.task.finishRewards?.offerUnlock ?? []);
-  const _completeButtonUi = {
-    base: 'bg-success-500 text-white border border-success-700',
-  };
   const actionButtonSize = computed(() => (xs.value ? 'xs' : 'sm'));
-  const isHotWheelsTask = computed(() => props.task.id === HOT_WHEELS_TASK_ID);
-  const _showHotWheelsFail = computed(
-    () => isHotWheelsTask.value && !isComplete.value && !isLocked.value
-  );
   const mapObjectiveTypes = [
     'mark',
     'zone',

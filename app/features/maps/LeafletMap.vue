@@ -532,6 +532,12 @@
     },
     { immediate: true }
   );
+  // Watch for theme changes to update popup styles
+  const colorMode = useColorMode();
+  watch(() => colorMode.value, () => {
+    // defer slightly to let DOM update
+    setTimeout(() => updateMarkers(), 0);
+  });
   // Cleanup
   onUnmounted(() => {
     clearMarkers();
