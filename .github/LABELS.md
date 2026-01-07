@@ -56,14 +56,12 @@ Both use `#f9d0c4` (light pink) for visual grouping.
 | `data:item` | Item data issues | Wrong item properties, missing items, incorrect images |
 
 ### Special Labels
-| Label | Color | Description |
-|-------|-------|-------------|
-| `good-first-issue` | ![#7057ff](https://via.placeholder.com/15/7057ff/000000?text=+) `#7057ff` | Good for newcomers |
-| `help-wanted` | ![#008672](https://via.placeholder.com/15/008672/000000?text=+) `#008672` | Community help needed |
-| `duplicate` | ![#cfd3d7](https://via.placeholder.com/15/cfd3d7/000000?text=+) `#cfd3d7` | Duplicate issue |
-| `invalid` | ![#e4e669](https://via.placeholder.com/15/e4e669/000000?text=+) `#e4e669` | This doesn't seem right |
-| `question` | ![#d876e3](https://via.placeholder.com/15/d876e3/000000?text=+) `#d876e3` | Further information requested |
-| `wontfix` | ![#ffffff](https://via.placeholder.com/15/ffffff/000000?text=+) `#ffffff` | Will not be addressed |
+| Label | Color | Description | When to Use |
+|-------|-------|-------------|-------------|
+| `good-first-issue` | ![#7057ff](https://via.placeholder.com/15/7057ff/000000?text=+) `#7057ff` | Good for newcomers | Simple issues perfect for first-time contributors |
+| `help-wanted` | ![#008672](https://via.placeholder.com/15/008672/000000?text=+) `#008672` | Community help needed | Issues where community contributions are especially welcome |
+| `duplicate` | ![#cfd3d7](https://via.placeholder.com/15/cfd3d7/000000?text=+) `#cfd3d7` | Duplicate issue | Link to original issue and close |
+| `wontfix` | ![#ffffff](https://via.placeholder.com/15/ffffff/000000?text=+) `#ffffff` | Will not be addressed | Issues that won't be worked on (explain why in comments) |
 
 ## Label Usage Guidelines
 
