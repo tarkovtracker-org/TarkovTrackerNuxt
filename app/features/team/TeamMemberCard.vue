@@ -140,6 +140,11 @@
     return fromProfile || fromProgress || props.teammember;
   });
   const level = computed(() => {
+    // For the current user, always use progressStore which respects automatic calculation
+    if (props.teammember === $supabase.user.id) {
+      return progressStore.getLevel(props.teammember);
+    }
+    // For teammates, prefer server-side profile data, fallback to progress store
     const fromProfile = teamStore.memberProfiles?.[props.teammember]?.level;
     const fromProgress = progressStore.getLevel(props.teammember);
     return fromProfile ?? fromProgress;
@@ -152,10 +157,16 @@
     ).length;
   });
   const groupIcon = computed(() => {
-    const level =
-      teamStore.memberProfiles?.[props.teammember]?.level ??
-      progressStore.getLevel(props.teammember);
-    const entry = playerLevels.value.find((pl) => pl.level === level);
+    // Use the same level logic as the level computed property
+    let levelValue: number;
+    if (props.teammember === $supabase.user.id) {
+      levelValue = progressStore.getLevel(props.teammember);
+    } else {
+      levelValue =
+        teamStore.memberProfiles?.[props.teammember]?.level ??
+        progressStore.getLevel(props.teammember);
+    }
+    const entry = playerLevels.value.find((pl) => pl.level === levelValue);
     return entry?.levelBadgeImageLink ?? '';
   });
   const kickingTeammate = ref(false);

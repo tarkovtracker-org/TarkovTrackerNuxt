@@ -286,7 +286,10 @@
       </template>
     </UModal>
     <!-- Reset All Modal -->
-    <UModal v-model:open="showResetAllDialog">
+    <UModal
+      v-model:open="showResetAllDialog"
+      @close="resetAllConfirmText = ''"
+    >
       <template #header>
         <div class="flex items-center gap-2">
           <UIcon name="i-mdi-alert-octagon" class="text-error-400 h-5 w-5" />
@@ -296,7 +299,7 @@
         </div>
       </template>
       <template #body>
-        <div class="space-y-3">
+        <div class="space-y-4">
           <UAlert
             icon="i-mdi-alert-octagon"
             color="error"
@@ -316,6 +319,16 @@
               )
             }}
           </p>
+          <div class="space-y-2">
+            <p class="text-surface-100 text-sm font-medium">
+              Type <strong class="text-error-400">DELETE</strong> to confirm:
+            </p>
+            <UInput
+              v-model="resetAllConfirmText"
+              placeholder="DELETE"
+              class="font-mono"
+            />
+          </div>
         </div>
       </template>
       <template #footer="{ close }">
@@ -333,6 +346,7 @@
             variant="solid"
             class="ml-auto min-w-30 justify-center text-center"
             :loading="resetting"
+            :disabled="resetAllConfirmText !== 'DELETE'"
             @click="resetAllData"
           >
             {{ $t('settings.data_management.reset_confirm', 'Reset All Data') }}
@@ -446,6 +460,7 @@
   const showResetPvPDialog = ref(false);
   const showResetPvEDialog = ref(false);
   const showResetAllDialog = ref(false);
+  const resetAllConfirmText = ref('');
   const streamerModeCooldown = ref(false);
   // Computed properties
   const user = computed(() => ({

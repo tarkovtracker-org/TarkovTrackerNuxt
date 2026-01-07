@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discord Community
+    url: https://discord.gg/tarkovtracker
+    about: Join our Discord for questions, discussions, and community support
+  - name: TarkovTracker Website
+    url: https://tarkovtracker.org
+    about: Visit the live application

@@ -51,6 +51,7 @@ const tarkovActions = {
           pvp_data: this.pvp,
           pve_data: this.pve,
         };
+        lastLocalSyncTime = Date.now(); // Track for self-origin filtering
         await $supabase.client.from('user_progress').upsert(completeState);
       } catch (error) {
         logger.error('Error syncing gamemode to backend:', error);
@@ -71,6 +72,7 @@ const tarkovActions = {
       const { $supabase } = useNuxtApp();
       if ($supabase.user.loggedIn && $supabase.user.id) {
         try {
+          lastLocalSyncTime = Date.now(); // Track for self-origin filtering
           $supabase.client.from('user_progress').upsert({
             user_id: $supabase.user.id,
             current_game_mode: migratedData.currentGameMode,
@@ -585,7 +587,69 @@ export const useTarkovStore = defineStore('swapTarkov', {
           _timestamp: Date.now(),
           data: state,
         };
-        return JSON.stringify(wrappedState);
+        const serialized = JSON.stringify(wrappedState);
+        // QUOTA MANAGEMENT: Check if localStorage has enough space
+        if (typeof window !== 'undefined') {
+          try {
+            // Estimate current localStorage usage
+            let currentUsage = 0;
+            for (const key in localStorage) {
+              if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
+                currentUsage += localStorage[key].length + key.length;
+              }
+            }
+            const neededSpace = serialized.length;
+            const estimatedQuota = 5 * 1024 * 1024; // 5MB typical limit
+            const safetyBuffer = 512 * 1024; // 512KB buffer
+            // If we're close to quota, clean up old backups
+            if (currentUsage + neededSpace > estimatedQuota - safetyBuffer) {
+              logger.warn(
+                '[TarkovStore] localStorage quota low, cleaning up old backups',
+                {
+                  currentUsage: Math.round(currentUsage / 1024) + 'KB',
+                  needed: Math.round(neededSpace / 1024) + 'KB',
+                  quota: Math.round(estimatedQuota / 1024) + 'KB',
+                }
+              );
+              // Get all backup keys sorted by timestamp (oldest first)
+              const backupKeys = Object.keys(localStorage)
+                .filter((k) => k.startsWith(STORAGE_KEYS.progressBackupPrefix))
+                .sort((a, b) => {
+                  // Extract timestamp from key (format: prefix_userId_timestamp or prefix_isoString)
+                  const extractTimestamp = (key: string): number => {
+                    const suffix = key.substring(STORAGE_KEYS.progressBackupPrefix.length);
+                    // Try parsing as ISO string first
+                    const isoDate = Date.parse(suffix);
+                    if (!isNaN(isoDate)) return isoDate;
+                    // Try extracting numeric timestamp from userId_timestamp format
+                    const parts = suffix.split('_');
+                    const lastPart = parts[parts.length - 1];
+                    const numericTimestamp = parseInt(lastPart, 10);
+                    return isNaN(numericTimestamp) ? 0 : numericTimestamp;
+                  };
+                  return extractTimestamp(a) - extractTimestamp(b);
+                });
+              // Remove old backups until we have enough space
+              let removedCount = 0;
+              for (const key of backupKeys) {
+                if (currentUsage + neededSpace <= estimatedQuota - safetyBuffer) break;
+                const keySize = localStorage[key].length + key.length;
+                localStorage.removeItem(key);
+                currentUsage -= keySize;
+                removedCount++;
+                logger.debug(`[TarkovStore] Removed old backup: ${key}`);
+              }
+              if (removedCount > 0) {
+                logger.info(`[TarkovStore] Cleaned up ${removedCount} old backups to free space`);
+              }
+            }
+          } catch (quotaError) {
+            logger.error('[TarkovStore] Error managing localStorage quota:', quotaError);
+            // If we can't manage quota, try to at least warn the user
+            // The persist plugin will handle the actual save error
+          }
+        }
+        return serialized;
       },
       deserialize: (value: string) => {
         try {
@@ -657,6 +721,7 @@ export function resetTarkovSync(reason?: string) {
     pendingSyncWatchStop();
     pendingSyncWatchStop = null;
   }
+  cleanupRealtimeListener();
   syncUserId = null;
   hasShownLocalIgnoreToast = false;
 }
@@ -777,23 +842,60 @@ export async function initializeTarkovSync() {
         userId: $supabase.user.id,
         hasLocalProgress,
       });
-      // Try to load from Supabase
-      const { data, error } = await $supabase.client
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', $supabase.user.id)
-        .single();
+      // Try to load from Supabase with retry logic to prevent race conditions
+      let data: unknown = null;
+      let error: unknown = null;
+      const maxRetries = 3;
+      const retryDelayMs = 500;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        if (attempt > 0) {
+          logger.debug(`[TarkovStore] Retry attempt ${attempt + 1}/${maxRetries}`);
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        }
+        const result = await $supabase.client
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', $supabase.user.id)
+          .single();
+        data = result.data;
+        error = result.error;
+        // Break if we got data or a real error (not "no rows")
+        if (
+          data ||
+          (error &&
+            typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            error.code !== 'PGRST116')
+        ) {
+          break;
+        }
+      }
       logger.debug('[TarkovStore] Supabase query result:', {
         hasData: !!data,
-        error: error?.code,
-        errorMessage: error?.message,
+        error:
+          error && typeof error === 'object' && error !== null && 'code' in error
+            ? error.code
+            : null,
+        errorMessage:
+          error && typeof error === 'object' && error !== null && 'message' in error
+            ? error.message
+            : null,
       });
       const hadRemoteData = Boolean(data);
       // Handle query errors (but not "no rows" which is expected for new users)
-      if (error && error.code !== 'PGRST116') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code !== 'PGRST116'
+      ) {
         logger.error('[TarkovStore] Error loading data from Supabase:', error);
         return { ok: false, hadRemoteData };
       }
+      let success = true; // Use simple variable to track success from within rAF
+
       // Wrap heavy data processing in rAF to avoid blocking the main thread
       await new Promise<void>((resolve) => {
         requestAnimationFrame(async () => {
@@ -807,16 +909,20 @@ export async function initializeTarkovSync() {
                 pve: { ...structuredClone(defaultState.pve), ...(data.pve_data || {}) },
               } as UserState)
             : null;
+
           const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
           const localScore = progressScore(localState);
+
           if (data) {
             const remoteUpdatedAt = data.updated_at ? Date.parse(data.updated_at) : null;
             const localOwnedByUser = storedUserId === currentUserId;
+
             if (hasLocalProgress && !localOwnedByUser && storedUserId === null) {
               notifyLocalIgnored(
                 'Found local guest progress on this device; your cloud progress was kept.'
               );
             }
+
             let shouldPreferLocal = false;
             // Conflict resolution logic
             if (localOwnedByUser && localTimestamp && remoteUpdatedAt) {
@@ -826,12 +932,14 @@ export async function initializeTarkovSync() {
             } else if (localOwnedByUser && !localTimestamp && !remoteUpdatedAt) {
               shouldPreferLocal = localScore > remoteScore;
             }
+
             // If local has more progress than remote, protect local and push it to Supabase.
             if (shouldPreferLocal) {
               logger.warn('[TarkovStore] Local progress ahead of Supabase; preserving local data', {
                 localScore,
                 remoteScore,
               });
+              lastLocalSyncTime = Date.now(); // Track for self-origin filtering
               const { error: upsertError } = await $supabase.client.from('user_progress').upsert({
                 user_id: $supabase.user.id,
                 current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
@@ -839,6 +947,7 @@ export async function initializeTarkovSync() {
                 pvp_data: localState.pvp || defaultState.pvp,
                 pve_data: localState.pve || defaultState.pve,
               });
+
               if (upsertError) {
                 logger.error(
                   '[TarkovStore] Error syncing local progress to Supabase:',
@@ -860,25 +969,74 @@ export async function initializeTarkovSync() {
               pvp_data: localState.pvp || defaultState.pvp,
               pve_data: localState.pve || defaultState.pve,
             };
+            lastLocalSyncTime = Date.now(); // Track for self-origin filtering
             const { error: upsertError } = await $supabase.client
               .from('user_progress')
               .upsert(migrateData);
+
             if (upsertError) {
               logger.error('[TarkovStore] Error migrating local data to Supabase:', upsertError);
-              // Don't return here inside rAF, instead just log and continue,
-              // or we should handle the 'hadRemoteData' return value differently.
-              // Note: strict return type matching is tricky inside async callback.
-              // We'll rely on the outer function returning { ok: true } generally unless critical failure.
             } else {
               logger.debug('[TarkovStore] Migration complete');
             }
           } else {
-            // Truly new user - no data anywhere
-            logger.debug('[TarkovStore] New user - no existing progress found');
+            // SAFETY CHECKS: Before treating as "new user", verify this isn't Issue #71 scenario
+            // Issue #71: User links a second OAuth provider → race condition → false "no data" → overwrites
+            
+            // Check 1: Account age
+            const accountCreatedAt = $supabase.user.createdAt;
+            const accountAgeMs = accountCreatedAt ? Date.now() - Date.parse(accountCreatedAt) : 0;
+            const isRecentlyCreated = accountAgeMs < 5000; // 5 seconds threshold
+
+            // Check 2: Multiple OAuth providers - strongest signal of Issue #71
+            const linkedProviders = $supabase.user.providers || [];
+            const hasMultipleProviders = linkedProviders.length > 1;
+
+            // ONLY block if hasMultipleProviders (Issue #71 scenario)
+            // OLD accounts with single provider are legitimate first-time users who waited to log in
+            if (hasMultipleProviders) {
+              // Multiple providers + no data = Issue #71 race condition
+              logger.error(
+                '[TarkovStore] SAFETY ABORT: Multi-provider account with no progress data (Issue #71)',
+                {
+                  accountAgeMs,
+                  isRecentlyCreated,
+                  linkedProviders,
+                  hasMultipleProviders,
+                  userId: $supabase.user.id,
+                }
+              );
+              
+              // Reset to default state but DO NOT sync to Supabase
+              // This prevents overwriting potentially existing data
+              resetStoreToDefault();
+              
+              // Notify user of the issue
+              const toast = useToast();
+              toast.add({
+                title: 'Unable to load progress',
+                description:
+                  'We detected an issue loading your account data. Please refresh the page or contact support if this persists.',
+                color: 'error',
+
+              });
+              
+              success = false;
+            } else {
+              // All safety checks passed - truly new user (or old account, first login)
+              logger.debug('[TarkovStore] New user - no existing progress found', {
+                accountAgeMs,
+                linkedProviders,
+              });
+            }
           }
           resolve();
         });
       });
+
+      if (!success) {
+        return { ok: false, hadRemoteData: false };
+      }
       logger.debug('[TarkovStore] Initial load complete');
       return { ok: true, hadRemoteData };
     };
@@ -906,6 +1064,17 @@ export async function initializeTarkovSync() {
         debounceMs: 5000, // Increased from 1s to reduce egress
         transform: (state: unknown) => {
           const userState = state as UserState;
+          // SAFETY CHECK: Prevent syncing completely empty state for existing accounts
+          // This protects against accidental data overwrites during edge cases
+          const stateHasProgress = hasProgress(userState);
+          if (!stateHasProgress && loadResult.hadRemoteData) {
+            logger.warn(
+              '[TarkovStore] Blocking sync of empty state - account had remote data on load'
+            );
+            return null; // Returning null prevents the sync
+          }
+          // Track sync time for self-origin filtering in realtime listener
+          lastLocalSyncTime = Date.now();
           return {
             user_id: $supabase.user.id,
             current_game_mode: userState.currentGameMode || GAME_MODES.PVP,
@@ -935,5 +1104,246 @@ export async function initializeTarkovSync() {
       );
       pendingSyncWatchStop = stopWatch;
     }
+    // MULTI-DEVICE CONFLICT RESOLUTION
+    // Setup realtime listener for remote changes from other devices
+    setupRealtimeListener();
+  }
+}
+// Realtime channel for multi-device sync
+let realtimeChannel: unknown = null;
+let lastLocalSyncTime = 0; // Track when we last synced locally to filter self-origin updates
+/**
+ * Setup realtime listener for user_progress changes from other devices
+ * This prevents silent data overwrites when using multiple devices simultaneously
+ */
+function setupRealtimeListener() {
+  const { $supabase } = useNuxtApp();
+  const tarkovStore = useTarkovStore();
+  if (!$supabase.user.loggedIn || !$supabase.user.id) return;
+  // Clean up existing channel if any
+  if (realtimeChannel) {
+    $supabase.client.removeChannel(realtimeChannel as Parameters<typeof $supabase.client.removeChannel>[0]);
+    realtimeChannel = null;
+  }
+  logger.debug('[TarkovStore] Setting up realtime listener for multi-device sync');
+  realtimeChannel = $supabase.client
+    .channel(`user_progress_${$supabase.user.id}`)
+    .on(
+      'postgres_changes' as const,
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'user_progress',
+        filter: `user_id=eq.${$supabase.user.id}`,
+      },
+      (payload: { new: unknown; old: unknown }) => {
+        const remoteData = payload.new as {
+          current_game_mode?: string;
+          game_edition?: number;
+          pvp_data?: UserProgressData;
+          pve_data?: UserProgressData;
+          updated_at?: string;
+        };
+        // SELF-ORIGIN FILTERING: Ignore updates that are likely from this client
+        // If update came within 3 seconds of our last local sync, it's probably ours
+        const updateTime = remoteData.updated_at ? Date.parse(remoteData.updated_at) : Date.now();
+        const timeSinceLastSync = updateTime - lastLocalSyncTime;
+        const SELF_ORIGIN_THRESHOLD_MS = 3000; // 3 seconds
+        if (timeSinceLastSync < SELF_ORIGIN_THRESHOLD_MS && timeSinceLastSync >= 0) {
+          logger.debug('[TarkovStore] Ignoring realtime update - likely self-origin', {
+            timeSinceLastSync,
+            threshold: SELF_ORIGIN_THRESHOLD_MS,
+          });
+          return;
+        }
+        logger.warn('[TarkovStore] Remote update detected from another device, merging changes');
+        // Pause local sync to prevent update loop
+        const controller = getSyncController();
+        if (controller) {
+          controller.pause();
+        }
+        // Get current local state
+        const localState = tarkovStore.$state;
+        // Merge remote changes with local state
+        const merged: Partial<UserState> = {
+          currentGameMode: (remoteData.current_game_mode as GameMode) || localState.currentGameMode,
+          gameEdition: remoteData.game_edition || localState.gameEdition,
+          pvp: mergeProgressData(localState.pvp, remoteData.pvp_data),
+          pve: mergeProgressData(localState.pve, remoteData.pve_data),
+        };
+        // Apply merged state
+        tarkovStore.$patch(merged);
+        // Resume sync after a short delay
+        setTimeout(() => {
+          if (controller) {
+            controller.resume();
+          }
+        }, 1000);
+        // Notify user
+        const toast = useToast();
+        toast.add({
+          title: 'Progress synced',
+          description: 'Changes from another device were merged with your local progress.',
+          color: 'info',
+
+        });
+      }
+    )
+    .subscribe((status: string) => {
+      logger.debug(`[TarkovStore] Realtime subscription status: ${status}`);
+    });
+}
+/**
+ * Merge two progress data objects, preserving maximum progress from both
+ * Strategy: Union of completed items, max values for levels/counts
+ */
+function mergeProgressData(
+  local: UserProgressData | undefined,
+  remote: UserProgressData | undefined
+): UserProgressData {
+  if (!local && !remote) return {} as UserProgressData;
+  if (!local) return remote!;
+  if (!remote) return local;
+  return {
+    level: Math.max(local.level || 1, remote.level || 1),
+    prestigeLevel: Math.max(local.prestigeLevel || 0, remote.prestigeLevel || 0),
+    displayName: remote.displayName || local.displayName,
+    pmcFaction: remote.pmcFaction || local.pmcFaction,
+    xpOffset: remote.xpOffset !== undefined ? remote.xpOffset : local.xpOffset,
+    // Merge task completions - union of both (keep all completed tasks)
+    taskCompletions: {
+      ...local.taskCompletions,
+      ...remote.taskCompletions,
+      // For conflicts, prefer the one marked complete
+      ...Object.fromEntries(
+        Object.entries({ ...local.taskCompletions, ...remote.taskCompletions }).map(
+          ([id, completion]) => {
+            const localComp = local.taskCompletions?.[id];
+            const remoteComp = remote.taskCompletions?.[id];
+            if (localComp && remoteComp) {
+              // Both exist - prefer complete over incomplete
+              return [
+                id,
+                {
+                  complete: localComp.complete || remoteComp.complete,
+                  failed: localComp.failed || remoteComp.failed,
+                  timestamp: Math.max(localComp.timestamp || 0, remoteComp.timestamp || 0),
+                },
+              ];
+            }
+            return [id, completion];
+          }
+        )
+      ),
+    },
+    // Merge objectives - max counts
+    taskObjectives: {
+      ...local.taskObjectives,
+      ...remote.taskObjectives,
+      ...Object.fromEntries(
+        Object.entries({ ...local.taskObjectives, ...remote.taskObjectives }).map(
+          ([id, objective]) => {
+            const localObj = local.taskObjectives?.[id];
+            const remoteObj = remote.taskObjectives?.[id];
+            if (localObj && remoteObj) {
+              return [
+                id,
+                {
+                  complete: localObj.complete || remoteObj.complete,
+                  count: Math.max(localObj.count || 0, remoteObj.count || 0),
+                  timestamp:
+                    localObj.timestamp && remoteObj.timestamp
+                      ? Math.max(localObj.timestamp, remoteObj.timestamp)
+                      : localObj.timestamp || remoteObj.timestamp,
+                },
+              ];
+            }
+            return [id, objective];
+          }
+        )
+      ),
+    },
+    // Merge hideout modules - union
+    hideoutModules: {
+      ...local.hideoutModules,
+      ...remote.hideoutModules,
+    },
+    // Merge hideout parts - max counts
+    hideoutParts: {
+      ...local.hideoutParts,
+      ...remote.hideoutParts,
+      ...Object.fromEntries(
+        Object.entries({ ...local.hideoutParts, ...remote.hideoutParts }).map(([id, part]) => {
+          const localPart = local.hideoutParts?.[id];
+          const remotePart = remote.hideoutParts?.[id];
+          if (localPart && remotePart) {
+            return [
+              id,
+              {
+                complete: localPart.complete || remotePart.complete,
+                count: Math.max(localPart.count || 0, remotePart.count || 0),
+                timestamp:
+                  localPart.timestamp && remotePart.timestamp
+                    ? Math.max(localPart.timestamp, remotePart.timestamp)
+                    : localPart.timestamp || remotePart.timestamp,
+              },
+            ];
+          }
+          return [id, part];
+        })
+      ),
+    },
+    // Merge traders - max level and reputation
+    traders: {
+      ...local.traders,
+      ...remote.traders,
+      ...Object.fromEntries(
+        Object.entries({ ...local.traders, ...remote.traders }).map(([traderId, trader]) => {
+          const localTrader = local.traders?.[traderId];
+          const remoteTrader = remote.traders?.[traderId];
+          if (localTrader && remoteTrader) {
+            return [
+              traderId,
+              {
+                level: Math.max(localTrader.level || 1, remoteTrader.level || 1),
+                reputation: Math.max(localTrader.reputation || 0, remoteTrader.reputation || 0),
+              },
+            ];
+          }
+          return [traderId, trader];
+        })
+      ),
+    },
+    // Merge skills - max values
+    skills: {
+      ...local.skills,
+      ...remote.skills,
+      ...Object.fromEntries(
+        Object.entries({ ...local.skills, ...remote.skills }).map(([skillName, skillLevel]) => {
+          const localSkill = local.skills?.[skillName];
+          const remoteSkill = remote.skills?.[skillName];
+          if (localSkill !== undefined && remoteSkill !== undefined) {
+            return [skillName, Math.max(localSkill, remoteSkill)];
+          }
+          return [skillName, skillLevel];
+        })
+      ),
+    },
+    // Merge skillOffsets - prefer remote (latest manual adjustment)
+    skillOffsets: {
+      ...local.skillOffsets,
+      ...remote.skillOffsets,
+    },
+  };
+}
+/**
+ * Cleanup realtime listener on disconnect
+ */
+function cleanupRealtimeListener() {
+  if (realtimeChannel) {
+    const { $supabase } = useNuxtApp();
+    $supabase.client.removeChannel(realtimeChannel as Parameters<typeof $supabase.client.removeChannel>[0]);
+    realtimeChannel = null;
+    logger.debug('[TarkovStore] Cleaned up realtime listener');
   }
 }

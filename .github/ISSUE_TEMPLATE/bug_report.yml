@@ -1,0 +1,114 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us investigate.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Tell us what should have happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Tell us what actually happened
+    validations:
+      required: true
+
+  - type: dropdown
+    id: game-mode
+    attributes:
+      label: Game Mode
+      description: Which game mode are you using?
+      options:
+        - PvP
+        - PvE
+        - Both
+        - Not Applicable
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Technical Area
+      description: Which technical system is affected? (Maintainers will add area labels during triage)
+      multiple: true
+      options:
+        - UI/Frontend (Vue components, pages, styling)
+        - API (Server routes, workers, endpoints)
+        - Database (Supabase, queries, schema)
+        - Auth (Login, permissions, sessions)
+        - Realtime (Team sync, broadcasts)
+        - i18n (Translations)
+        - Not Sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: Drag and drop images here or paste URLs
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: What browser are you using?
+      placeholder: e.g., Chrome 120, Firefox 121, Safari 17
+    validations:
+      required: false
+
+  - type: input
+    id: discord
+    attributes:
+      label: Discord Handle (Optional)
+      description: Your Discord username if you'd like us to follow up there
+      placeholder: username#1234
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here.
+    validations:
+      required: false

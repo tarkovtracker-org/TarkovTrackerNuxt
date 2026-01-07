@@ -6,7 +6,7 @@ import type { UserProgressData } from '~/stores/progressState';
 export interface SupabaseSyncConfig {
   store: Store;
   table: string;
-  transform?: (state: Record<string, unknown>) => Record<string, unknown>;
+  transform?: (state: Record<string, unknown>) => Record<string, unknown> | null;
   debounceMs?: number;
 }
 // Type for the transformed data that gets sent to Supabase
@@ -40,11 +40,38 @@ export function useSupabaseSync({
   const isSyncing = ref(false);
   const isPaused = ref(false);
   let lastSyncedHash: string | null = null;
-  const syncToSupabase = async (inputState: unknown) => {
+  // Retry state
+  const MAX_SYNC_RETRIES = 3;
+  let syncRetries = 0;
+  let pendingRetryTimeouts: NodeJS.Timeout[] = [];
+  let syncVersion = 0; // Increments with each sync to track freshness
+  const syncToSupabase = async (inputState: unknown, retryVersion?: number) => {
     const state = inputState as Record<string, unknown>;
+    // If this is a retry, check if it's stale
+    if (retryVersion !== undefined && retryVersion < syncVersion) {
+      logger.debug('[Sync] Ignoring stale retry - newer sync has occurred', {
+        retryVersion,
+        currentVersion: syncVersion,
+      });
+      return;
+    }
+    // Cancel any pending retries when starting a new sync (not a retry itself)
+    if (retryVersion === undefined) {
+      if (pendingRetryTimeouts.length > 0) {
+        logger.debug(`[Sync] Canceling ${pendingRetryTimeouts.length} pending retry timeouts`);
+        pendingRetryTimeouts.forEach(clearTimeout);
+        pendingRetryTimeouts = [];
+      }
+      // Increment version for this new sync
+      syncVersion++;
+      syncRetries = 0; // Reset retry counter for new sync
+    }
+    const currentSyncVersion = retryVersion !== undefined ? retryVersion : syncVersion;
     logger.debug('[Sync] syncToSupabase called', {
       loggedIn: $supabase.user.loggedIn,
       isPaused: isPaused.value,
+      version: currentSyncVersion,
+      isRetry: retryVersion !== undefined,
     });
     if (isPaused.value) {
       logger.debug('[Sync] Skipping - sync is paused');
@@ -94,12 +121,84 @@ export function useSupabaseSync({
       const { error } = await $supabase.client.from(table).upsert(dataToSave);
       if (error) {
         logger.error(`[Sync] Error syncing to ${table}:`, error);
+        // Retry with exponential backoff
+        if (syncRetries < MAX_SYNC_RETRIES) {
+          syncRetries++;
+          const retryDelay = 1000 * Math.pow(2, syncRetries - 1); // 1s, 2s, 4s
+          logger.debug(
+            `[Sync] Retrying in ${retryDelay}ms (attempt ${syncRetries}/${MAX_SYNC_RETRIES})`
+          );
+          const timeoutId = setTimeout(() => {
+            logger.debug(`[Sync] Retry attempt ${syncRetries}/${MAX_SYNC_RETRIES}`);
+            // Remove this timeout from pending list
+            pendingRetryTimeouts = pendingRetryTimeouts.filter((id) => id !== timeoutId);
+            // Pass version to ensure retry isn't stale
+            syncToSupabase(state, currentSyncVersion);
+          }, retryDelay);
+          pendingRetryTimeouts.push(timeoutId);
+          isSyncing.value = false;
+          return;
+        }
+        // All retries exhausted - notify user
+        const toast = useToast();
+        toast.add({
+          title: 'Sync failed',
+          description:
+            "Your progress couldn't be saved to the cloud. Please check your connection and try again.",
+          color: 'error',
+
+        });
+        // Store failed sync for potential recovery (table-specific key to avoid conflicts)
+        if (typeof window !== 'undefined') {
+          try {
+            const pendingSyncKey = `pending_sync_${table}`;
+            localStorage.setItem(pendingSyncKey, JSON.stringify(dataToSave));
+            logger.debug(`[Sync] Saved pending sync to localStorage for recovery (${pendingSyncKey})`);
+          } catch (e) {
+            logger.error('[Sync] Could not save pending sync:', e);
+          }
+        }
       } else {
-        lastSyncedHash = currentHash; // Update hash on successful sync
+        // Success - reset retry counter and clear pending sync
+        syncRetries = 0;
+        lastSyncedHash = currentHash;
         logger.debug(`[Sync] ✅ Successfully synced to ${table}`);
+        // Clear any pending sync from localStorage (table-specific key)
+        if (typeof window !== 'undefined') {
+          try {
+            const pendingSyncKey = `pending_sync_${table}`;
+            localStorage.removeItem(pendingSyncKey);
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
       }
     } catch (err) {
       logger.error('[Sync] Unexpected error:', err);
+      // Treat unexpected errors same as sync errors
+      if (syncRetries < MAX_SYNC_RETRIES) {
+        syncRetries++;
+        const retryDelay = 1000 * Math.pow(2, syncRetries - 1);
+        logger.debug(
+          `[Sync] Retrying after unexpected error in ${retryDelay}ms (attempt ${syncRetries}/${MAX_SYNC_RETRIES})`
+        );
+        const timeoutId = setTimeout(() => {
+          // Remove this timeout from pending list
+          pendingRetryTimeouts = pendingRetryTimeouts.filter((id) => id !== timeoutId);
+          // Pass version to ensure retry isn't stale
+          syncToSupabase(state, currentSyncVersion);
+        }, retryDelay);
+        pendingRetryTimeouts.push(timeoutId);
+        isSyncing.value = false;
+        return;
+      }
+      const toast = useToast();
+      toast.add({
+        title: 'Sync error',
+        description: 'An unexpected error occurred while saving your progress.',
+        color: 'error',
+        timeout: 10000,
+      });
     } finally {
       isSyncing.value = false;
     }
@@ -136,6 +235,14 @@ export function useSupabaseSync({
   const cleanup = () => {
     debouncedSync.cancel();
     unwatch();
+    // Clear any pending retry timeouts
+    if (pendingRetryTimeouts.length > 0) {
+      logger.debug(`[Sync] Cleanup: clearing ${pendingRetryTimeouts.length} pending retry timeouts`);
+      pendingRetryTimeouts.forEach(clearTimeout);
+      pendingRetryTimeouts = [];
+    }
+    // Reset retry state
+    syncRetries = 0;
   };
   if (getCurrentInstance()) {
     onUnmounted(cleanup);

@@ -380,7 +380,15 @@ serve(async (req) => {
 
     const cleanupErrors = await cleanupUserData(supabase, user.id);
     if (Object.keys(cleanupErrors).length > 0) {
-      console.error('[account-delete] Cleanup errors after auth delete:', cleanupErrors);
+      // Sanitize errors - log table names but not error details from sensitive tables
+      const SENSITIVE_TABLES = ['api_tokens'];
+      const sanitizedErrors = Object.fromEntries(
+        Object.entries(cleanupErrors).map(([table, error]) => [
+          table,
+          SENSITIVE_TABLES.includes(table) ? 'Deletion failed' : error,
+        ])
+      );
+      console.error('[account-delete] Cleanup errors after auth delete:', sanitizedErrors);
       await recordDeletionFailure(supabase, user.id, 'cleanup_failed', {
         stage: 'cleanup',
         errors: cleanupErrors,

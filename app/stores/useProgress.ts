@@ -146,21 +146,15 @@ export const useProgressStore = defineStore('progress', () => {
         level: number;
         faction: string;
         completions: Record<string, { complete?: boolean; failed?: boolean }>;
-        traderLevels: Record<string, number>;
       }
     >();
     for (const teamId of teamIds) {
       const store = visibleTeamStores.value[teamId];
       const currentData = getGameModeData(store);
-      const traderLevels: Record<string, number> = {};
-      for (const trader of metadataStore.traders) {
-        traderLevels[trader.id] = currentData?.level ?? 0;
-      }
       teamDataCache.set(teamId, {
         level: currentData?.level ?? 0,
         faction: currentData?.pmcFaction ?? 'USEC',
         completions: currentData?.taskCompletions ?? {},
-        traderLevels,
       });
     }
     const tasksById = new Map(tasks.map((task) => [task.id, task]));
@@ -242,16 +236,8 @@ export const useProgressStore = defineStore('progress', () => {
           visiting.delete(taskId);
           return false;
         }
-        // Trader levels check
-        if (task.traderLevelRequirements) {
-          for (const req of task.traderLevelRequirements) {
-            if ((teamData.traderLevels[req.trader.id] ?? 0) < req.level) {
-              memo.set(taskId, false);
-              visiting.delete(taskId);
-              return false;
-            }
-          }
-        }
+        // Trader gating intentionally disabled until real trader level/rep is wired.
+        // TODO: Use trader level/rep from currentData.traders[traderId], not player level.
         // Prerequisites check
         if (task.taskRequirements) {
           for (const req of task.taskRequirements) {
@@ -529,10 +515,42 @@ export const useProgressStore = defineStore('progress', () => {
     // Final fallback
     return teamId.substring(0, 6);
   };
+  /**
+   * Calculate derived level from XP for any team member
+   */
+  const calculateDerivedLevel = (teamId: string): number => {
+    const storeKey = getTeamIndex(teamId);
+    const store = teamStores.value[storeKey];
+    const currentData = getGameModeData(store);
+    const xpOffset = currentData?.xpOffset ?? 0;
+    // Calculate total XP from completed tasks
+    const calculatedQuestXP = metadataStore.tasks
+      .filter((task) => {
+        const completion = currentData?.taskCompletions?.[task.id];
+        return completion?.complete === true && completion?.failed !== true;
+      })
+      .reduce((sum, task) => sum + (task.experience || 0), 0);
+    const totalXP = calculatedQuestXP + xpOffset;
+    // Find level from total XP
+    const levels = metadataStore.playerLevels;
+    if (!levels || levels.length === 0) return 1;
+    for (let i = levels.length - 1; i >= 0; i--) {
+      const level = levels[i];
+      if (level && totalXP >= level.exp) {
+        return level.level;
+      }
+    }
+    return 1;
+  };
   const getLevel = (teamId: string): number => {
     const storeKey = getTeamIndex(teamId);
     const store = teamStores.value[storeKey];
     const currentData = getGameModeData(store);
+    // For the current user (self), check if automatic level calculation is enabled
+    if (storeKey === 'self' && preferencesStore.getUseAutomaticLevelCalculation) {
+      return calculateDerivedLevel(teamId);
+    }
+    // For teammates or when manual mode, use stored level
     return currentData?.level ?? 1;
   };
   const getFaction = (teamId: string): string => {

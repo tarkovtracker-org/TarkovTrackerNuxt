@@ -1,0 +1,79 @@
+name: Enhancement
+description: Suggest an improvement to an existing feature
+title: "[Enhancement]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an enhancement! This is for improvements to existing features.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Technical Area
+      description: Which technical system does this enhancement affect? (Maintainers will add area labels during triage)
+      multiple: true
+      options:
+        - UI/Frontend (Vue components, pages, styling)
+        - API (Server routes, workers, endpoints)
+        - Database (Supabase, queries, schema)
+        - Auth (Login, permissions, sessions)
+        - Realtime (Team sync, broadcasts)
+        - i18n (Translations)
+        - Not Sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Behavior
+      description: How does the feature currently work?
+      placeholder: Currently, when I...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Enhancement
+      description: How would you like it to work instead?
+      placeholder: It would be better if...
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: Benefits
+      description: What are the benefits of this enhancement?
+      placeholder: This would improve...
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Examples
+      description: If applicable, add screenshots or examples.
+      placeholder: Drag and drop images here or paste URLs
+    validations:
+      required: false
+
+  - type: input
+    id: discord
+    attributes:
+      label: Discord Handle (Optional)
+      description: Your Discord username if you'd like to discuss further
+      placeholder: username#1234
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the enhancement.
+    validations:
+      required: false

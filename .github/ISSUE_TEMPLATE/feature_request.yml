@@ -1,0 +1,91 @@
+name: Feature Request
+description: Suggest a new feature or major addition
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide as much detail as possible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see.
+      placeholder: I would like to see...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Technical Area
+      description: Which technical system would this feature involve? (Maintainers will add area labels during triage)
+      multiple: true
+      options:
+        - UI/Frontend (Vue components, pages, styling)
+        - API (Server routes, workers, endpoints)
+        - Database (Supabase, queries, schema)
+        - Auth (Login, permissions, sessions)
+        - Realtime (Team sync, broadcasts)
+        - i18n (Translations)
+        - Not Sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or features?
+      placeholder: I've also thought about...
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Examples
+      description: If applicable, add mockups, screenshots, or examples from other apps.
+      placeholder: Drag and drop images here or paste URLs
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Opinion)
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my experience
+        - High - Significantly impacts my workflow
+    validations:
+      required: false
+
+  - type: input
+    id: discord
+    attributes:
+      label: Discord Handle (Optional)
+      description: Your Discord username if you'd like to discuss further
+      placeholder: username#1234
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context or information about the feature request.
+    validations:
+      required: false
