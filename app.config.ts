@@ -105,5 +105,11 @@ export default defineAppConfig({
         },
       },
     },
+    // Input configuration to enforce theme-driven text color
+    input: {
+      slots: {
+        base: 'relative block w-full focus:outline-none border-0 text-accent-700 dark:text-accent-200 placeholder:text-gray-500 dark:placeholder:text-gray-400 bg-transparent',
+      },
+    },
   },
 });

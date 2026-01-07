@@ -89,103 +89,91 @@
             </div>
           </div>
         </div>
-        <div class="grid gap-4 md:grid-cols-2">
-          <!-- Left: XP Equation Breakdown -->
-          <div
-            class="border-base bg-surface-elevated dark:border-accent-700/30 rounded-lg border p-4"
-          >
-            <div class="text-content-primary mb-3 text-sm font-semibold">
-              {{ $t('settings.experience.breakdown', 'XP Breakdown') }}
+        <!-- Unified XP Management (Math Style) -->
+        <div
+          class="border-base bg-surface-elevated dark:border-accent-700/30 rounded-lg border p-4"
+        >
+          <div class="grid grid-cols-[70%_30%] items-center gap-y-4">
+            <!-- Row 1: Task XP -->
+            <span class="text-content-secondary text-sm font-medium">
+              {{ $t('settings.experience.task_xp', 'Task XP') }}
+            </span>
+            <div class="text-content-primary font-mono text-xl font-semibold pr-2 text-right sm:pr-4">
+              {{ formatNumber(xpCalculation.calculatedQuestXP.value) }}
             </div>
-            <div class="flex flex-col gap-1 font-mono text-sm">
-              <!-- Quest XP -->
-              <div class="text-content-secondary flex items-center justify-between">
-                <span>Task XP</span>
-                <span>{{ formatNumber(xpCalculation.calculatedQuestXP.value) }}</span>
-              </div>
-              <!-- Manual Offset -->
-              <div class="text-content-secondary flex items-center justify-between">
-                <span class="flex items-center gap-2">
-                  <span>+</span>
-                  <span>Manual Offset</span>
-                </span>
-                <span
-                  :class="
-                    tarkovStore.getXpOffset() >= 0
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-500 dark:text-red-400'
-                  "
-                >
-                  {{ formatNumber(tarkovStore.getXpOffset()) }}
-                </span>
-              </div>
-              <!-- Divider -->
-              <div class="border-base my-2 border-b"></div>
-              <!-- Total -->
-              <div class="flex items-center justify-between py-0.5 text-lg font-bold">
-                <span class="text-content-primary">Total XP</span>
-                <span class="text-accent-600 dark:text-accent-400">
-                  {{ formatNumber(xpCalculation.totalXP.value) }}
-                </span>
-              </div>
+            <!-- Row 2: Manual Offset -->
+            <div class="flex items-center gap-2">
+              <span class="text-content-secondary text-sm font-medium">
+                {{ $t('settings.experience.manual_offset', 'Manual Offset') }}
+              </span>
+              <UButton
+                v-if="tarkovStore.getXpOffset() !== 0"
+                icon="i-mdi-undo"
+                variant="link"
+                color="gray"
+                size="xs"
+                class="h-4 p-0 opacity-50 hover:opacity-100"
+                :title="$t('settings.experience.reset_offset', 'Reset XP Offset')"
+                @click="resetOffset"
+              >
+                {{ $t('settings.experience.reset', 'Reset') }}
+              </UButton>
             </div>
-          </div>
-          <!-- Right: Manual Input Actions -->
-          <div
-            class="border-base bg-surface-elevated dark:border-accent-700/30 rounded-lg border p-4"
-          >
-            <label class="text-content-primary mb-3 block text-sm font-semibold">
-              {{ $t('settings.experience.set_total_xp', 'Set Total XP') }}
+            <div
+              class="font-mono text-xl font-semibold pr-2 text-right sm:pr-4"
+              :class="
+                tarkovStore.getXpOffset() >= 0
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-500 dark:text-red-400'
+              "
+            >
+              <span class="opacity-50 mr-1">{{ tarkovStore.getXpOffset() >= 0 ? '+' : '' }}</span>
+              {{ formatNumber(tarkovStore.getXpOffset()) }}
+            </div>
+            <!-- Math Divider -->
+            <div class="border-base col-span-2 my-2 border-b-2"></div>
+            <!-- Row 3: Total XP Input -->
+            <label class="text-content-primary text-sm font-bold uppercase tracking-wider">
+              {{ $t('settings.experience.total_xp', 'Total XP') }}
             </label>
-            <div class="flex flex-col gap-1">
-              <!-- Description (Matches Quest XP row) -->
-              <div class="text-content-tertiary flex min-h-[20px] items-center text-xs">
-                <p class="line-clamp-1">
-                  {{
-                    $t(
-                      'settings.experience.manual_hint',
-                      'Enter your actual total XP to adjust the offset automatically.'
-                    )
-                  }}
-                </p>
-              </div>
-              <!-- Reset Button (Matches Manual Offset row) -->
-              <div class="flex min-h-[20px] items-center">
-                <UButton
-                  icon="i-mdi-refresh"
-                  size="xs"
-                  variant="link"
-                  color="neutral"
-                  class="h-5 px-0"
-                  :disabled="tarkovStore.getXpOffset() === 0"
-                  @click="resetOffset"
-                >
-                  {{ $t('settings.experience.reset_offset', 'Reset XP Offset') }}
-                </UButton>
-              </div>
-              <!-- Invisible Divider (Matches visible divider) -->
-              <div class="my-2 border-b border-transparent"></div>
-              <!-- Input (Matches Total XP row) -->
-              <div class="flex items-center gap-2 py-0.5">
-                <UInput
-                  v-model.number="manualXPInput"
-                  type="number"
-                  :min="0"
-                  :placeholder="xpCalculation.totalXP.value.toString()"
-                  size="md"
-                  class="flex-1 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  @keyup.enter="applyManualXP"
-                />
-                <UButton
-                  icon="i-mdi-check"
-                  size="md"
-                  color="primary"
-                  :disabled="!isValidXPInput"
-                  @click="applyManualXP"
-                >
-                  {{ $t('page.tasks.filters.apply') }}
-                </UButton>
-              </div>
+            <UInput
+              v-model.number="manualXPInput"
+              type="number"
+              :min="0"
+              class="xp-input w-full"
+              input-class="font-mono font-bold text-accent-600 dark:text-accent-400"
+              :placeholder="xpCalculation.totalXP.value.toString()"
+              @keyup.enter="applyManualXP"
+            />
+            <!-- Row 4: Info & Apply -->
+            <div class="pr-4">
+              <p class="text-content-tertiary text-xs leading-tight">
+                {{
+                  $t(
+                    'settings.experience.sync_description',
+                    'Set your in-game Total XP to automatically update the offset.'
+                  )
+                }}
+              </p>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+              <span
+                v-if="!isValidXPInput && manualXPInput !== null"
+                class="text-accent-500 text-[10px] font-bold uppercase tracking-tighter"
+              >
+                {{ $t('settings.experience.unsaved_changes', 'Unsaved Changes') }}
+              </span>
+              <UButton
+                icon="i-mdi-check"
+                color="primary"
+                variant="solid"
+                size="md"
+                class="shadow-sm w-full justify-center"
+                :disabled="!isValidXPInput"
+                @click="applyManualXP"
+              >
+                {{ $t('page.tasks.filters.apply') }}
+              </UButton>
             </div>
           </div>
         </div>
@@ -236,3 +224,17 @@
     }
   };
 </script>
+<style scoped>
+  /* Hide number input spinners */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+  .xp-input :deep(input) {
+    text-align: right !important;
+  }
+</style>

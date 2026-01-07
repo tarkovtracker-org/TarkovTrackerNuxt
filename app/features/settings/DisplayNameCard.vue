@@ -103,7 +103,7 @@
               {{ previewName }}
             </span>
           </div>
-          <p class="text-content-tertiary mt-2 text-xs italic">
+          <p class="text-content-tertiary mt-2 text-xs">
             {{
               $t(
                 'settings.display_name.preview_hint',

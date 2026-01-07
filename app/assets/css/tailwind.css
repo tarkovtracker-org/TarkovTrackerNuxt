@@ -21,16 +21,19 @@ a {
   cursor: pointer;
 }
 
-/* Disabled element cursor override
-   !important required: Nuxt UI and Leaflet set their own cursor styles.
-   This ensures consistent disabled state appearance across all interactive elements. */
+/* Global Disabled State
+   Standardized appearance for all disabled interactive elements.
+   Includes cursor, opacity, and grayscale filter for consistency. */
 button:disabled,
 [role='button'][aria-disabled='true'],
 input:disabled,
 select:disabled,
+textarea:disabled,
 .disabled,
 .leaflet-disabled {
   cursor: not-allowed !important;
+  opacity: 0.6;
+  filter: grayscale(0.2);
 }
 
 /* =========================================
@@ -623,6 +626,16 @@ select:disabled,
 }
 .dark .text-gray-200 {
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Global Input Text Color Override (Standard HTML inputs) */
+input[type='text'],
+input[type='password'],
+input[type='email'],
+input[type='search'],
+input[type='number'],
+textarea {
+  @apply text-accent-700 dark:text-accent-200 placeholder:text-gray-500 dark:placeholder:text-gray-400;
 }
 
 /* =========================================
