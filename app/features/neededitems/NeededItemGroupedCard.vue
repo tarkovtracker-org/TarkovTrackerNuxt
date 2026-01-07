@@ -7,25 +7,22 @@
     <div class="flex items-stretch">
       <!-- Item image - fills top-left corner -->
       <div class="relative h-24 w-24 shrink-0 overflow-hidden rounded-tl-lg">
+        <ItemStatusBadge
+          :current-count="groupedItem.currentCount"
+          :needed-count="groupedItem.total"
+          :is-complete="isComplete"
+          :found-in-raid="groupedItem.taskFir > 0 || groupedItem.hideoutFir > 0"
+          :is-craftable="isCraftable"
+          :is-craftable-available="isCraftableAvailable"
+          :is-kappa-required="false"
+          :show-count="false"
+          size="md"
+        />
         <GameItem :item="groupedItem.item" :is-visible="true" size="fluid" simple-mode />
       </div>
-      <!-- Item name + Total - with padding -->
       <div class="flex min-w-0 flex-1 flex-col justify-center p-3">
-        <div class="flex min-w-0 items-start gap-1">
-          <div
-            class="text-content-primary line-clamp-2 min-w-0 text-sm leading-tight font-semibold"
-          >
-            {{ groupedItem.item.name }}
-          </div>
-          <ItemIndicators
-            v-if="isCraftable"
-            :size="'sm'"
-            :found-in-raid="false"
-            :is-craftable="isCraftable"
-            :is-craftable-available="isCraftableAvailable"
-            :craftable-title="craftableTitle"
-            @craft="goToCraftStation"
-          />
+        <div class="text-content-primary line-clamp-2 min-w-0 text-sm leading-tight font-semibold">
+          {{ groupedItem.item.name }}
         </div>
         <div class="mt-1 flex items-center gap-1">
           <span
@@ -178,7 +175,8 @@
 </template>
 <script setup lang="ts">
   import { computed } from 'vue';
-  import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
+  import GameItem from '@/components/ui/GameItem.vue';
+  import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
   import { useCraftableItem } from '@/composables/useCraftableItem';
   import { formatCompactNumber } from '@/utils/formatters';
   interface GroupedItem {

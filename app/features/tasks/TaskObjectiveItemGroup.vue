@@ -31,7 +31,7 @@
             :found-in-raid="row.meta.foundInRaid"
             :is-craftable="isItemCraftable(row)"
             :craftable-title="getCraftableTitle(row)"
-            :craftable-icon-class="getCraftableIconClass(row)"
+            :is-craftable-available="isItemCraftableAvailable(row)"
             :is-kappa-required="false"
             :show-count="false"
             size="sm"
@@ -316,14 +316,13 @@
   const isItemCraftable = (row: ConsolidatedRow): boolean => {
     return getCraftSourcesForRow(row).length > 0;
   };
-  const getCraftableIconClass = (row: ConsolidatedRow): string => {
+  const isItemCraftableAvailable = (row: ConsolidatedRow): boolean => {
     const sources = getCraftSourcesForRow(row);
-    if (sources.length === 0) return '';
-    const isAvailable = sources.some((source) => {
+    if (sources.length === 0) return false;
+    return sources.some((source) => {
       const currentLevel = progressStore.hideoutLevels?.[source.stationId]?.self ?? 0;
       return currentLevel >= source.stationLevel;
     });
-    return isAvailable ? 'text-success-600 dark:text-success-400' : 'text-surface-400';
   };
   const getCraftableTitle = (row: ConsolidatedRow): string => {
     const sources = getCraftSourcesForRow(row);

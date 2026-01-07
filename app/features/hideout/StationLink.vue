@@ -1,7 +1,8 @@
 <template>
   <router-link
+    v-tooltip="props.station.name"
     :to="stationHref"
-    class="hover-effect inline-flex max-w-full items-center rounded pr-2 text-blue-400 no-underline"
+    class="hover-effect inline-flex max-w-full min-w-0 items-center rounded pr-2 text-blue-400 no-underline"
     :aria-label="`Go to ${props.station.name} card`"
     :class="{
       'gap-2': !props.compact,
@@ -34,8 +35,9 @@
         'text-sm': !props.compact,
         'text-xs': props.compact,
       }"
-      >{{ level }}</span
     >
+      {{ level }}
+    </span>
   </router-link>
 </template>
 <script setup lang="ts">

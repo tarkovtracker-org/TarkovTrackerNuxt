@@ -1,14 +1,16 @@
 <template>
   <div v-if="hasContent" class="peer/indicators absolute top-0 left-0 z-40">
     <div
-      class="bg-surface-elevated flex items-center gap-1 rounded-tl rounded-br-lg bg-clip-padding px-2 py-1 shadow-lg"
+      class="bg-surface-elevated flex items-center rounded-tl rounded-br-lg bg-clip-padding shadow-lg"
       :class="[sizeClasses]"
     >
-      <template v-if="showCount">
-        <span :class="countTextClasses">{{ currentCount }}/{{ neededCount }}</span>
-      </template>
       <ItemIndicators
         :size="size"
+        :current-count="currentCount"
+        :needed-count="neededCount"
+        :show-count="showCount"
+        :is-complete="isComplete"
+        :show-icons="showIcons"
         :found-in-raid="foundInRaid"
         :is-craftable="isCraftable"
         :is-craftable-available="isCraftableAvailable"
@@ -20,9 +22,11 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
   import { computed } from 'vue';
   import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
+
   interface Props {
     currentCount?: number;
     neededCount?: number;
@@ -34,8 +38,10 @@
     craftableTitle?: string;
     isKappaRequired?: boolean;
     kappaTitle?: string;
-    size?: 'sm' | 'md';
+    size?: 'sm' | 'md' | 'lg';
+    showIcons?: boolean;
   }
+
   const props = withDefaults(defineProps<Props>(), {
     currentCount: 0,
     neededCount: 1,
@@ -48,24 +54,28 @@
     isKappaRequired: false,
     kappaTitle: 'Required for Kappa quest',
     size: 'md',
+    showIcons: true,
   });
+
   const emit = defineEmits<{
     craft: [];
   }>();
+
   // Hide badge entirely if nothing to show
   const hasContent = computed(() => {
-    return props.showCount || props.foundInRaid || props.isCraftable || props.isKappaRequired;
+    return (
+      props.showCount ||
+      (props.showIcons && (props.foundInRaid || props.isCraftable || props.isKappaRequired))
+    );
   });
-  const countTextClasses = computed(() => ({
-    'text-content-primary': !props.isComplete,
-    'text-success-600 dark:text-success-400 font-bold': props.isComplete,
-  }));
+
   const sizeClasses = computed(() => {
     if (props.size === 'sm') {
-      return 'text-xs font-semibold';
+      return 'text-xs font-semibold px-1 py-0.5 gap-1';
     }
-    return 'text-sm font-bold';
-  });
-    return 'text-sm font-bold';
+    if (props.size === 'lg') {
+      return 'text-base font-bold px-3 py-1.5 gap-2';
+    }
+    return 'text-sm font-bold px-2 py-1 gap-1';
   });
 </script>

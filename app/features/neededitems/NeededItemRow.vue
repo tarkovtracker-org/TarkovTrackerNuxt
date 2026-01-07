@@ -13,6 +13,21 @@
               :class="{ 'pointer-events-none': selfCompletedNeed }"
               @click.stop="!selfCompletedNeed && $emit('toggleCount')"
             >
+              <ItemStatusBadge
+                :current-count="currentCount"
+                :needed-count="neededCount"
+                :is-complete="selfCompletedNeed || isCollected"
+                :found-in-raid="props.need.foundInRaid"
+                :is-craftable="isCraftable"
+                :is-craftable-available="isCraftableAvailable"
+                :craftable-title="craftableTitle"
+                :is-kappa-required="isKappaRequired"
+                :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
+                :show-count="false"
+                :show-icons="false"
+                size="md"
+                @craft="goToCraftStation"
+              />
               <GameItem
                 v-if="isVisible"
                 :item="imageItem"
@@ -39,7 +54,11 @@
               <span class="flex items-center truncate text-xl font-semibold">
                 <span class="truncate">{{ item.name }}</span>
                 <ItemIndicators
-                  :size="'md'"
+                  class="ml-2"
+                  :current-count="currentCount"
+                  :needed-count="neededCount"
+                  :show-count="false"
+                  :is-complete="selfCompletedNeed || isCollected"
                   :found-in-raid="props.need.foundInRaid"
                   :is-craftable="isCraftable"
                   :is-craftable-available="isCraftableAvailable"
@@ -88,8 +107,23 @@
                   <div class="flex flex-col items-center">
                     <!-- Item image -->
                     <div
-                      class="bg-surface-elevated flex aspect-video min-h-25 w-full items-center justify-center"
+                      class="bg-surface-elevated relative flex aspect-video min-h-25 w-full items-center justify-center"
                     >
+                      <ItemStatusBadge
+                        :current-count="currentCount"
+                        :needed-count="neededCount"
+                        :is-complete="selfCompletedNeed || isCollected"
+                        :found-in-raid="props.need.foundInRaid"
+                        :is-craftable="isCraftable"
+                        :is-craftable-available="isCraftableAvailable"
+                        :craftable-title="craftableTitle"
+                        :is-kappa-required="isKappaRequired"
+                        :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
+                        :show-count="false"
+                        :show-icons="false"
+                        size="md"
+                        @craft="goToCraftStation"
+                      />
                       <GameItem
                         v-if="imageItem"
                         :item="imageItem"
@@ -104,12 +138,16 @@
                         {{ item.name }}
                       </div>
                       <ItemIndicators
-                        :size="'md'"
+                        class="ml-2"
+                        :current-count="currentCount"
+                        :needed-count="neededCount"
+                        :show-count="false"
+                        :is-complete="selfCompletedNeed || isCollected"
                         :found-in-raid="props.need.foundInRaid"
                         :is-craftable="isCraftable"
                         :is-craftable-available="isCraftableAvailable"
                         :craftable-title="craftableTitle"
-                        :kappa-required="isKappaRequired"
+                        :is-kappa-required="isKappaRequired"
                         :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
                         @craft="goToCraftStation"
                       />
@@ -284,6 +322,8 @@
     createDefaultNeededItemContext,
     neededItemKey,
   } from '@/features/neededitems/neededitem-keys';
+  import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
+  import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
   import { useTarkovStore } from '@/stores/useTarkov';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
   import ItemCountControls from './ItemCountControls.vue';

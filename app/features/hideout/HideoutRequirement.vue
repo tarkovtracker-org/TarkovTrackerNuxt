@@ -28,6 +28,8 @@
           :needed-count="requiredCount"
           :is-complete="isComplete"
           :found-in-raid="isFoundInRaid"
+          :is-craftable="isItemCraftable"
+          :is-craftable-available="isItemCraftableAvailable"
           :show-count="requiredCount > 1"
           size="sm"
         />
@@ -139,6 +141,8 @@
   import ContextMenuItem from '@/components/ui/ContextMenuItem.vue';
   import GameItem from '@/components/ui/GameItem.vue';
   import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
+  import { useMetadataStore } from '@/stores/useMetadata';
+  import { useProgressStore } from '@/stores/useProgress';
   import { useTarkovStore } from '@/stores/useTarkov';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
   interface Props {
@@ -167,6 +171,8 @@
   const requiredCount = computed(() => props.requirement.count);
   // Context menu
   const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+  const metadataStore = useMetadataStore();
+  const progressStore = useProgressStore();
   const inputRef = ref<HTMLInputElement | null>(null);
   const editValue = ref(0);
   // Check if item requires Found in Raid status
@@ -175,6 +181,17 @@
       (attr) => attr.type === 'foundInRaid' || attr.name === 'foundInRaid'
     );
     return firAttribute?.value === 'true';
+  });
+  // Check if item is craftable
+  const getCraftSources = computed(() => {
+    return metadataStore.craftSourcesByItemId.get(props.requirement.item.id) ?? [];
+  });
+  const isItemCraftable = computed(() => getCraftSources.value.length > 0);
+  const isItemCraftableAvailable = computed(() => {
+    return getCraftSources.value.some((source) => {
+      const currentLevel = progressStore.hideoutLevels?.[source.stationId]?.self ?? 0;
+      return currentLevel >= source.stationLevel;
+    });
   });
   // Get current count from store (synced with needed items page)
   const currentCount = computed(() => {

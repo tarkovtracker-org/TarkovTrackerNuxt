@@ -25,6 +25,8 @@
             :craftable-title="craftableTitle"
             :is-kappa-required="isKappaRequired"
             :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
+            :show-count="!isSingleItem"
+            size="md"
             @craft="goToCraftStation"
           />
           <!-- Click to complete overlay -->
