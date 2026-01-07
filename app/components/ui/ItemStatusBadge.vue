@@ -1,5 +1,5 @@
 <template>
-  <div v-if="hasContent" class="peer/indicators absolute top-0 left-0 z-40">
+  <div v-if="hasContent" class="peer/indicators pointer-events-auto absolute top-0 left-0 z-50">
     <div
       class="bg-surface-elevated flex items-center rounded-tl rounded-br-lg bg-clip-padding shadow-lg"
       :class="[sizeClasses]"

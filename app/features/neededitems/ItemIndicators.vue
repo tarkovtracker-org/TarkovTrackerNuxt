@@ -14,7 +14,7 @@
         v-if="isCraftable"
         v-tooltip="craftableTitleText"
         type="button"
-        class="inline-flex"
+        class="clickable inline-flex items-center justify-center rounded"
         :aria-label="craftableTitleText"
         @click.stop="emit('craft')"
       >

@@ -300,7 +300,7 @@
       : names;
   });
   const rewardItemCardClass =
-    'group flex flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-elevated p-2 text-center transition-all hover:border-gray-300 dark:hover:border-gray-600';
+    'group clickable flex flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-elevated p-2 text-center transition-all';
   const offerUnlockSummaryTooltip = computed(() => {
     const offers = props.offerUnlockRewards;
     if (offers.length === 0) return '';

@@ -51,7 +51,7 @@
             option: {
               base: 'px-3 py-2 text-sm cursor-pointer transition-colors rounded',
               inactive:
-                'clickable text-content-secondary hover:text-content-primary dark:text-surface-200 dark:hover:text-white',
+                'clickable text-content-secondary dark:text-surface-200',
               active:
                 'clickable bg-surface-200 text-content-primary dark:bg-surface-800 dark:text-white',
               selected:
@@ -98,7 +98,7 @@
               content:
                 'z-[9999] min-w-32 p-1 bg-surface-floating dark:bg-surface-900 ring-1 ring-gray-200 dark:ring-white/10 rounded-lg shadow-xl',
               item: {
-                base: 'clickable px-2.5 py-1.5 text-sm rounded transition-colors text-content-secondary hover:text-content-primary',
+                base: 'clickable px-2.5 py-1.5 text-sm rounded transition-colors text-content-secondary',
               },
             }"
           >

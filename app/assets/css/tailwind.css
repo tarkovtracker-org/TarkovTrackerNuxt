@@ -973,7 +973,6 @@ textarea {
     transition: opacity 0.15s ease-in-out;
     pointer-events: none;
     border-radius: inherit; /* Inherit border radius from parent */
-    z-index: 20; /* Ensure it sits on top of content (text/images) for a true tint */
     mix-blend-mode: multiply; /* Stain background in light mode */
   }
 

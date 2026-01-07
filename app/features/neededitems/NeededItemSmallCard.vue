@@ -209,7 +209,7 @@
     const ringColor =
       hasItem.value && !selfCompletedNeed.value
         ? 'hover:ring-accent-400'
-        : 'hover:ring-black/5 dark:hover:ring-white/10';
+        : 'hover:ring-gray-200 dark:hover:ring-gray-700';
     return [baseLayoutClasses, transitionClasses, hoverClasses, ringColor];
   });
 </script>

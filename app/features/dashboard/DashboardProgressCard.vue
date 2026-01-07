@@ -1,9 +1,8 @@
 <template>
   <div
     :class="[
-      'border-base bg-surface-elevated dark:bg-surface-900 dark:border-accent-700/30 cursor-pointer rounded-xl border p-6 shadow-lg',
+      'border-base bg-surface-elevated dark:bg-surface-900 dark:border-accent-700/30 clickable rounded-xl border p-6 shadow-lg',
       'transition-colors',
-      hoverBorderClass,
     ]"
     role="button"
     tabindex="0"
