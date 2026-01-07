@@ -10,7 +10,7 @@
         <GameItem :item="groupedItem.item" :is-visible="true" size="fluid" simple-mode />
       </div>
       <!-- Item name + Total - with padding -->
-      <div class="flex min-w-0 flex-1 flex-col justify-center p-2">
+      <div class="flex min-w-0 flex-1 flex-col justify-center p-3">
         <div class="flex min-w-0 items-start gap-1">
           <div
             class="text-content-primary line-clamp-2 min-w-0 text-sm leading-tight font-semibold"
@@ -33,7 +33,7 @@
         </div>
         <div class="mt-1 flex items-center gap-1">
           <span
-            class="text-xl font-bold"
+            class="text-lg font-bold"
             :class="
               isComplete
                 ? 'text-success-600 dark:text-success-400'
@@ -49,33 +49,36 @@
     </div>
     <!-- Breakdown grid -->
     <div
-      class="gap-px text-xs"
-      :class="activeFilter === 'tasks' || activeFilter === 'hideout' ? '' : 'grid grid-cols-2'"
+      v-if="activeFilter === 'all' || activeFilter === 'completed'"
+      class="bg-divider rounded-b-[calc(var(--ui-radius)*1.5-1px)] gap-px overflow-hidden"
+      :class="
+        activeFilter === 'all' || activeFilter === 'completed' ? 'grid grid-cols-2' : ''
+      "
     >
       <!-- Tasks section -->
-      <div v-if="activeFilter !== 'hideout'" class="p-2">
+      <div v-if="activeFilter !== 'hideout'" class="bg-surface-elevated flex flex-col gap-1 p-2">
         <div
           v-if="activeFilter === 'all' || activeFilter === 'completed'"
-          class="text-content-tertiary mb-1.5 flex items-center gap-1.5"
+          class="text-content-tertiary flex items-center gap-1"
         >
-          <UIcon name="i-mdi-clipboard-list" class="h-3.5 w-3.5 opacity-70" />
+          <UIcon name="i-mdi-clipboard-list" class="h-4 w-4 opacity-70" />
           <span class="text-[10px] font-bold tracking-wider uppercase">Tasks</span>
         </div>
-        <div class="flex gap-3">
+        <div class="flex items-center gap-3">
           <div v-if="groupedItem.taskFir > 0" class="flex items-center gap-1">
             <span v-tooltip="$t('neededitems.fir_required')" class="inline-flex items-center">
               <UIcon
                 name="i-mdi-checkbox-marked-circle-outline"
-                class="h-3.5 w-3.5"
+                class="h-4 w-4"
                 :class="
                   groupedItem.taskFirCurrent >= groupedItem.taskFir
                     ? 'text-success-600 dark:text-success-400'
-                    : 'text-content-primary'
+                    : 'text-content-secondary'
                 "
               />
             </span>
             <span
-              class="font-semibold"
+              class="text-sm font-semibold whitespace-nowrap"
               :class="
                 groupedItem.taskFirCurrent >= groupedItem.taskFir
                   ? 'text-success-600 dark:text-success-400'
@@ -88,7 +91,7 @@
           <div v-if="groupedItem.taskNonFir > 0" class="flex items-center gap-1">
             <UIcon
               name="i-mdi-checkbox-blank-circle-outline"
-              class="h-3.5 w-3.5"
+              class="h-4 w-4"
               :class="
                 groupedItem.taskNonFirCurrent >= groupedItem.taskNonFir
                   ? 'text-success-600 dark:text-success-400'
@@ -96,7 +99,7 @@
               "
             />
             <span
-              class="font-semibold"
+              class="text-sm font-semibold whitespace-nowrap"
               :class="
                 groupedItem.taskNonFirCurrent >= groupedItem.taskNonFir
                   ? 'text-success-600 dark:text-success-400'
@@ -108,36 +111,36 @@
           </div>
           <span
             v-if="groupedItem.taskFir === 0 && groupedItem.taskNonFir === 0"
-            class="text-content-tertiary"
+            class="text-content-tertiary text-xs"
           >
             -
           </span>
         </div>
       </div>
       <!-- Hideout section -->
-      <div v-if="activeFilter !== 'tasks'" class="p-2">
+      <div v-if="activeFilter !== 'tasks'" class="bg-surface-elevated flex flex-col gap-1 p-2">
         <div
           v-if="activeFilter === 'all' || activeFilter === 'completed'"
-          class="text-content-tertiary mb-1.5 flex items-center gap-1.5"
+          class="text-content-tertiary flex items-center gap-1"
         >
-          <UIcon name="i-mdi-home" class="h-3.5 w-3.5 opacity-70" />
+          <UIcon name="i-mdi-home" class="h-4 w-4 opacity-70" />
           <span class="text-[10px] font-bold tracking-wider uppercase">Hideout</span>
         </div>
-        <div class="flex gap-3">
+        <div class="flex items-center gap-3">
           <div v-if="groupedItem.hideoutFir > 0" class="flex items-center gap-1">
             <span v-tooltip="$t('neededitems.fir_required')" class="inline-flex items-center">
               <UIcon
                 name="i-mdi-checkbox-marked-circle-outline"
-                class="h-3.5 w-3.5"
+                class="h-4 w-4"
                 :class="
                   groupedItem.hideoutFirCurrent >= groupedItem.hideoutFir
                     ? 'text-success-600 dark:text-success-400'
-                    : 'text-content-primary'
+                    : 'text-content-secondary'
                 "
               />
             </span>
             <span
-              class="font-semibold"
+              class="text-sm font-semibold whitespace-nowrap"
               :class="
                 groupedItem.hideoutFirCurrent >= groupedItem.hideoutFir
                   ? 'text-success-600 dark:text-success-400'
@@ -150,7 +153,7 @@
           <div v-if="groupedItem.hideoutNonFir > 0" class="flex items-center gap-1">
             <UIcon
               name="i-mdi-checkbox-blank-circle-outline"
-              class="h-3.5 w-3.5"
+              class="h-4 w-4"
               :class="
                 groupedItem.hideoutNonFirCurrent >= groupedItem.hideoutNonFir
                   ? 'text-success-600 dark:text-success-400'
@@ -158,7 +161,7 @@
               "
             />
             <span
-              class="font-semibold"
+              class="text-sm font-semibold whitespace-nowrap"
               :class="
                 groupedItem.hideoutNonFirCurrent >= groupedItem.hideoutNonFir
                   ? 'text-success-600 dark:text-success-400'
@@ -170,7 +173,7 @@
           </div>
           <span
             v-if="groupedItem.hideoutFir === 0 && groupedItem.hideoutNonFir === 0"
-            class="text-content-tertiary"
+            class="text-content-tertiary text-xs"
           >
             -
           </span>

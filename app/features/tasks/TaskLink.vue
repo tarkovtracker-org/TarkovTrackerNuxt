@@ -3,12 +3,9 @@
     <span v-tooltip="props.task?.name">
       <router-link
         :to="taskHref"
-        class="text-accent-700 dark:text-accent-400 hover-effect focus-ring flex min-w-0 items-center gap-2 rounded-full pr-2 no-underline"
+        class="text-accent-700 dark:text-accent-400 hover-effect focus-ring flex min-w-0 flex-1 items-center gap-2 rounded-full pr-2 no-underline"
       >
-        <div
-          class="shrink-0 overflow-hidden rounded-full bg-gray-800"
-          :class="compact ? 'h-6 w-6' : 'h-9 w-9'"
-        >
+        <div class="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-800">
           <img
             v-if="traderAvatarSrc"
             :src="traderAvatarSrc"
@@ -25,10 +22,9 @@
           v-if="isFactionTask"
           :src="factionImage"
           :alt="factionAlt"
-          class="shrink-0 object-contain invert dark:invert-0"
-          :class="compact ? 'h-4 w-4' : 'h-6 w-6'"
+          class="h-4 w-4 shrink-0 object-contain invert dark:invert-0"
         />
-        <span class="min-w-0 truncate font-semibold" :class="compact ? 'text-xs' : ''">
+        <span class="truncate text-sm font-semibold">
           {{ props.task?.name }}
         </span>
       </router-link>

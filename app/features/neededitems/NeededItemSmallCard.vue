@@ -75,11 +75,9 @@
                 v-if="relatedStation"
                 :station="relatedStation"
                 compact
+                :level="props.need.hideoutModule.level"
                 class="max-w-full text-[clamp(0.625rem,2vw,0.75rem)]"
               />
-              <span class="text-content-tertiary ml-1 text-[clamp(0.625rem,2vw,0.75rem)]">
-                {{ props.need.hideoutModule.level }}
-              </span>
             </template>
           </div>
           <!-- Requirements (Level & Tasks Before) -->

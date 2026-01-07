@@ -55,7 +55,11 @@
                   <TaskLink :task="relatedTask" />
                 </template>
                 <template v-else-if="props.need.needType == 'hideoutModule'">
-                  <StationLink v-if="relatedStation" :station="relatedStation" />
+                  <StationLink
+                    v-if="relatedStation"
+                    :station="relatedStation"
+                    :level="props.need.hideoutModule.level"
+                  />
                   <span v-else class="text-sm text-gray-300">Unknown station</span>
                 </template>
               </span>
@@ -129,17 +133,16 @@
                       </template>
                       <template v-else-if="props.need.needType == 'hideoutModule'">
                         <div class="mt-1 mb-1 flex justify-center">
-                          <div class="text-center">
-                            <template v-if="relatedStation">
-                              <StationLink :station="relatedStation" class="justify-center" />
-                            </template>
-                            <template v-else>
-                              <span class="text-sm text-gray-300">Unknown station</span>
-                            </template>
-                          </div>
-                          <div class="ml-1">
-                            {{ props.need.hideoutModule.level }}
-                          </div>
+                          <template v-if="relatedStation">
+                            <StationLink
+                              :station="relatedStation"
+                              :level="props.need.hideoutModule.level"
+                              class="justify-center"
+                            />
+                          </template>
+                          <template v-else>
+                            <span class="text-sm text-gray-300">Unknown station</span>
+                          </template>
                         </div>
                         <RequirementInfo
                           :need-type="props.need.needType"
@@ -148,6 +151,7 @@
                           :player-level="tarkovStore.playerLevel()"
                           :related-station="relatedStation"
                           :hideout-level="props.need.hideoutModule.level"
+                          :show-station-link="false"
                         />
                       </template>
                     </div>
@@ -222,6 +226,7 @@
                     :player-level="tarkovStore.playerLevel()"
                     :related-station="relatedStation"
                     :hideout-level="props.need.hideoutModule.level"
+                    :show-station-link="false"
                   />
                 </template>
               </div>
