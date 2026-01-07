@@ -157,7 +157,7 @@
               size="xs"
               color="neutral"
               variant="solid"
-              badge-class="badge-soft-success ml-1"
+              badge-class="badge-soft-accent ml-1"
               label="YOU"
             />
           </template>

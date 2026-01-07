@@ -162,7 +162,7 @@ const initialSavingState = {
 };
 export const usePreferencesStore = defineStore('preferences', {
   state: (): PreferencesState => {
-    const state = JSON.parse(JSON.stringify(preferencesDefaultState));
+    const state = structuredClone(preferencesDefaultState);
     // Always reset saving state on store creation
     state.saving = { ...initialSavingState };
     return state;
@@ -492,7 +492,9 @@ if (shouldInitPreferencesWatchers) {
                       '[PreferencesStore] Transform called - preparing preferences for sync'
                     );
                     // Convert nested state to flat snake_case for Supabase
-                    const flat = flattenPreferences(preferencesState as unknown as Record<string, unknown>);
+                    const flat = flattenPreferences(
+                      preferencesState as unknown as Record<string, unknown>
+                    );
                     return {
                       user_id: $supabase.user.id,
                       ...flat,

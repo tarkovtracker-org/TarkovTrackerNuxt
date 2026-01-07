@@ -84,10 +84,7 @@
                   {{ formatNumber(currentCount) }}/{{ formatNumber(neededCount) }}
                 </template>
               </UButton>
-              <UModal
-                v-model="smallDialog"
-                :ui="{ content: { base: 'w-11/12 p-0' } }"
-              >
+              <UModal v-model="smallDialog" :ui="{ content: { base: 'w-11/12 p-0' } }">
                 <UCard v-if="smallDialog" :ui="{ body: { padding: 'p-0 sm:p-0' } }">
                   <div class="flex flex-col items-center">
                     <!-- Item image -->

@@ -50,10 +50,8 @@
     <!-- Breakdown grid -->
     <div
       v-if="activeFilter === 'all' || activeFilter === 'completed'"
-      class="bg-divider rounded-b-[calc(var(--ui-radius)*1.5-1px)] gap-px overflow-hidden"
-      :class="
-        activeFilter === 'all' || activeFilter === 'completed' ? 'grid grid-cols-2' : ''
-      "
+      class="bg-divider gap-px overflow-hidden rounded-b-[calc(var(--ui-radius)*1.5-1px)]"
+      :class="activeFilter === 'all' || activeFilter === 'completed' ? 'grid grid-cols-2' : ''"
     >
       <!-- Tasks section -->
       <div v-if="activeFilter !== 'hideout'" class="bg-surface-elevated flex flex-col gap-1 p-2">

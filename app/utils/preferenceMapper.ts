@@ -68,10 +68,7 @@ export function flattenPreferences(nested: Record<string, unknown>): FlatPrefere
       } else {
         const columnName =
           PROPERTY_TO_COLUMN_MAP[newPath] ||
-          key.replace(
-            /(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/g,
-            '_'
-          ).toLowerCase();
+          key.replace(/(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/g, '_').toLowerCase();
         result[columnName] = value;
       }
     }
@@ -86,7 +83,7 @@ export function unflattenPreferences(
   flat: FlatPreferences,
   defaultState: Record<string, unknown>
 ): Record<string, unknown> {
-  const result = JSON.parse(JSON.stringify(defaultState));
+  const result = structuredClone(defaultState);
   for (const colName in flat) {
     if (['user_id', 'created_at', 'updated_at', 'id'].includes(colName)) continue;
     const propPath = COLUMN_TO_PROPERTY_MAP[colName];

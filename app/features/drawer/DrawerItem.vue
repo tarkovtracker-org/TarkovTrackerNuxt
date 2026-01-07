@@ -6,13 +6,13 @@
       v-if="props.to && !props.href"
       :to="computedNavUrl"
       class="group flex cursor-pointer items-center rounded-md px-3 py-2.5 text-base font-medium transition-colors duration-150"
-      @click="handleNavClick"
       :class="[
         isActive
           ? 'border-accent-500 bg-accent-100 text-accent-900 dark:bg-accent-500/20 dark:text-accent-100 border-l-2'
           : 'hover-effect text-content-secondary border-l-2 border-transparent',
         props.isCollapsed ? 'justify-center' : '',
       ]"
+      @click="handleNavClick"
     >
       <!-- Icon / Avatar -->
       <div

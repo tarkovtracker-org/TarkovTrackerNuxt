@@ -167,7 +167,7 @@
       </div>
       <!-- Section 3: View Mode & Item Count -->
       <div
-        class="bg-surface-elevated flex w-full shrink-0 items-center justify-between gap-3 rounded-lg px-4 py-3 shadow-sm md:w-auto sm:justify-start"
+        class="bg-surface-elevated flex w-full shrink-0 items-center justify-between gap-3 rounded-lg px-4 py-3 shadow-sm sm:justify-start md:w-auto"
       >
         <GameBadge color="neutral" variant="soft" size="md" badge-class="px-3 py-1 text-sm">
           <template v-if="groupByItem && ungroupedCount !== totalCount">

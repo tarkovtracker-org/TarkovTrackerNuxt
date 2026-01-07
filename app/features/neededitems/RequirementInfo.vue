@@ -16,11 +16,7 @@
     </div>
     <!-- Station Info for Hideout (only shown when relatedStation is passed) -->
     <div v-if="needType === 'hideoutModule' && relatedStation" class="mr-2 flex items-center">
-      <station-link
-        v-if="showStationLink"
-        :station="relatedStation"
-        :level="hideoutLevel"
-      />
+      <station-link v-if="showStationLink" :station="relatedStation" :level="hideoutLevel" />
     </div>
   </div>
 </template>

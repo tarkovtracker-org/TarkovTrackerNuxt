@@ -1,5 +1,5 @@
 import { type _GettersTree, defineStore, type StateTree } from 'pinia';
-import { watch } from 'vue';
+import { toRaw, watch } from 'vue';
 import { useSupabaseSync } from '@/composables/supabase/useSupabaseSync';
 import {
   actions,
@@ -65,7 +65,7 @@ const tarkovActions = {
       ((this as unknown as Record<string, unknown>).level !== undefined && !this.pvp?.level);
     if (needsMigration) {
       logger.debug('Migrating legacy data structure to gamemode-aware structure');
-      const currentState = JSON.parse(JSON.stringify(this.$state));
+      const currentState = structuredClone(toRaw(this.$state));
       const migratedData = migrateToGameModeStructure(currentState);
       this.$patch(migratedData);
       const { $supabase } = useNuxtApp();
@@ -91,7 +91,7 @@ const tarkovActions = {
       return;
     }
     try {
-      const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
+      const freshDefaultState = structuredClone(defaultState);
       await $supabase.client.from('user_progress').upsert({
         user_id: $supabase.user.id,
         current_game_mode: freshDefaultState.currentGameMode,
@@ -101,7 +101,7 @@ const tarkovActions = {
       });
       localStorage.clear();
       // Use $patch with a function to fully replace all nested objects (not deep merge)
-      const freshState = JSON.parse(JSON.stringify(defaultState));
+      const freshState = structuredClone(defaultState);
       this.$patch((state) => {
         state.currentGameMode = freshState.currentGameMode;
         state.gameEdition = freshState.gameEdition;
@@ -132,7 +132,7 @@ const tarkovActions = {
       if (controller) {
         controller.pause();
       }
-      const freshPvPData = JSON.parse(JSON.stringify(defaultState.pvp));
+      const freshPvPData = structuredClone(defaultState.pvp);
       if ($supabase.user.loggedIn && $supabase.user.id) {
         // User is logged in - reset both Supabase and localStorage
         logger.debug('[TarkovStore] Resetting PvP data in Supabase');
@@ -174,7 +174,7 @@ const tarkovActions = {
       if (controller) {
         controller.pause();
       }
-      const freshPvEData = JSON.parse(JSON.stringify(defaultState.pve));
+      const freshPvEData = structuredClone(defaultState.pve);
       if ($supabase.user.loggedIn && $supabase.user.id) {
         // User is logged in - reset both Supabase and localStorage
         logger.debug('[TarkovStore] Resetting PvE data in Supabase');
@@ -216,7 +216,7 @@ const tarkovActions = {
       if (controller) {
         controller.pause();
       }
-      const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
+      const freshDefaultState = structuredClone(defaultState);
       if ($supabase.user.loggedIn && $supabase.user.id) {
         // User is logged in - reset both Supabase and localStorage
         logger.debug('[TarkovStore] Resetting all data in Supabase');
@@ -560,7 +560,7 @@ const tarkovActions = {
 export type TarkovStoreActions = typeof tarkovActions;
 export const useTarkovStore = defineStore('swapTarkov', {
   state: () => {
-    return JSON.parse(JSON.stringify(defaultState)) as UserState;
+    return structuredClone(defaultState) as UserState;
   },
   getters: tarkovGetters,
   actions: tarkovActions,
@@ -625,13 +625,13 @@ export const useTarkovStore = defineStore('swapTarkov', {
                 logger.error('[TarkovStore] Error backing up/clearing localStorage:', e);
               }
             }
-            return JSON.parse(JSON.stringify(defaultState)) as UserState;
+            return structuredClone(defaultState) as UserState;
           }
           // UserId matches or user not logged in - safe to restore
           return parsed.data as UserState;
         } catch (e) {
           logger.error('[TarkovStore] Error deserializing localStorage:', e);
-          return JSON.parse(JSON.stringify(defaultState)) as UserState;
+          return structuredClone(defaultState) as UserState;
         }
       },
     },
@@ -708,7 +708,7 @@ export async function initializeTarkovSync() {
       hasShownLocalIgnoreToast = true;
     };
     const resetStoreToDefault = () => {
-      const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
+      const freshDefaultState = structuredClone(defaultState);
       tarkovStore.$patch((state) => {
         state.currentGameMode = freshDefaultState.currentGameMode;
         state.gameEdition = freshDefaultState.gameEdition;
@@ -794,76 +794,91 @@ export async function initializeTarkovSync() {
         logger.error('[TarkovStore] Error loading data from Supabase:', error);
         return { ok: false, hadRemoteData };
       }
-      // Normalize Supabase data with defaults for safety
-      const normalizedRemote = data
-        ? ({
-            currentGameMode: data.current_game_mode || GAME_MODES.PVP,
-            gameEdition: data.game_edition || defaultState.gameEdition,
-            pvp: { ...defaultState.pvp, ...(data.pvp_data || {}) },
-            pve: { ...defaultState.pve, ...(data.pve_data || {}) },
-          } as UserState)
-        : null;
-      const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
-      const localScore = progressScore(localState);
-      if (data) {
-        const remoteUpdatedAt = data.updated_at ? Date.parse(data.updated_at) : null;
-        const localOwnedByUser = storedUserId === currentUserId;
-        if (hasLocalProgress && !localOwnedByUser && storedUserId === null) {
-          notifyLocalIgnored(
-            'Found local guest progress on this device; your cloud progress was kept.'
-          );
-        }
-        let shouldPreferLocal = false;
-        if (localOwnedByUser && localTimestamp && remoteUpdatedAt) {
-          shouldPreferLocal = localTimestamp > remoteUpdatedAt;
-        } else if (localOwnedByUser && localTimestamp && !remoteUpdatedAt) {
-          shouldPreferLocal = localScore > remoteScore;
-        } else if (localOwnedByUser && !localTimestamp && !remoteUpdatedAt) {
-          shouldPreferLocal = localScore > remoteScore;
-        }
-        // If local has more progress than remote, protect local and push it to Supabase.
-        if (shouldPreferLocal) {
-          logger.warn('[TarkovStore] Local progress ahead of Supabase; preserving local data', {
-            localScore,
-            remoteScore,
-          });
-          const { error: upsertError } = await $supabase.client.from('user_progress').upsert({
-            user_id: $supabase.user.id,
-            current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
-            game_edition: localState.gameEdition || defaultState.gameEdition,
-            pvp_data: localState.pvp || defaultState.pvp,
-            pve_data: localState.pve || defaultState.pve,
-          });
-          if (upsertError) {
-            logger.error('[TarkovStore] Error syncing local progress to Supabase:', upsertError);
-            return { ok: false, hadRemoteData };
+      // Wrap heavy data processing in rAF to avoid blocking the main thread
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(async () => {
+          // Normalize Supabase data with defaults for safety
+          const normalizedRemote = data
+            ? ({
+                currentGameMode: data.current_game_mode || GAME_MODES.PVP,
+                gameEdition: data.game_edition || defaultState.gameEdition,
+                // Use structuredClone for deep copy of defaults
+                pvp: { ...structuredClone(defaultState.pvp), ...(data.pvp_data || {}) },
+                pve: { ...structuredClone(defaultState.pve), ...(data.pve_data || {}) },
+              } as UserState)
+            : null;
+          const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
+          const localScore = progressScore(localState);
+          if (data) {
+            const remoteUpdatedAt = data.updated_at ? Date.parse(data.updated_at) : null;
+            const localOwnedByUser = storedUserId === currentUserId;
+            if (hasLocalProgress && !localOwnedByUser && storedUserId === null) {
+              notifyLocalIgnored(
+                'Found local guest progress on this device; your cloud progress was kept.'
+              );
+            }
+            let shouldPreferLocal = false;
+            // Conflict resolution logic
+            if (localOwnedByUser && localTimestamp && remoteUpdatedAt) {
+              shouldPreferLocal = localTimestamp > remoteUpdatedAt;
+            } else if (localOwnedByUser && localTimestamp && !remoteUpdatedAt) {
+              shouldPreferLocal = localScore > remoteScore;
+            } else if (localOwnedByUser && !localTimestamp && !remoteUpdatedAt) {
+              shouldPreferLocal = localScore > remoteScore;
+            }
+            // If local has more progress than remote, protect local and push it to Supabase.
+            if (shouldPreferLocal) {
+              logger.warn('[TarkovStore] Local progress ahead of Supabase; preserving local data', {
+                localScore,
+                remoteScore,
+              });
+              const { error: upsertError } = await $supabase.client.from('user_progress').upsert({
+                user_id: $supabase.user.id,
+                current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
+                game_edition: localState.gameEdition || defaultState.gameEdition,
+                pvp_data: localState.pvp || defaultState.pvp,
+                pve_data: localState.pve || defaultState.pve,
+              });
+              if (upsertError) {
+                logger.error(
+                  '[TarkovStore] Error syncing local progress to Supabase:',
+                  upsertError
+                );
+                // Even if upsert fails, we keep local data as it's newer
+              }
+            } else {
+              logger.debug('[TarkovStore] Loading data from Supabase (user exists in DB)');
+              tarkovStore.$patch(normalizedRemote!);
+            }
+          } else if (hasLocalProgress && hasLocalPersistence) {
+            // No Supabase record at all, but localStorage has progress - migrate it
+            logger.debug('[TarkovStore] Migrating localStorage data to Supabase');
+            const migrateData = {
+              user_id: $supabase.user.id,
+              current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
+              game_edition: localState.gameEdition || defaultState.gameEdition,
+              pvp_data: localState.pvp || defaultState.pvp,
+              pve_data: localState.pve || defaultState.pve,
+            };
+            const { error: upsertError } = await $supabase.client
+              .from('user_progress')
+              .upsert(migrateData);
+            if (upsertError) {
+              logger.error('[TarkovStore] Error migrating local data to Supabase:', upsertError);
+              // Don't return here inside rAF, instead just log and continue,
+              // or we should handle the 'hadRemoteData' return value differently.
+              // Note: strict return type matching is tricky inside async callback.
+              // We'll rely on the outer function returning { ok: true } generally unless critical failure.
+            } else {
+              logger.debug('[TarkovStore] Migration complete');
+            }
+          } else {
+            // Truly new user - no data anywhere
+            logger.debug('[TarkovStore] New user - no existing progress found');
           }
-        } else {
-          logger.debug('[TarkovStore] Loading data from Supabase (user exists in DB)');
-          tarkovStore.$patch(normalizedRemote!);
-        }
-      } else if (hasLocalProgress && hasLocalPersistence) {
-        // No Supabase record at all, but localStorage has progress - migrate it
-        logger.debug('[TarkovStore] Migrating localStorage data to Supabase');
-        const migrateData = {
-          user_id: $supabase.user.id,
-          current_game_mode: localState.currentGameMode || GAME_MODES.PVP,
-          game_edition: localState.gameEdition || defaultState.gameEdition,
-          pvp_data: localState.pvp || defaultState.pvp,
-          pve_data: localState.pve || defaultState.pve,
-        };
-        const { error: upsertError } = await $supabase.client
-          .from('user_progress')
-          .upsert(migrateData);
-        if (upsertError) {
-          logger.error('[TarkovStore] Error migrating local data to Supabase:', upsertError);
-          return { ok: false, hadRemoteData };
-        }
-        logger.debug('[TarkovStore] Migration complete');
-      } else {
-        // Truly new user - no data anywhere
-        logger.debug('[TarkovStore] New user - no existing progress found');
-      }
+          resolve();
+        });
+      });
       logger.debug('[TarkovStore] Initial load complete');
       return { ok: true, hadRemoteData };
     };

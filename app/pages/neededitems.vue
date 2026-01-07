@@ -80,9 +80,7 @@
       </div>
       <!-- Grid View -->
       <div v-else>
-        <div
-          class="grid items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7"
-        >
+        <div class="grid items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           <NeededItem
             v-for="(item, index) in visibleIndividualItems"
             :key="`${item.needType}-${item.id}`"
