@@ -31,7 +31,7 @@
       /** Tooltip text */
       tooltip?: string;
       /** Accessibility label (required) */
-      ariaLabel: string;
+      ariaLabel?: string;
       /** Custom class for active state (when variant="custom") */
       activeClass?: string;
       /** Custom class for inactive state (when variant="custom") */
@@ -44,6 +44,7 @@
       activeIcon: 'i-mdi-check',
       inactiveIcon: 'i-mdi-circle-outline',
       tooltip: undefined,
+      ariaLabel: '',
       activeClass: undefined,
       inactiveClass: undefined,
     }

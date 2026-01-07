@@ -181,7 +181,7 @@ export function usePageFilters<C extends FilterConfig>(
     key: K,
     urlValue: string | undefined
   ): FilterValue<C[K]> => {
-    const paramConfig = config[key];
+    const paramConfig = config[key]!;
     const defaultValue = paramConfig.default as FilterValue<C[K]>;
     if (urlValue === undefined || urlValue === null || urlValue === '') {
       // URL is empty - use static default (not storedDefault)
@@ -206,7 +206,7 @@ export function usePageFilters<C extends FilterConfig>(
    * Serialize a typed value to URL string using config.
    */
   const serializeValue = <K extends keyof C>(key: K, value: FilterValue<C[K]>): string | null => {
-    const paramConfig = config[key];
+    const paramConfig = config[key]!;
     const defaultValue = paramConfig.default;
     // Don't include default values in URL (clean URLs)
     if (value === defaultValue) {
@@ -302,7 +302,7 @@ export function usePageFilters<C extends FilterConfig>(
       const updateValue = updates[key];
       const value =
         updateValue === null
-          ? (config[key].default as FilterValue<C[typeof key]>)
+          ? (config[key]!.default as FilterValue<C[typeof key]>)
           : ((key in updates ? updateValue : filters[key].value) as FilterValue<C[typeof key]>);
       const serialized = serializeValue(key, value);
       if (serialized !== null) {
@@ -335,16 +335,16 @@ export function usePageFilters<C extends FilterConfig>(
    */
   const setFilter = <K extends keyof C>(key: K, value: FilterValue<C[K]>) => {
     // Call onUpdate callback if provided to persist to store
-    const paramConfig = config[key];
+    const paramConfig = config[key]!;
     if (paramConfig.onUpdate) {
       paramConfig.onUpdate(value);
     }
     // If this param has a debounced input, update that instead
     if (debouncedInputRefs[key as string]) {
-      debouncedInputRefs[key as string].value = value;
+      debouncedInputRefs[key as string]!.value = value;
       return;
     }
-    updateUrl({ [key]: value } as Partial<{ [K in keyof C]: FilterValue<C[K]> }>);
+    updateUrl({ [key]: value } as unknown as any);
   };
   /**
    * Set multiple filter values at once.
@@ -379,7 +379,7 @@ export function usePageFilters<C extends FilterConfig>(
   const resetFilters = () => {
     // Clear debounced inputs
     for (const [key, ref] of Object.entries(debouncedInputRefs)) {
-      ref.value = config[key].default;
+      ref.value = config[key]!.default;
     }
     // Clear URL params for this composable
     const newQuery: Record<string, string> = {};

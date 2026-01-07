@@ -215,6 +215,6 @@
       'bg-surface-elevated': !isComplete.value,
     };
   });
-  const { isCraftable, isCraftableAvailable, craftableTitle, goToCraftStation } =
+  const { isCraftable, isCraftableAvailable } =
     useCraftableItem(itemId);
 </script>

@@ -22,11 +22,9 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
   import { computed } from 'vue';
   import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
-
   interface Props {
     currentCount?: number;
     neededCount?: number;
@@ -41,7 +39,6 @@
     size?: 'sm' | 'md' | 'lg';
     showIcons?: boolean;
   }
-
   const props = withDefaults(defineProps<Props>(), {
     currentCount: 0,
     neededCount: 1,
@@ -56,11 +53,9 @@
     size: 'md',
     showIcons: true,
   });
-
   const emit = defineEmits<{
     craft: [];
   }>();
-
   // Hide badge entirely if nothing to show
   const hasContent = computed(() => {
     return (
@@ -68,7 +63,6 @@
       (props.showIcons && (props.foundInRaid || props.isCraftable || props.isKappaRequired))
     );
   });
-
   const sizeClasses = computed(() => {
     if (props.size === 'sm') {
       return 'text-xs font-semibold px-1 py-0.5 gap-1';

@@ -180,8 +180,11 @@
   const router = useRouter();
   const currentEditionName = computed(() => metadataStore.getEditionName(tarkovStore.gameEdition));
   // Faction cycling logic
-  const factionArray = PMC_FACTIONS; // ['USEC', 'BEAR']
-  const currentFaction = computed<PMCFaction>(() => tarkovStore.getPMCFaction());
+  const factionArray = PMC_FACTIONS as unknown as PMCFaction[]; // ['USEC', 'BEAR']
+  const currentFaction = computed(() => {
+    const faction = tarkovStore.getPMCFaction();
+    return (faction ?? 'USEC') as PMCFaction;
+  });
   const nextFaction = computed<PMCFaction>(() => {
     const currentIndex = factionArray.indexOf(currentFaction.value);
     const nextIndex = (currentIndex + 1) % factionArray.length;
@@ -196,7 +199,7 @@
     setFaction(nextFaction.value);
   }
   // Game mode cycling logic
-  const gameModeArray = [GAME_MODES.PVP, GAME_MODES.PVE];
+  const gameModeArray = [GAME_MODES.PVP, GAME_MODES.PVE] as GameMode[];
   const gameModeConfig = {
     [GAME_MODES.PVP]: {
       label: 'PvP',
@@ -211,7 +214,10 @@
       iconClass: 'text-pve-600 dark:text-pve-400',
     },
   };
-  const currentGameMode = computed(() => tarkovStore.getCurrentGameMode());
+  const currentGameMode = computed(() => {
+    const mode = tarkovStore.getCurrentGameMode();
+    return (mode ?? 'pvp') as GameMode;
+  });
   const currentGameModeConfig = computed(() => gameModeConfig[currentGameMode.value]);
   const currentGameModeLabel = computed(() => currentGameModeConfig.value.label);
   const currentGameModeIcon = computed(() => currentGameModeConfig.value.icon);

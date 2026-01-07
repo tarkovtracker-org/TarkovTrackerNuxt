@@ -32,13 +32,10 @@
     </template>
   </span>
 </template>
-
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-
   const { t } = useI18n({ useScope: 'global' });
-
   const props = withDefaults(
     defineProps<{
       size?: 'sm' | 'md' | 'lg';
@@ -75,11 +72,9 @@
       kappaIconClass: '',
     }
   );
-
   const emit = defineEmits<{
     craft: [];
   }>();
-
   const iconSizeClasses = computed(() => {
     switch (props.size) {
       case 'sm':
@@ -91,27 +86,22 @@
         return 'h-4 w-4';
     }
   });
-
   const craftableColorClass = computed(() => {
     return props.isCraftableAvailable
       ? 'text-success-600 dark:text-success-400'
       : 'text-surface-400';
   });
-
   const countTextClasses = computed(() => ({
     'text-content-primary': !props.isComplete,
     'text-success-600 dark:text-success-400 font-bold': props.isComplete,
   }));
-
   // Tooltip text with fallbacks to translations
   const craftableTitleText = computed(() => {
     return props.craftableTitle || t('page.neededitems.craftable', 'Craftable');
   });
-
   const computedFoundInRaidTitle = computed(() => {
     return props.foundInRaidTitle || t('page.neededitems.fir_required', 'Found in Raid required');
   });
-
   const kappaTitleText = computed(() => {
     return props.kappaTitle || t('task.kappa_req', 'Required for Kappa task');
   });

@@ -62,7 +62,7 @@ export function useAppInitialization() {
   );
   onMounted(async () => {
     // Apply user's locale preference
-    const localeOverride = preferencesStore.localeOverride;
+    const localeOverride = preferencesStore.getLocaleOverride;
     if (localeOverride) {
       locale.value = localeOverride;
     }

@@ -252,38 +252,6 @@ export const usePreferencesStore = defineStore('preferences', {
       const val = state.hideout.views.primary;
       return val && valid.includes(val) ? val : 'available';
     },
-    // Task filter getters
-    getShowNonSpecialTasks: (state) => {
-      return state.showNonSpecialTasks ?? true;
-    },
-    getShowLightkeeperTasks: (state) => {
-      return state.showLightkeeperTasks ?? true;
-    },
-    // Task appearance getters
-    getShowRequiredLabels: (state) => {
-      return state.showRequiredLabels ?? true;
-    },
-    getShowNotRequiredLabels: (state) => {
-      return state.showNotRequiredLabels ?? true;
-    },
-    getShowExperienceRewards: (state) => {
-      return state.showExperienceRewards ?? true;
-    },
-    getShowTaskIds: (state) => {
-      return state.showTaskIds ?? true;
-    },
-    getShowNextQuests: (state) => {
-      return state.showNextQuests ?? true;
-    },
-    getShowPreviousQuests: (state) => {
-      return state.showPreviousQuests ?? true;
-    },
-    getTaskCardDensity: (state) => {
-      return state.taskCardDensity ?? 'compact';
-    },
-    getEnableManualTaskFail: (state) => {
-      return state.enableManualTaskFail ?? false;
-    },
     // Filter visibility
     getShowNonSpecialTasks: (state) => state.tasks.filters.showNonSpecial,
     getShowEodTasks: (state) => state.tasks.filters.showEod,

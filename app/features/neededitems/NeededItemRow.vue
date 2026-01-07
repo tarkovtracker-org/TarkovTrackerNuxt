@@ -316,14 +316,14 @@
 <script setup>
   import { computed, defineAsyncComponent, inject, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
   import { useItemRowIntersection } from '@/composables/useItemRowIntersection';
   import { useSharedBreakpoints } from '@/composables/useSharedBreakpoints';
+  import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
   import {
     createDefaultNeededItemContext,
     neededItemKey,
   } from '@/features/neededitems/neededitem-keys';
-  import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
-  import ItemStatusBadge from '@/components/ui/ItemStatusBadge.vue';
   import { useTarkovStore } from '@/stores/useTarkov';
   import { useLocaleNumberFormatter } from '@/utils/formatters';
   import ItemCountControls from './ItemCountControls.vue';

@@ -35,6 +35,8 @@
       showStationLink?: boolean;
     }>(),
     {
+      relatedStation: null,
+      hideoutLevel: 0,
       showStationLink: true,
     }
   );
