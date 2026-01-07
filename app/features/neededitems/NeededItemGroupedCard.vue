@@ -17,19 +17,15 @@
           >
             {{ groupedItem.item.name }}
           </div>
-          <button
+          <ItemIndicators
             v-if="isCraftable"
-            v-tooltip="craftableTitle"
-            type="button"
-            class="inline-flex"
-            @click.stop="goToCraftStation"
-          >
-            <UIcon
-              name="i-mdi-hammer-wrench"
-              class="h-4 w-4 opacity-90"
-              :class="craftableIconClass"
-            />
-          </button>
+            :size="'sm'"
+            :found-in-raid="false"
+            :is-craftable="isCraftable"
+            :is-craftable-available="isCraftableAvailable"
+            :craftable-title="craftableTitle"
+            @craft="goToCraftStation"
+          />
         </div>
         <div class="mt-1 flex items-center gap-1">
           <span
@@ -181,6 +177,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { computed } from 'vue';
+  import ItemIndicators from '@/features/neededitems/ItemIndicators.vue';
   import { useCraftableItem } from '@/composables/useCraftableItem';
   import { formatCompactNumber } from '@/utils/formatters';
   interface GroupedItem {
@@ -219,6 +217,6 @@
       'bg-surface-elevated': !isComplete.value,
     };
   });
-  const { isCraftable, craftableIconClass, craftableTitle, goToCraftStation } =
+  const { isCraftable, isCraftableAvailable, craftableTitle, goToCraftStation } =
     useCraftableItem(itemId);
 </script>

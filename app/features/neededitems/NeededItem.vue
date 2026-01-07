@@ -148,7 +148,7 @@
   };
   const {
     isCraftable: baseIsCraftable,
-    craftableIconClass,
+    isCraftableAvailable,
     craftableTitle,
     goToCraftStation,
   } = useCraftableItem(() => item.value?.id);
@@ -348,7 +348,7 @@
     levelRequired,
     teamNeeds,
     imageItem,
-    craftableIconClass,
+    isCraftableAvailable,
     craftableTitle,
     isCraftable,
     goToCraftStation,

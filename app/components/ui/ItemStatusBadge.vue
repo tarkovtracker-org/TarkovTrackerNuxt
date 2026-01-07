@@ -8,15 +8,13 @@
         <span :class="countTextClasses">{{ currentCount }}/{{ neededCount }}</span>
       </template>
       <ItemIndicators
+        :size="size"
         :found-in-raid="foundInRaid"
-        :fir-icon-class="indicatorIconClass"
         :is-craftable="isCraftable"
+        :is-craftable-available="isCraftableAvailable"
         :craftable-title="craftableTitle"
-        :craftable-icon-base-class="indicatorIconClass"
-        :craftable-icon-class="craftableIconClass"
         :kappa-required="isKappaRequired"
         :kappa-title="kappaTitle"
-        :kappa-icon-class="kappaKappaIconClass"
         @craft="emit('craft')"
       />
     </div>
@@ -32,8 +30,8 @@
     isComplete?: boolean;
     foundInRaid?: boolean;
     isCraftable?: boolean;
+    isCraftableAvailable?: boolean;
     craftableTitle?: string;
-    craftableIconClass?: string;
     isKappaRequired?: boolean;
     kappaTitle?: string;
     size?: 'sm' | 'md';
@@ -45,8 +43,8 @@
     isComplete: false,
     foundInRaid: false,
     isCraftable: false,
+    isCraftableAvailable: false,
     craftableTitle: 'Craftable',
-    craftableIconClass: '',
     isKappaRequired: false,
     kappaTitle: 'Required for Kappa quest',
     size: 'md',
@@ -68,14 +66,6 @@
     }
     return 'text-sm font-bold';
   });
-  const indicatorIconClass = computed(() => {
-    if (props.size === 'sm') {
-      return 'h-3 w-3';
-    }
-    return 'h-4 w-4';
-  });
-  const kappaKappaIconClass = computed(() => {
-    const baseSize = props.size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-    return `${baseSize} text-entity-kappa`;
+    return 'text-sm font-bold';
   });
 </script>

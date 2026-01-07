@@ -13,6 +13,7 @@ export type NeededItemContext = {
   goToCraftStation: () => Promise<void>;
   imageItem: ComputedRef<NeededItemImageItem>;
   isCraftable: ComputedRef<boolean>;
+  isCraftableAvailable: ComputedRef<boolean>;
   isKappaRequired: ComputedRef<boolean>;
   isParentCompleted: ComputedRef<boolean>;
   item: ComputedRef<TarkovItem | null>;
@@ -34,6 +35,7 @@ export const createDefaultNeededItemContext = (): NeededItemContext => {
     goToCraftStation: async () => {},
     imageItem: asComputed(null),
     isCraftable: asComputed(false),
+    isCraftableAvailable: asComputed(false),
     isKappaRequired: asComputed(false),
     isParentCompleted: asComputed(false),
     item: asComputed(null),

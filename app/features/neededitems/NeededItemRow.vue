@@ -5,7 +5,7 @@
       class="mb-1 rounded-lg shadow-sm transition-all duration-200"
       :class="itemRowClasses"
     >
-      <div class="px-3 py-2">
+      <div class="pr-2">
         <div class="mx-0 flex flex-nowrap items-center">
           <div class="flex min-w-0 flex-1 items-center p-0">
             <div
@@ -18,7 +18,7 @@
                 :item="imageItem"
                 :is-visible="true"
                 :task-wiki-link="relatedTask?.wikiLink"
-                size="small"
+                size="medium"
                 simple-mode
               />
               <!-- Click to collect overlay -->
@@ -36,15 +36,14 @@
               </div>
             </div>
             <span class="ml-3 flex min-w-0 flex-1 flex-col overflow-hidden">
-              <span class="flex items-center truncate text-base font-semibold">
+              <span class="flex items-center truncate text-xl font-semibold">
                 <span class="truncate">{{ item.name }}</span>
                 <ItemIndicators
+                  :size="'md'"
                   :found-in-raid="props.need.foundInRaid"
-                  fir-icon-class="ml-1 h-4 w-4"
                   :is-craftable="isCraftable"
+                  :is-craftable-available="isCraftableAvailable"
                   :craftable-title="craftableTitle"
-                  craftable-icon-base-class="ml-1 h-4 w-4 opacity-90"
-                  :craftable-icon-class="craftableIconClass"
                   :kappa-required="isKappaRequired"
                   :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
                   @craft="goToCraftStation"
@@ -105,15 +104,13 @@
                         {{ item.name }}
                       </div>
                       <ItemIndicators
+                        :size="'md'"
                         :found-in-raid="props.need.foundInRaid"
-                        fir-icon-class="ml-1 h-4 w-4"
                         :is-craftable="isCraftable"
+                        :is-craftable-available="isCraftableAvailable"
                         :craftable-title="craftableTitle"
-                        craftable-icon-base-class="ml-1 h-4 w-4 opacity-90"
-                        :craftable-icon-class="craftableIconClass"
                         :kappa-required="isKappaRequired"
                         :kappa-title="$t('task.kappa_req', 'Required for Kappa quest')"
-                        kappa-icon-class="ml-1 h-4 w-4 text-entity-kappa"
                         @craft="goToCraftStation"
                       />
                     </div>
@@ -310,7 +307,7 @@
     selfCompletedNeed,
     relatedTask,
     relatedStation,
-    craftableIconClass,
+    isCraftableAvailable,
     craftableTitle,
     goToCraftStation,
     lockedBefore,

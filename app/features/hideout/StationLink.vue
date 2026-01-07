@@ -1,21 +1,41 @@
 <template>
   <router-link
     :to="stationHref"
-    class="hover-effect inline-flex items-center rounded pr-2 text-blue-400 no-underline"
+    class="hover-effect inline-flex max-w-full items-center rounded pr-2 text-blue-400 no-underline"
     :aria-label="`Go to ${props.station.name} card`"
+    :class="{
+      'gap-2': !props.compact,
+      'gap-1.5': props.compact,
+    }"
   >
-    <div class="flex max-w-full min-w-0 items-center gap-2 overflow-hidden">
-      <img
-        :src="stationIcon"
-        :alt="`${props.station.name} icon`"
-        class="h-9 w-9 shrink-0 align-middle"
-        loading="lazy"
-      />
-      <span class="truncate text-sm font-semibold">
-        {{ props.station.name }}
-      </span>
-      <span v-if="level" class="shrink-0 text-sm font-bold">{{ level }}</span>
-    </div>
+    <img
+      :src="stationIcon"
+      :alt="`${props.station.name} icon`"
+      class="shrink-0 align-middle"
+      :class="{
+        'h-9 w-9': !props.compact,
+        'h-5 w-5': props.compact,
+      }"
+      loading="lazy"
+    />
+    <span
+      class="truncate font-semibold"
+      :class="{
+        'text-sm': !props.compact,
+        'text-xs': props.compact,
+      }"
+    >
+      {{ props.station.name }}
+    </span>
+    <span
+      v-if="level"
+      class="shrink-0 font-bold"
+      :class="{
+        'text-sm': !props.compact,
+        'text-xs': props.compact,
+      }"
+      >{{ level }}</span
+    >
   </router-link>
 </template>
 <script setup lang="ts">
