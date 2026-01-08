@@ -967,13 +967,13 @@ textarea {
   .hover-effect::after {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 2px;
     background-color: var(--color-hover-tint);
     opacity: 0;
     transition: opacity 0.15s ease-in-out;
     pointer-events: none;
-    border-radius: inherit; /* Inherit border radius from parent */
-    mix-blend-mode: multiply; /* Stain background in light mode */
+    border-radius: inherit;
+    mix-blend-mode: multiply;
   }
 
   /* Dark mode overrides */

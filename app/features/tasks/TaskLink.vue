@@ -6,7 +6,7 @@
     <span v-tooltip="props.task?.name" class="min-w-0 flex-1">
       <router-link
         :to="taskHref"
-        class="text-accent-700 dark:text-accent-400 focus-ring flex min-w-0 items-center rounded-full pr-2 no-underline"
+        class="text-accent-700 dark:text-accent-400 focus-ring flex min-w-0 items-center rounded-full pr-3 no-underline"
         :class="{
           'gap-2': !props.compact,
           'gap-1.5': props.compact,
