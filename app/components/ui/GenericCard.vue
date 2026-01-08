@@ -34,7 +34,13 @@
                   <UIcon
                     v-else
                     :name="props.icon?.startsWith('mdi-') ? `i-${props.icon}` : props.icon"
-                    :class="props.iconColor ? `text-${props.iconColor}` : 'text-content-primary'"
+                    :class="
+                      props.iconColor
+                        ? `text-${props.iconColor}`
+                        : props.highlightColor
+                          ? ''
+                          : 'text-content-primary'
+                    "
                     class="h-[50px] w-[50px] drop-shadow-md"
                   />
                 </span>
