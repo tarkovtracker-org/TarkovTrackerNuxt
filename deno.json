@@ -1,3 +1,0 @@
-{
-  "allowScripts": ["npm:@parcel/watcher@2.5.1", "npm:esbuild@0.25.12", "npm:esbuild@0.27.2", "npm:sharp@0.34.5", "npm:supabase@2.70.5", "npm:unrs-resolver@1.11.1", "npm:vue-demi@0.14.10"]
-}

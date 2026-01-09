@@ -421,7 +421,7 @@
   import { logger } from '@/utils/logger';
   // Page metadata
   useSeoMeta({
-    title: 'Settings | TarkovTracker',
+    title: 'Settings',
     description:
       'Customize your TarkovTracker experience. Manage preferences, game mode, and account settings.',
   });

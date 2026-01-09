@@ -229,7 +229,7 @@
               </template>
             </UAlert>
             <UAlert
-              v-if="hasOwnedTeams"
+              v-if="isLoggedIn"
               icon="i-mdi-account-group"
               color="warning"
               variant="soft"
@@ -238,9 +238,8 @@
             >
               <template #description>
                 <div class="text-sm">
-                  You own {{ ownedTeamsCount }} team(s). Team ownership will be automatically
-                  transferred to the oldest member in each team. Teams without other members will be
-                  deleted.
+                  If you own any teams, ownership will be automatically transferred to the oldest
+                  member in each team. Teams without other members will be deleted.
                 </div>
               </template>
             </UAlert>
@@ -269,6 +268,11 @@
         <UIcon name="i-mdi-alert-circle" class="text-error-500 mr-2 h-6 w-6" />
         Confirm Account Deletion
       </div>
+    </template>
+    <template #description>
+      <span class="sr-only">
+        This action is irreversible and requires typing the confirmation phrase to proceed.
+      </span>
     </template>
     <template #body>
       <div class="space-y-4">
@@ -325,10 +329,19 @@
         Account Deleted Successfully
       </div>
     </template>
+    <template #description>
+      <span class="sr-only">
+        Your account deletion is complete, and you will be redirected to the dashboard.
+      </span>
+    </template>
     <template #body>
       <div class="space-y-3">
         <div class="text-base">
           Your account and all associated data have been permanently deleted.
+        </div>
+        <div v-if="cleanupScheduled" class="text-sm text-gray-400">
+          <UIcon name="i-mdi-information" class="mr-1 inline h-4 w-4" />
+          Some data cleanup is still in progress and will complete shortly.
         </div>
         <div class="text-sm text-gray-400">
           Thank you for using TarkovTracker. You will be redirected to the dashboard.
@@ -347,14 +360,19 @@
   import { useRouter } from 'vue-router';
   import GameBadge from '@/components/ui/GameBadge.vue';
   import GenericCard from '@/components/ui/GenericCard.vue';
-  import { useTeamStoreWithSupabase } from '@/stores/useTeamStore';
+  import { usePreferencesStore } from '@/stores/usePreferences';
+  import { useSystemStore } from '@/stores/useSystemStore';
+  import { resetTarkovSync, useTarkovStore } from '@/stores/useTarkov';
+  import { useTeamStore } from '@/stores/useTeamStore';
   import { logger } from '@/utils/logger';
   defineOptions({
     inheritAttrs: false,
   });
   const { $supabase } = useNuxtApp();
-  const router = useRouter();
-  const { teamStore } = useTeamStoreWithSupabase();
+  const preferencesStore = usePreferencesStore();
+  const systemStore = useSystemStore();
+  const teamStore = useTeamStore();
+  const tarkovStore = useTarkovStore();
   const showConfirmationDialog = ref(false);
   const showSuccessDialog = ref(false);
   const confirmationText = ref('');
@@ -362,6 +380,7 @@
   const deleteError = ref('');
   const isDeleting = ref(false);
   const accountIdCopied = ref(false);
+  const cleanupScheduled = ref(false);
   // Visibility toggles for sensitive data (hidden by default)
   const showUsername = ref(false);
   const showEmail = ref(false);
@@ -443,15 +462,8 @@
   const getProviderLabel = (provider: AuthProvider) => {
     return provider.charAt(0).toUpperCase() + provider.slice(1);
   };
-  const hasOwnedTeams = computed(() => {
-    if (!isLoggedIn.value) return false;
-    return teamStore.$state.team && teamStore.$state.team.owner === $supabase.user.id;
-  });
-  const ownedTeamsCount = computed(() => {
-    return hasOwnedTeams.value ? 1 : 0;
-  });
   const canDelete = computed(() => {
-    return confirmationText.value === 'DELETE MY ACCOUNT';
+    return confirmationText.value.trim().toUpperCase() === 'DELETE MY ACCOUNT';
   });
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Unknown';
@@ -485,18 +497,95 @@
         throw new Error('You must be logged in to delete your account.');
       }
       // Refresh the session to ensure we have a valid token
-      const { error: refreshError } = await $supabase.client.auth.refreshSession();
+      const { data: refreshData, error: refreshError } =
+        await $supabase.client.auth.refreshSession();
       if (refreshError) {
-        logger.warn('Session refresh warning:', refreshError);
-        // Continue anyway - the existing session might still be valid
+        logger.error('Session refresh failed:', refreshError);
+        throw new Error('Your session has expired. Please refresh the page and try again.');
+      }
+      if (!refreshData.session) {
+        throw new Error('Unable to verify your session. Please refresh the page and try again.');
       }
       const { data, error } = await $supabase.client.functions.invoke('account-delete');
       if (error) {
         logger.error('Edge function error:', error);
-        throw error;
+        // Extract the actual error message from the Edge Function response
+        // Supabase wraps Edge Function errors with context: Response
+        let errorMessage = 'Failed to delete account. Please try again.';
+        const applyBodyError = (body: unknown) => {
+          if (!body) return false;
+          if (typeof body === 'string' && body.trim()) {
+            errorMessage = body;
+            return true;
+          }
+          if (typeof body === 'object' && 'error' in body) {
+            const bodyError = (body as { error?: unknown }).error;
+            if (bodyError) {
+              errorMessage = String(bodyError);
+              return true;
+            }
+          }
+          return false;
+        };
+        const getErrorContext = (err: unknown): unknown => {
+          if (err && typeof err === 'object' && 'context' in err) {
+            return (err as { context?: unknown }).context;
+          }
+          return undefined;
+        };
+        const getErrorMessage = (err: unknown): string | undefined => {
+          if (err && typeof err === 'object' && 'message' in err) {
+            const message = (err as { message?: unknown }).message;
+            return typeof message === 'string' ? message : undefined;
+          }
+          return undefined;
+        };
+        const context = getErrorContext(error);
+        if (context instanceof Response) {
+          try {
+            const body = await context.clone().json();
+            applyBodyError(body);
+          } catch {
+            try {
+              const text = await context.clone().text();
+              applyBodyError(text);
+            } catch {
+              // Ignore parsing errors and fall back to generic messaging
+            }
+          }
+        } else if ((context as { body?: { error?: string } }).body?.error) {
+          errorMessage = (context as { body?: { error?: string } }).body?.error || errorMessage;
+        }
+        if (
+          errorMessage === 'Failed to delete account. Please try again.' &&
+          getErrorMessage(error)
+        ) {
+          errorMessage = getErrorMessage(error) || errorMessage;
+        } else if (
+          typeof error === 'string' &&
+          errorMessage === 'Failed to delete account. Please try again.'
+        ) {
+          errorMessage = error;
+        }
+        // Handle rate limiting errors specifically
+        if (errorMessage.includes('Too many deletion requests')) {
+          // Extract wait time if present
+          const match = errorMessage.match(/wait (\d+) seconds/);
+          if (match) {
+            errorMessage = `Rate limit exceeded. Please wait ${match[1]} seconds before trying again.`;
+          }
+        }
+        throw new Error(errorMessage);
       }
       if (data?.success) {
         showConfirmationDialog.value = false;
+        // Check if cleanup is scheduled asynchronously (202 response)
+        if (data.cleanupScheduled) {
+          logger.info('Account deleted, cleanup scheduled:', data.message);
+          cleanupScheduled.value = true;
+        } else {
+          cleanupScheduled.value = false;
+        }
         showSuccessDialog.value = true;
       } else {
         throw new Error('Failed to delete account.');
@@ -508,14 +597,31 @@
       isDeleting.value = false;
     }
   };
+  const resetClientState = () => {
+    // Clear localStorage FIRST to prevent persist plugin from reading stale data
+    localStorage.clear();
+    // Stop Supabase sync before resetting stores
+    resetTarkovSync('account deleted');
+    // Reset all stores - this triggers persist plugin writes
+    preferencesStore.$reset();
+    systemStore.$reset();
+    teamStore.$reset();
+    tarkovStore.$reset();
+    // Clear localStorage AGAIN to remove any data written by persist plugins during reset
+    localStorage.clear();
+  };
   const redirectToHome = async () => {
     try {
       showSuccessDialog.value = false;
       logger.info('Signing out user and redirecting to dashboard...');
-      localStorage.clear();
+      // Reset all client state and clear localStorage
+      resetClientState();
+      // Sign out from Supabase
       await $supabase.signOut();
-      await router.push('/');
-      logger.info('Successfully signed out and redirected to dashboard');
+      // Use hard page reload to ensure completely fresh state
+      // router.push() keeps Pinia stores in memory which can show stale data
+      logger.info('Successfully signed out, performing hard reload...');
+      window.location.href = '/';
     } catch (error) {
       logger.error('Failed to sign out and redirect:', error);
       window.location.href = '/';

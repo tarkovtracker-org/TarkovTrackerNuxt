@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: false,
   srcDir: 'app',
+  ignore: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
   runtimeConfig: {
     // Server-only (private) runtime config
     supabaseUrl: process.env.SB_URL || process.env.SUPABASE_URL || '',

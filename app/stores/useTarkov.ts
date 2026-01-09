@@ -16,6 +16,18 @@ import { GAME_MODES, type GameMode } from '@/utils/constants';
 import { logger } from '@/utils/logger';
 import { STORAGE_KEYS } from '@/utils/storageKeys';
 import { useToast } from '#imports';
+type UserProgressRow = {
+  user_id: string;
+  current_game_mode: string | null;
+  game_edition: number | null;
+  pvp_data: UserProgressData | null;
+  pve_data: UserProgressData | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+const coerceGameMode = (mode?: string | null): GameMode => {
+  return mode === GAME_MODES.PVE ? GAME_MODES.PVE : GAME_MODES.PVP;
+};
 // Create a type that extends UserState with Pinia store methods
 type TarkovStoreInstance = UserState & {
   $state: UserState;
@@ -620,7 +632,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
                     if (!isNaN(isoDate)) return isoDate;
                     // Try extracting numeric timestamp from userId_timestamp format
                     const parts = suffix.split('_');
-                    const lastPart = parts[parts.length - 1];
+                    const lastPart = parts[parts.length - 1] ?? '';
                     const numericTimestamp = parseInt(lastPart, 10);
                     return isNaN(numericTimestamp) ? 0 : numericTimestamp;
                   };
@@ -840,8 +852,8 @@ export async function initializeTarkovSync() {
         hasLocalProgress,
       });
       // Try to load from Supabase with retry logic to prevent race conditions
-      let data: unknown = null;
-      let error: unknown = null;
+      let data: UserProgressRow | null = null;
+      let error: { code?: string; message?: string } | null = null;
       const maxRetries = 3;
       const retryDelayMs = 500;
       for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -854,40 +866,21 @@ export async function initializeTarkovSync() {
           .select('*')
           .eq('user_id', $supabase.user.id)
           .single();
-        data = result.data;
-        error = result.error;
+        data = result.data as UserProgressRow | null;
+        error = result.error as { code?: string; message?: string } | null;
         // Break if we got data or a real error (not "no rows")
-        if (
-          data ||
-          (error &&
-            typeof error === 'object' &&
-            error !== null &&
-            'code' in error &&
-            error.code !== 'PGRST116')
-        ) {
+        if (data || (error && error.code !== 'PGRST116')) {
           break;
         }
       }
       logger.debug('[TarkovStore] Supabase query result:', {
         hasData: !!data,
-        error:
-          error && typeof error === 'object' && error !== null && 'code' in error
-            ? error.code
-            : null,
-        errorMessage:
-          error && typeof error === 'object' && error !== null && 'message' in error
-            ? error.message
-            : null,
+        error: error?.code ?? null,
+        errorMessage: error?.message ?? null,
       });
       const hadRemoteData = Boolean(data);
       // Handle query errors (but not "no rows" which is expected for new users)
-      if (
-        error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code !== 'PGRST116'
-      ) {
+      if (error && error.code !== 'PGRST116') {
         logger.error('[TarkovStore] Error loading data from Supabase:', error);
         return { ok: false, hadRemoteData };
       }
@@ -899,7 +892,7 @@ export async function initializeTarkovSync() {
           const normalizedRemote = data
             ? ({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                currentGameMode: (data as any).current_game_mode || GAME_MODES.PVP,
+                currentGameMode: coerceGameMode((data as any).current_game_mode),
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 gameEdition: (data as any).game_edition || defaultState.gameEdition,
                 // Use structuredClone for deep copy of defaults
@@ -909,21 +902,27 @@ export async function initializeTarkovSync() {
                 pve: { ...structuredClone(defaultState.pve), ...((data as any).pve_data || {}) },
               } as UserState)
             : null;
+
           const remoteScore = normalizedRemote ? progressScore(normalizedRemote) : 0;
           const localScore = progressScore(localState);
+
           if (data) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const remoteUpdatedAt = (data as any).updated_at
               ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 Date.parse((data as any).updated_at)
               : null;
+
             const localOwnedByUser = storedUserId === currentUserId;
+
             if (hasLocalProgress && !localOwnedByUser && storedUserId === null) {
               notifyLocalIgnored(
                 'Found local guest progress on this device; your cloud progress was kept.'
               );
             }
+
             let shouldPreferLocal = false;
+
             // Conflict resolution logic
             if (localOwnedByUser && localTimestamp && remoteUpdatedAt) {
               shouldPreferLocal = localTimestamp > remoteUpdatedAt;
@@ -932,6 +931,7 @@ export async function initializeTarkovSync() {
             } else if (localOwnedByUser && !localTimestamp && !remoteUpdatedAt) {
               shouldPreferLocal = localScore > remoteScore;
             }
+
             // If local has more progress than remote, protect local and push it to Supabase.
             if (shouldPreferLocal) {
               logger.warn('[TarkovStore] Local progress ahead of Supabase; preserving local data', {
@@ -946,6 +946,7 @@ export async function initializeTarkovSync() {
                 pvp_data: localState.pvp || defaultState.pvp,
                 pve_data: localState.pve || defaultState.pve,
               });
+
               if (upsertError) {
                 logger.error(
                   '[TarkovStore] Error syncing local progress to Supabase:',
@@ -967,10 +968,12 @@ export async function initializeTarkovSync() {
               pvp_data: localState.pvp || defaultState.pvp,
               pve_data: localState.pve || defaultState.pve,
             };
+
             lastLocalSyncTime = Date.now(); // Track for self-origin filtering
             const { error: upsertError } = await $supabase.client
               .from('user_progress')
               .upsert(migrateData);
+
             if (upsertError) {
               logger.error('[TarkovStore] Error migrating local data to Supabase:', upsertError);
             } else {
@@ -979,13 +982,16 @@ export async function initializeTarkovSync() {
           } else {
             // SAFETY CHECKS: Before treating as "new user", verify this isn't Issue #71 scenario
             // Issue #71: User links a second OAuth provider → race condition → false "no data" → overwrites
+
             // Check 1: Account age
             const accountCreatedAt = $supabase.user.createdAt;
             const accountAgeMs = accountCreatedAt ? Date.now() - Date.parse(accountCreatedAt) : 0;
             const isRecentlyCreated = accountAgeMs < 5000; // 5 seconds threshold
+
             // Check 2: Multiple OAuth providers - strongest signal of Issue #71
             const linkedProviders = $supabase.user.providers || [];
             const hasMultipleProviders = linkedProviders.length > 1;
+
             // ONLY block if hasMultipleProviders (Issue #71 scenario)
             // OLD accounts with single provider are legitimate first-time users who waited to log in
             if (hasMultipleProviders) {
@@ -1000,9 +1006,11 @@ export async function initializeTarkovSync() {
                   userId: $supabase.user.id,
                 }
               );
+
               // Reset to default state but DO NOT sync to Supabase
               // This prevents overwriting potentially existing data
               resetStoreToDefault();
+
               // Notify user of the issue
               const toast = useToast();
               toast.add({
@@ -1010,6 +1018,7 @@ export async function initializeTarkovSync() {
                 description:
                   'We detected an issue loading your account data. Please refresh the page or contact support if this persists.',
                 color: 'error',
+                duration: 10000,
               });
               success = false;
             } else {
@@ -1157,7 +1166,9 @@ function setupRealtimeListener() {
         const localState = tarkovStore.$state;
         // Merge remote changes with local state
         const merged: Partial<UserState> = {
-          currentGameMode: (remoteData.current_game_mode as GameMode) || localState.currentGameMode,
+          currentGameMode: remoteData.current_game_mode
+            ? coerceGameMode(remoteData.current_game_mode)
+            : localState.currentGameMode,
           gameEdition: remoteData.game_edition || localState.gameEdition,
           pvp: mergeProgressData(localState.pvp, remoteData.pvp_data),
           pve: mergeProgressData(localState.pve, remoteData.pve_data),
@@ -1176,6 +1187,7 @@ function setupRealtimeListener() {
           title: 'Progress synced',
           description: 'Changes from another device were merged with your local progress.',
           color: 'info',
+          duration: 5000,
         });
       }
     )
@@ -1256,6 +1268,7 @@ function mergeProgressData(
     // Merge hideout modules - union
     hideoutModules: {
       ...local.hideoutModules,
+      ...remote.hideoutModules,
       ...remote.hideoutModules,
     },
     // Merge hideout parts - max counts

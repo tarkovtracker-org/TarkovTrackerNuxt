@@ -256,21 +256,20 @@ serve(async (req) => {
     const supabase = sbClient as unknown as TypedSupabaseClient;
     const now = new Date().toISOString();
 
-    // Rate limiting: Check for recent deletion attempts (user-initiated only)
-    // Use created_at to exclude scheduled retries from rate limit
+    // Rate limiting: Check for recent deletion attempts
     const rateLimitTimestamp = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
     const { data: recentAttempts, error: rateLimitError } = await supabase
-      .from('account_deletion_jobs')
-      .select('created_at')
+      .from('account_deletion_attempts')
+      .select('attempted_at')
       .eq('user_id', user.id)
-      .gte('created_at', rateLimitTimestamp)
-      .order('created_at', { ascending: false });
+      .gte('attempted_at', rateLimitTimestamp)
+      .order('attempted_at', { ascending: false });
 
     if (!rateLimitError && recentAttempts && recentAttempts.length >= RATE_LIMIT_MAX_ATTEMPTS) {
       const oldestAttempt = recentAttempts[recentAttempts.length - 1];
-      const createdAt = oldestAttempt.created_at;
-      const timeRemaining = createdAt
-        ? Math.ceil((new Date(createdAt).getTime() + RATE_LIMIT_WINDOW_MS - Date.now()) / 1000)
+      const attemptedAt = oldestAttempt.attempted_at;
+      const timeRemaining = attemptedAt
+        ? Math.ceil((new Date(attemptedAt).getTime() + RATE_LIMIT_WINDOW_MS - Date.now()) / 1000)
         : 60;
       console.warn('[account-delete] Rate limit exceeded for user:', user.id);
       return createErrorResponse(
@@ -278,6 +277,22 @@ serve(async (req) => {
         429,
         req
       );
+    }
+
+    // Record this deletion attempt for rate limiting
+    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || null;
+    const userAgent = req.headers.get('user-agent') || null;
+    const { error: attemptInsertError } = await supabase
+      .from('account_deletion_attempts')
+      .insert({
+        user_id: user.id,
+        attempted_at: now,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+      });
+    if (attemptInsertError) {
+      console.error('[account-delete] Failed to record deletion attempt:', attemptInsertError);
+      // Continue anyway - rate limiting failure shouldn't block deletion
     }
 
     // Initialize job tracking - this MUST succeed before proceeding
@@ -319,6 +334,9 @@ serve(async (req) => {
       });
       return createErrorResponse('Failed to fetch owned teams', 500, req);
     }
+
+    // Process all owned teams and collect errors before proceeding
+    const teamErrors: Array<{ teamId: string; error: string }> = [];
     if (ownedTeams && ownedTeams.length > 0) {
       for (const team of ownedTeams) {
         const { data: members, error: membersError } = await supabase
@@ -329,11 +347,11 @@ serve(async (req) => {
           .order('joined_at', { ascending: true });
         if (membersError) {
           console.error('[account-delete] Failed to fetch team members:', membersError);
-          await recordDeletionFailure(supabase, user.id, 'team_members_query_failed', {
-            stage: 'team_transfer',
-            error: serializeError(membersError),
+          teamErrors.push({
+            teamId: team.id,
+            error: `Failed to fetch members: ${getErrorMessage(membersError)}`,
           });
-          return createErrorResponse('Failed to process team memberships', 500, req);
+          continue;
         }
         if (members && members.length > 0) {
           const newOwner = members[0].user_id;
@@ -344,11 +362,11 @@ serve(async (req) => {
           });
           if (transferError) {
             console.error('[account-delete] Failed to transfer ownership:', transferError);
-            await recordDeletionFailure(supabase, user.id, 'team_transfer_failed', {
-              stage: 'team_transfer',
-              error: serializeError(transferError),
+            teamErrors.push({
+              teamId: team.id,
+              error: `Failed to transfer ownership: ${getErrorMessage(transferError)}`,
             });
-            return createErrorResponse('Failed to transfer team ownership', 500, req);
+            continue;
           }
         } else {
           const { error: deleteTeamError } = await supabase
@@ -357,14 +375,26 @@ serve(async (req) => {
             .eq('id', team.id);
           if (deleteTeamError) {
             console.error('[account-delete] Failed to delete empty team:', deleteTeamError);
-            await recordDeletionFailure(supabase, user.id, 'team_delete_failed', {
-              stage: 'team_transfer',
-              error: serializeError(deleteTeamError),
+            teamErrors.push({
+              teamId: team.id,
+              error: `Failed to delete team: ${getErrorMessage(deleteTeamError)}`,
             });
-            return createErrorResponse('Failed to delete empty team', 500, req);
+            continue;
           }
         }
       }
+    }
+
+    if (teamErrors.length > 0) {
+      await recordDeletionFailure(supabase, user.id, 'team_transfer_failed', {
+        stage: 'team_transfer',
+        errors: teamErrors,
+      });
+      return createErrorResponse(
+        'Failed to process team ownership transfers. Please try again.',
+        500,
+        req
+      );
     }
 
     const authDeleteResult = await deleteUserWithRetry(supabase, user.id);

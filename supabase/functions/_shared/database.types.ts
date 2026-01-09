@@ -39,6 +39,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       account_deletion_jobs: {
         Row: {
           attempts: number
