@@ -65,6 +65,11 @@
               :label="labelShowLightkeeperTasks"
               :tooltip="tooltipShowLightkeeperTasks"
             />
+            <SettingsToggle
+              v-model="sharedByAllOnly"
+              :label="labelSharedByAllOnly"
+              :tooltip="tooltipSharedByAllOnly"
+            />
           </section>
           <!-- APPEARANCE Section -->
           <section class="space-y-2">
@@ -222,6 +227,18 @@
       'Show tasks from Lightkeeper trader and tasks required for Lightkeeper'
     )
   );
+  const labelSharedByAllOnly = computed(() =>
+    t(
+      'page.tasks.settings.filters.sharedByAllOnly',
+      'Only show tasks available to all visible teammates'
+    )
+  );
+  const tooltipSharedByAllOnly = computed(() =>
+    t(
+      'page.tasks.settings.filters.sharedByAllOnlyTooltip',
+      'Filters the list to tasks that every visible teammate has available'
+    )
+  );
   const labelShowRequiredLabels = computed(() =>
     t('page.tasks.settings.appearance.showRequiredLabels', 'Show "Required" labels')
   );
@@ -304,6 +321,10 @@
   const showLightkeeperTasks = computed({
     get: () => preferencesStore.getShowLightkeeperTasks,
     set: (value) => preferencesStore.setShowLightkeeperTasks(value),
+  });
+  const sharedByAllOnly = computed({
+    get: () => preferencesStore.getTaskSharedByAllOnly,
+    set: (value) => preferencesStore.setTaskSharedByAllOnly(value),
   });
   // Appearance preferences
   const showRequiredLabels = computed({
