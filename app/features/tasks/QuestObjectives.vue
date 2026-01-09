@@ -1,20 +1,28 @@
 <template>
   <div class="flex flex-col divide-y divide-gray-100 dark:divide-white/5">
-    <div v-for="row in rows" :key="row.key" class="py-2 first:pt-0 last:pb-0">
-      <TaskObjectiveItemGroup
-        v-if="row.kind === 'itemGroup'"
-        :title="row.title"
-        :icon-name="row.iconName"
-        :objectives="row.objectives"
-      />
-      <TaskObjective v-else :objective="row.objective" />
-    </div>
-    <div v-if="irrelevantCount > 0" class="flex w-full items-center p-1 opacity-50">
-      <UIcon name="i-mdi-eye-off" class="mr-1 h-4 w-4" />
+    <component
+      :is="row.kind === 'itemGroup' ? TaskObjectiveItemGroup : TaskObjective"
+      v-for="row in rows"
+      :key="row.key"
+      v-bind="
+        row.kind === 'itemGroup'
+          ? { title: row.title, iconName: row.iconName, objectives: row.objectives }
+          : { objective: row.objective }
+      "
+      class="my-2"
+    />
+    <div
+      v-if="irrelevantCount > 0"
+      class="hover:text-primary-500 hover:bg-gray-50 dark:hover:bg-white/5 my-2 flex w-full cursor-pointer items-center gap-4 rounded-md px-2 py-2 transition-colors hover:underline"
+      role="button"
+      @click.stop="$emit('view-all-objectives')"
+    >
+      <UIcon name="i-mdi-eye-off" class="text-gray-400 h-5 w-5 shrink-0" />
       <i18n-t
         keypath="page.tasks.questcard.objectiveshidden"
         :plural="irrelevantCount"
         scope="global"
+        class="text-sm text-gray-500 dark:text-gray-400"
       >
         <template #count>{{ irrelevantCount }}</template>
         <template #uncompleted>{{ uncompletedIrrelevant }}</template>

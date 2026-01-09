@@ -10,7 +10,7 @@
   >
     <div class="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-300">
       <!-- Rewards title -->
-      <div class="flex items-center text-sm">
+      <div class="flex items-center">
         <UIcon
           v-if="hasExpandableDetails"
           name="i-mdi-chevron-right"
@@ -18,10 +18,7 @@
           class="mr-1 h-4 w-4 shrink-0 text-gray-500 transition-transform duration-200"
           :class="showDetails ? 'rotate-90' : ''"
         />
-        <span class="font-medium text-gray-700 dark:text-gray-200">
-          <UIcon name="i-mdi-gift" aria-hidden="true" class="mr-1 inline h-3.5 w-3.5" />
-          {{ t('page.tasks.questcard.rewards', 'Rewards') }}:
-        </span>
+        <span class="mr-2 shrink-0 text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('page.tasks.questcard.rewards', 'Rewards') }}:</span>
       </div>
       <!-- XP Badge -->
       <span

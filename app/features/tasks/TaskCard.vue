@@ -297,6 +297,7 @@
             :objectives="relevantViewObjectives"
             :irrelevant-count="irrelevantObjectives.length"
             :uncompleted-irrelevant="uncompletedIrrelevantObjectives.length"
+            @view-all-objectives="$emit('view-all-objectives')"
           />
         </div>
       </div>
@@ -471,6 +472,7 @@
   }>();
   const emit = defineEmits<{
     'on-task-action': [payload: TaskActionPayload];
+    'view-all-objectives': [];
   }>();
   const { t } = useI18n({ useScope: 'global' });
   const router = useRouter();

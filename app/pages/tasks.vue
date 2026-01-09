@@ -54,6 +54,7 @@
             :key="task.id"
             :task="task"
             @on-task-action="onTaskAction"
+            @view-all-objectives="forceViewAll"
           />
           <!-- Sentinel for infinite scroll -->
           <div v-if="displayCount < filteredTasks.length" ref="tasksSentinel" class="h-1" />
@@ -408,45 +409,64 @@
   // IMPORTANT: Use router.replace (not setFilters) to avoid creating duplicate history entries.
   // The user navigated to /tasks?task=xxx - any auto-adjustments should replace, not push.
   // Watch both singleTaskId and tasksLoading to handle page refresh correctly
-  watch(
-    [singleTaskId, tasksLoading],
-    ([taskId, loading], [oldTaskId]) => {
-      if (!taskId) return;
-      // Wait for metadata to load before determining view
-      if (loading || !metadataStore.hasInitialized) return;
-      // Scroll to top when entering single-task mode (only on initial entry)
-      if (!oldTaskId) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      // Find the task and determine best map to show
-      const task = tasks.value.find((t) => t.id === taskId);
-    // Build the replacement query - start with current query params
-    const newQuery: Record<string, string> = {};
-    for (const [key, value] of Object.entries(router.currentRoute.value.query)) {
-      if (typeof value === 'string') {
-        newQuery[key] = value;
-      }
+  // Smart Navigation Logic
+  const resolveSmartNavigation = async (
+    to: ReturnType<typeof useRouter>['currentRoute']['value'],
+    from?: ReturnType<typeof useRouter>['currentRoute']['value']
+  ) => {
+    // 1. Basic checks
+    if (isLoading.value || !metadataStore.hasInitialized) return;
+
+    const taskId = to.query.task as string;
+    if (!taskId) return; // Not in single-task mode
+
+    // Scroll to top if task changed (and it's not just a view change on the same task)
+    if (from && to.query.task !== from.query.task) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (!from) {
+      // Initial load
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    // Always set status to 'all' so task is visible regardless of completion state
+
+    // 2. If URL already has a view (e.g. user clicked a tab or permalink), respect it.
+    if (to.query.view) return;
+
+    // 3. Toggle Logic: REMOVED by request.
+    // Ideally we always want "smart resolution" when landing on a clean link.
+    // If the user wants to leave map view, they must now do so explicitly via the "View All" link.
+
+    // 4. Smart Resolution Logic
+    const task = tasks.value.find((t) => t.id === taskId);
+
+    // Build the replacement query - start with current query params
+    const newQuery: Record<string, string> = { ...to.query } as Record<string, string>;
+    // Always ensure status is 'all' so task is visible
     newQuery.status = 'all';
+    
+    // Explicitly set view to 'all' as baseline, overridden below if maps found
+    newQuery.view = 'all';
+
     if (task && Array.isArray(task.objectives)) {
       const mapIncompleteStatus = new Map<string, boolean>();
       const orderedMapIds: string[] = [];
+      
       for (const obj of task.objectives) {
         if (!Array.isArray(obj.maps)) continue;
+        
         const isComplete = tarkovStore.isTaskObjectiveComplete(obj.id);
-        // Cast to access location properties
+        
+        // Cast to access location properties (same as before)
         const objectiveWithLocations = obj as typeof obj & {
-          zones?: Array<{ map?: { id: string }; outline?: unknown[]; position?: unknown }>;
-          possibleLocations?: Array<{ map?: { id: string }; positions?: unknown[] }>;
+          zones?: Array<{ map?: { id: string }; }>
+          possibleLocations?: Array<{ map?: { id: string }; }>
         };
-        // Only consider objectives that have actual displayable location data
+
         const hasLocationData =
-          (Array.isArray(objectiveWithLocations.zones) &&
-            objectiveWithLocations.zones.length > 0) ||
-          (Array.isArray(objectiveWithLocations.possibleLocations) &&
-            objectiveWithLocations.possibleLocations.length > 0);
+          (Array.isArray(objectiveWithLocations.zones) && objectiveWithLocations.zones.length > 0) ||
+          (Array.isArray(objectiveWithLocations.possibleLocations) && objectiveWithLocations.possibleLocations.length > 0);
+
         if (!hasLocationData) continue;
+
         for (const objMap of obj.maps) {
           if (!objMap?.id) continue;
           if (!orderedMapIds.includes(objMap.id)) {
@@ -459,29 +479,58 @@
           }
         }
       }
+
       const firstIncompleteMap = orderedMapIds.find((id) => mapIncompleteStatus.get(id) === true);
       const targetMap = firstIncompleteMap ?? orderedMapIds[0];
+
       if (targetMap) {
-        // Task has map objectives - switch to maps view with that map
+        // Task has map objectives
         newQuery.view = 'maps';
         newQuery.map = targetMap;
-        // Clear trader param since we're switching to maps view
         delete newQuery.trader;
       } else {
-        // Task has no displayable map objectives
+        // No displayable objectives on map
         newQuery.view = 'all';
         delete newQuery.map;
         delete newQuery.trader;
       }
     } else {
-      // Task not found or has no objectives
+      // Task has no objectives
       newQuery.view = 'all';
       delete newQuery.map;
       delete newQuery.trader;
     }
-    // Replace the current URL in place (no new history entry)
-    router.replace({ query: newQuery });
+
+    // Only redirect if the calculated query is different effectively
+    // (Simple check: if we decided on 'maps' view and we are not there)
+    if (newQuery.view === 'maps') {
+       await router.replace({ query: newQuery });
+    }
+  };
+
+  // Watch route changes
+  watch(
+    () => router.currentRoute.value,
+    (to, from) => {
+      resolveSmartNavigation(to, from);
+    },
+    { immediate: true }
+  );
+  // Watch loading state to handle initial load / refresh
+  watch(isLoading, (loading) => {
+    if (!loading) {
+      // Pass undefined as 'from' to treat as fresh entry (smart resolve)
+      resolveSmartNavigation(router.currentRoute.value, undefined);
+    }
   });
+  // Force "View All" mode by explicitly pushing to router (bypassing filter defaults stripping)
+  const forceViewAll = async () => {
+     const newQuery = { ...router.currentRoute.value.query, view: 'all' };
+     delete newQuery.map;
+     delete newQuery.trader;
+     await router.push({ query: newQuery });
+  };
+
   // Clear single task filter
   const clearSingleTaskFilter = () => {
     setFilter('task', null);
