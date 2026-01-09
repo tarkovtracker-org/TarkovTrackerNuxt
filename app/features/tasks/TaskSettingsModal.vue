@@ -9,7 +9,13 @@
       <span class="hidden text-xs sm:inline">SETTINGS</span>
     </UButton>
     <template #content>
-      <UCard class="bg-contentbackground">
+      <UCard
+        class="bg-contentbackground"
+        :ui="{
+          root: 'max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-4rem)] flex flex-col',
+          body: 'min-h-0 overflow-y-auto',
+        }"
+      >
         <template #header>
           <div class="flex items-center justify-between">
             <div>
@@ -53,6 +59,11 @@
               v-model="showLightkeeperTasks"
               :label="labelShowLightkeeperTasks"
               :tooltip="tooltipShowLightkeeperTasks"
+            />
+            <SettingsToggle
+              v-model="sharedByAllOnly"
+              :label="labelSharedByAllOnly"
+              :tooltip="tooltipSharedByAllOnly"
             />
           </section>
           <!-- APPEARANCE Section -->
@@ -202,6 +213,18 @@
       'Show tasks from Lightkeeper trader and tasks required for Lightkeeper'
     )
   );
+  const labelSharedByAllOnly = computed(() =>
+    t(
+      'page.tasks.settings.filters.sharedByAllOnly',
+      'Only show tasks available to all visible teammates'
+    )
+  );
+  const tooltipSharedByAllOnly = computed(() =>
+    t(
+      'page.tasks.settings.filters.sharedByAllOnlyTooltip',
+      'Filters the list to tasks that every visible teammate has available'
+    )
+  );
   const labelShowRequiredLabels = computed(() =>
     t('page.tasks.settings.appearance.showRequiredLabels', 'Show "Required" labels')
   );
@@ -284,6 +307,10 @@
   const showLightkeeperTasks = computed({
     get: () => preferencesStore.getShowLightkeeperTasks,
     set: (value) => preferencesStore.setShowLightkeeperTasks(value),
+  });
+  const sharedByAllOnly = computed({
+    get: () => preferencesStore.getTaskSharedByAllOnly,
+    set: (value) => preferencesStore.setTaskSharedByAllOnly(value),
   });
   // Appearance preferences
   const showRequiredLabels = computed({
