@@ -37,18 +37,30 @@ All area labels use `#c2e0c6` (light green) for visual grouping.
 ### Priority Labels (How urgent)
 | Label | Color | Description | When to Use |
 |-------|-------|-------------|-------------|
-| `priority:high` | ![#d93f0b](https://via.placeholder.com/15/d93f0b/000000?text=+) `#d93f0b` | Important features/bugs | Critical bugs, security issues, data loss, blocking issues, important features |
-| `priority:medium` | ![#fbca04](https://via.placeholder.com/15/fbca04/000000?text=+) `#fbca04` | Normal priority | Standard bugs and features (default) |
-| `priority:low` | ![#0e8a16](https://via.placeholder.com/15/0e8a16/000000?text=+) `#0e8a16` | Nice to have | Minor improvements, edge cases, quality-of-life enhancements |
+| `priority:high` | `#d93f0b` | Important features/bugs | Critical bugs, security issues, data loss, blocking issues, important features |
+| `priority:medium` | `#fbca04` | Normal priority | Standard bugs and features (default) |
+| `priority:low` | `#0e8a16` | Nice to have | Minor improvements, edge cases, quality-of-life enhancements |
 
 ### Special Labels
 | Label | Color | Description | When to Use |
 |-------|-------|-------------|-------------|
-| `good-first-issue` | ![#7057ff](https://via.placeholder.com/15/7057ff/000000?text=+) `#7057ff` | Good for newcomers | Simple, well-defined issues perfect for first-time contributors |
-| `help-wanted` | ![#008672](https://via.placeholder.com/15/008672/000000?text=+) `#008672` | Community help needed | Issues where community contributions are especially welcome |
-| `upstream` | ![#e99695](https://via.placeholder.com/15/e99695/000000?text=+) `#e99695` | Issue belongs in data-overlay repo | Quest/item data issues that need fixes in the data-overlay repository |
+| `good-first-issue` | `#7057ff` | Good for newcomers | Simple, well-defined issues that can be completed in isolation without deep knowledge |
+| `help-wanted` | `#008672` | Community help needed | Well-scoped issues that welcome community contributions but may require broader context or experience |
+| `upstream` | `#e99695` | Issue belongs in data-overlay repo | Quest/item data issues that need fixes in the data-overlay repository |
 
 ## Label Usage Guidelines
+
+#### `good-first-issue` guidelines
+
+Only apply `good-first-issue` to issues that meet **all** of the following criteria:
+
+- Limited to a single technical area (usually `area:ui`)
+- Can be completed without introducing new data models or shared logic
+- Does not require deep Tarkov Tracker domain knowledge
+- Has a clear, testable outcome that can be verified visually or with simple checks
+
+If an issue is contributor-friendly but larger in scope, use **`help-wanted` without `good-first-issue`**.
+
 
 ### Combining Labels
 Issues and PRs should typically have:
@@ -137,6 +149,8 @@ These are **NOT** labels - they're handled by GitHub Project columns:
    - `good-first-issue` for simple, well-defined issues
    - `help-wanted` for community contributions
    - `upstream` if it's a data issue → close with comment
+
+   **Note**: Prefer `help-wanted` over `good-first-issue` unless the issue is truly first-time contributor safe.
 6. Move to appropriate project column:
    - **Waiting for Info** if clarification needed
    - **Blocked** if waiting on external dependency
