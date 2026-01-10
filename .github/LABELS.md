@@ -53,7 +53,7 @@ All area labels use `#c2e0c6` (light green) for visual grouping.
 
 ## Label Usage Guidelines
 
-#### `good-first-issue` guidelines
+### `good-first-issue` guidelines
 
 Only apply `good-first-issue` to issues that meet **all** of the following criteria:
 
