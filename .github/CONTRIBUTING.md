@@ -53,7 +53,7 @@ Branch naming convention:
 - Follow coding standards (see [Coding Standards](#coding-standards))
 - Write meaningful commit messages
 - Test your changes thoroughly
-- Keep PRs focused on a single issue
+- Each pull request must focus on a single change (fix, update, documentation, or feature). Unrelated changes may be requested to be split or closed.
 
 ### 5. Submit a Pull Request
 - Use the PR template
