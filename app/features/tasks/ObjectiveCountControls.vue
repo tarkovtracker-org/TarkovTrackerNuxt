@@ -13,7 +13,7 @@
           type="button"
           :disabled="disabled || currentCount <= 0"
           :aria-label="t('page.tasks.questcard.decrease', 'Decrease')"
-          class="focus-ring flex h-7 w-7 items-center justify-center rounded-l-md text-gray-500 transition-colors disabled:pointer-events-none dark:text-gray-300"
+          class="focus-ring flex h-7 w-7 items-center justify-center rounded-l-md text-gray-500 transition-colors dark:text-gray-300"
           :class="disabled || currentCount <= 0 ? 'disabled' : 'clickable'"
           @click="$emit('decrease')"
         >
@@ -57,7 +57,7 @@
           type="button"
           :disabled="disabled || currentCount >= neededCount"
           :aria-label="t('page.tasks.questcard.increase', 'Increase')"
-          class="focus-ring flex h-7 w-7 items-center justify-center rounded-r-md text-gray-500 transition-colors disabled:pointer-events-none dark:text-gray-300"
+          class="focus-ring flex h-7 w-7 items-center justify-center rounded-r-md text-gray-500 transition-colors dark:text-gray-300"
           :class="disabled || currentCount >= neededCount ? 'disabled' : 'clickable'"
           @click="$emit('increase')"
         >

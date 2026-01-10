@@ -5,7 +5,7 @@
     :disabled="props.disabled"
     :aria-pressed="props.isActive"
     :aria-label="props.ariaLabel"
-    class="focus-ring flex items-center justify-center rounded-md border transition-colors disabled:pointer-events-none"
+    class="focus-ring flex items-center justify-center rounded-md border transition-colors"
     :class="[sizeClass, stateClass]"
     @click="emit('toggle')"
   >
