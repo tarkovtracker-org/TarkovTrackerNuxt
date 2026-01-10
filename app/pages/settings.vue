@@ -330,11 +330,19 @@
           </p>
           <div class="space-y-2">
             <p class="text-surface-100 text-sm font-medium">
-              Type
-              <strong class="text-error-400">DELETE</strong>
-              to confirm:
+              <i18n-t keypath="settings.danger_zone.confirm_delete_instruction" tag="span">
+                <template #word>
+                  <strong class="text-error-400">
+                    {{ $t('settings.danger_zone.confirm_word', 'DELETE') }}
+                  </strong>
+                </template>
+              </i18n-t>
             </p>
-            <UInput v-model="resetAllConfirmText" placeholder="DELETE" class="font-mono" />
+            <UInput
+              v-model="resetAllConfirmText"
+              :placeholder="$t('settings.danger_zone.confirm_word', 'DELETE')"
+              class="font-mono"
+            />
           </div>
         </div>
       </template>
@@ -353,7 +361,7 @@
             variant="solid"
             class="ml-auto min-w-30 justify-center text-center"
             :loading="resetting"
-            :disabled="resetAllConfirmText !== 'DELETE'"
+            :disabled="resetAllConfirmText !== $t('settings.danger_zone.confirm_word', 'DELETE')"
             @click="resetAllData"
           >
             {{ $t('settings.data_management.reset_confirm', 'Reset All Data') }}
@@ -542,6 +550,7 @@
     errorLogContext: string;
     errorDescription: string;
     dialogRef: Ref<boolean>;
+    onSuccess?: () => void;
   }
   const createResetHandler = (config: ResetConfig) => async () => {
     resetting.value = true;
@@ -553,6 +562,9 @@
         color: 'success',
       });
       config.dialogRef.value = false;
+      if (config.onSuccess) {
+        config.onSuccess();
+      }
     } catch (error) {
       logger.error(`[Settings] Error resetting ${config.errorLogContext}:`, error);
       toast.add({
@@ -587,5 +599,6 @@
     errorLogContext: 'all data',
     errorDescription: 'Failed to reset data. Please try again.',
     dialogRef: showResetAllDialog,
+    // Note: resetAllConfirmText is cleared in the @close handler of the modal
   });
 </script>

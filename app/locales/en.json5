@@ -661,6 +661,8 @@
     },
     danger_zone: {
       title: 'Danger Zone',
+      confirm_delete_instruction: 'Type {word} to confirm:',
+      confirm_word: 'DELETE',
     },
   },
   generic: {
