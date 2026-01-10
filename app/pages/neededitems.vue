@@ -91,17 +91,52 @@
   const preferencesStore = usePreferencesStore();
   const tarkovStore = useTarkovStore();
   const { neededItemTaskObjectives, neededItemHideoutModules } = storeToRefs(metadataStore);
-  // View mode state: 'list' or 'grid'
-  const viewMode = ref<'list' | 'grid'>('grid');
   // Filter state
   type FilterType = 'all' | 'tasks' | 'hideout' | 'completed';
   type FirFilter = 'all' | 'fir' | 'non-fir';
-  const activeFilter = ref<FilterType>('all');
   const search = ref('');
-  const firFilter = ref<FirFilter>('all');
-  const groupByItem = ref(false);
-  const hideNonFirSpecialEquipment = ref(false);
-  const kappaOnly = ref(false);
+  const normalizeActiveFilter = (value: string | null): FilterType => {
+    if (value === 'tasks' || value === 'hideout' || value === 'completed' || value === 'all') {
+      return value;
+    }
+    return 'all';
+  };
+  const normalizeFirFilter = (value: string | null): FirFilter => {
+    if (value === 'fir' || value === 'non-fir' || value === 'all') {
+      return value;
+    }
+    return 'all';
+  };
+  const normalizeViewMode = (value: string | null): 'list' | 'grid' => {
+    if (value === 'list' || value === 'grid') {
+      return value;
+    }
+    return 'grid';
+  };
+  const activeFilter = computed<FilterType>({
+    get: () => normalizeActiveFilter(preferencesStore.neededItemsActiveFilter),
+    set: (value) => preferencesStore.setNeededItemsActiveFilter(value),
+  });
+  const firFilter = computed<FirFilter>({
+    get: () => normalizeFirFilter(preferencesStore.neededItemsFirFilter),
+    set: (value) => preferencesStore.setNeededItemsFirFilter(value),
+  });
+  const viewMode = computed<'list' | 'grid'>({
+    get: () => normalizeViewMode(preferencesStore.neededItemsViewMode),
+    set: (value) => preferencesStore.setNeededItemsViewMode(value),
+  });
+  const groupByItem = computed({
+    get: () => preferencesStore.neededItemsGroupByItem ?? false,
+    set: (value) => preferencesStore.setNeededItemsGroupByItem(value),
+  });
+  const hideNonFirSpecialEquipment = computed({
+    get: () => preferencesStore.neededItemsHideNonFirSpecialEquipment ?? false,
+    set: (value) => preferencesStore.setNeededItemsHideNonFirSpecialEquipment(value),
+  });
+  const kappaOnly = computed({
+    get: () => preferencesStore.neededItemsKappaOnly ?? false,
+    set: (value) => preferencesStore.setNeededItemsKappaOnly(value),
+  });
   // Team filter preferences (two-way binding with preferences store)
   const hideTeamItems = computed({
     get: () => preferencesStore.itemsTeamAllHidden,

@@ -15,6 +15,12 @@ export interface PreferencesState {
   itemsTeamHideNonFIR: boolean;
   itemsTeamHideHideout: boolean;
   mapTeamHideAll: boolean;
+  neededItemsActiveFilter: string | null;
+  neededItemsFirFilter: string | null;
+  neededItemsViewMode: string | null;
+  neededItemsGroupByItem: boolean;
+  neededItemsHideNonFirSpecialEquipment: boolean;
+  neededItemsKappaOnly: boolean;
   taskPrimaryView: string | null;
   taskMapView: string | null;
   taskTraderView: string | null;
@@ -61,6 +67,12 @@ export const preferencesDefaultState: PreferencesState = {
   itemsTeamHideNonFIR: false,
   itemsTeamHideHideout: false,
   mapTeamHideAll: false,
+  neededItemsActiveFilter: null,
+  neededItemsFirFilter: null,
+  neededItemsViewMode: null,
+  neededItemsGroupByItem: false,
+  neededItemsHideNonFirSpecialEquipment: false,
+  neededItemsKappaOnly: false,
   taskPrimaryView: null,
   taskMapView: null,
   taskTraderView: null,
@@ -254,6 +266,24 @@ export const usePreferencesStore = defineStore('preferences', {
     setMapTeamHideAll(hide: boolean) {
       this.mapTeamHideAll = hide;
     },
+    setNeededItemsActiveFilter(value: string) {
+      this.neededItemsActiveFilter = value;
+    },
+    setNeededItemsFirFilter(value: string) {
+      this.neededItemsFirFilter = value;
+    },
+    setNeededItemsViewMode(value: string) {
+      this.neededItemsViewMode = value;
+    },
+    setNeededItemsGroupByItem(value: boolean) {
+      this.neededItemsGroupByItem = value;
+    },
+    setNeededItemsHideNonFirSpecialEquipment(value: boolean) {
+      this.neededItemsHideNonFirSpecialEquipment = value;
+    },
+    setNeededItemsKappaOnly(value: boolean) {
+      this.neededItemsKappaOnly = value;
+    },
     setTaskPrimaryView(view: string) {
       this.taskPrimaryView = view;
     },
@@ -360,6 +390,12 @@ export const usePreferencesStore = defineStore('preferences', {
       'itemsTeamHideNonFIR',
       'itemsTeamHideHideout',
       'mapTeamHideAll',
+      'neededItemsActiveFilter',
+      'neededItemsFirFilter',
+      'neededItemsViewMode',
+      'neededItemsGroupByItem',
+      'neededItemsHideNonFirSpecialEquipment',
+      'neededItemsKappaOnly',
       'taskPrimaryView',
       'taskMapView',
       'taskTraderView',
