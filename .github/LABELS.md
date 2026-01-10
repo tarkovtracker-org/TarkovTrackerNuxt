@@ -21,6 +21,7 @@ GitHub's native **Issue Types** feature replaces type labels. Each issue must ha
 ## Label Categories
 
 ### Area Labels (Technical boundaries - which systems are affected)
+
 All area labels use `#c2e0c6` (light green) for visual grouping.
 
 | Label | Description | Examples |
@@ -35,6 +36,7 @@ All area labels use `#c2e0c6` (light green) for visual grouping.
 **Note:** Issues can have multiple area labels if they affect multiple systems (e.g., `area:ui` + `area:realtime` for team page display issues).
 
 ### Priority Labels (How urgent)
+
 | Label | Color | Description | When to Use |
 |-------|-------|-------------|-------------|
 | `priority:high` | `#d93f0b` | Important features/bugs | Critical bugs, security issues, data loss, blocking issues, important features |
@@ -42,6 +44,7 @@ All area labels use `#c2e0c6` (light green) for visual grouping.
 | `priority:low` | `#0e8a16` | Nice to have | Minor improvements, edge cases, quality-of-life enhancements |
 
 ### Special Labels
+
 | Label | Color | Description | When to Use |
 |-------|-------|-------------|-------------|
 | `good-first-issue` | `#7057ff` | Good for newcomers | Simple, well-defined issues that can be completed in isolation without deep knowledge |
@@ -61,9 +64,10 @@ Only apply `good-first-issue` to issues that meet **all** of the following crite
 
 If an issue is contributor-friendly but larger in scope, use **`help-wanted` without `good-first-issue`**.
 
-
 ### Combining Labels
+
 Issues and PRs should typically have:
+
 1. **One Issue Type** (required) - bug, feature, enhancement, dependencies, or documentation
 2. **One or more Area labels** (optional) - Which technical systems are affected
 3. **One Priority label** (optional, for issues) - How urgent is it
@@ -72,46 +76,68 @@ Issues and PRs should typically have:
 ### Examples
 
 **Bug in task display:**
+
 ```
+
 Issue Type: bug
 Labels: area:ui, priority:medium
+
 ```
 
 **API endpoint missing CORS headers:**
+
 ```
+
 Issue Type: bug
 Labels: area:api, priority:high
+
 ```
 
 **Team page shows wrong level:**
+
 ```
+
 Issue Type: bug
 Labels: area:ui, area:realtime, priority:medium
+
 ```
 
 **New feature spanning multiple areas:**
+
 ```
+
 Issue Type: feature
 Labels: area:api, area:database, area:auth, priority:high
+
 ```
 
 **Enhancement to UI:**
+
 ```
+
 Issue Type: enhancement
 Labels: area:ui, priority:low, good-first-issue
+
 ```
 
 **Missing quest data (send to data-overlay):**
+
 ```
+
 Issue Type: bug (or feature, depending on what's wrong)
 Labels: upstream
+
 ```
+
 Close the issue with a comment explaining it belongs in the data-overlay repo and link to where they should report it.
 
 **Dependency update PR:**
+
 ```
+
 Issue Type: dependencies
 Labels: (none needed, Dependabot handles these)
+
 ```
 
 ### Workflow States (Use Project Board, NOT Labels)
@@ -128,11 +154,13 @@ These are **NOT** labels - they're handled by GitHub Project columns:
 | ~~wontfix~~ | Close with explanation in comment |
 
 ### Automated Labeling
+
 - Issue templates automatically apply initial type labels
 - Area and priority labels are added during triage
 - Dependabot PRs automatically get `dependencies` label
 
 ### Label Hygiene
+
 - Keep labels current and accurate
 - Update priority as needed
 - Add area labels during triage
@@ -141,6 +169,7 @@ These are **NOT** labels - they're handled by GitHub Project columns:
 ## For Maintainers
 
 ### Triage Process
+
 1. Review new issues in **Inbox** column
 2. Add **one type label** (usually auto-applied by template)
 3. Add **one or more area labels** based on technical systems affected
@@ -151,6 +180,7 @@ These are **NOT** labels - they're handled by GitHub Project columns:
    - `upstream` if it's a data issue → close with comment
 
    **Note**: Prefer `help-wanted` over `good-first-issue` unless the issue is truly first-time contributor safe.
+
 6. Move to appropriate project column:
    - **Waiting for Info** if clarification needed
    - **Blocked** if waiting on external dependency
@@ -158,12 +188,14 @@ These are **NOT** labels - they're handled by GitHub Project columns:
    - **Todo** if ready to work on
 
 ### Label Management
+
 - Keep labels organized and consistent
 - Don't create new labels without team discussion
 - Use existing labels whenever possible
 - Remove unused labels rather than letting them accumulate
 
 ### Data Issues (Quest/Item Data)
+
 When someone reports incorrect quest requirements, missing items, wrong item properties, etc.:
 
 1. Add `upstream` label
