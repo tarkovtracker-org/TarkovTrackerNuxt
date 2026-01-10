@@ -92,8 +92,25 @@ npm run preview
 
 ## Documentation
 
-For detailed development guidelines, architecture information, and migration progress, see the files in the `docs/` directory.
+For detailed development guidelines, architecture references, and migration progress, see the files in the [`docs/`](docs/) directory.
+
+This repository includes both **contribution workflow guidance** and **technical documentation**. 
+
+[**How to Contribute (Issues, Branches, PR Process):**](CONTRIBUTING.md) Open or pick an issue, get assigned, create a focused branch, Use the PR template, and link the issue.
+
+> [!IMPORTANT]
+> Each pull request must address **one change only** — a single fix, update, documentation improvement, or new feature.  
+> Pull requests that bundle unrelated changes may be asked to split or be closed.
+
+[**Label System:**](LABELS.md) Issue Types define the kind of work being done, while labels communicate scope, priority, ownership, and status throughout the lifecycle of the issue.
+
+[**GitHub Project Board:**](PROJECT_BOARD.md) Issues progress through the board from backlog to completion, with transitions driven by issue and pull request activity.
+
+#### Where to start (new contributors)
+
+> [!NOTE]
+> If you’re new to the project, look for issues labeled **`good-first-issue`**. These are intentionally scoped to be approachable and are the best way to get familiar with the codebase, contribution process, and review expectations.
 
 ## License
 
-This project remains licensed under the GNU General Public License v3.0. See LICENSE.md for the full license text.
+This project remains licensed under the GNU General Public License v3.0. See [LICENSE.md](LICENSE.md) for the full license text.
