@@ -96,15 +96,15 @@ For detailed development guidelines, architecture references, and migration prog
 
 This repository includes both **contribution workflow guidance** and **technical documentation**. 
 
-[**How to Contribute (Issues, Branches, PR Process):**](CONTRIBUTING.md) Open or pick an issue, get assigned, create a focused branch, Use the PR template, and link the issue.
+[**How to Contribute (Issues, Branches, PR Process):**](.github/CONTRIBUTING.md) Open or pick an issue, get assigned, create a focused branch, Use the PR template, and link the issue.
 
 > [!IMPORTANT]
 > Each pull request must address **one change only** — a single fix, update, documentation improvement, or new feature.  
 > Pull requests that bundle unrelated changes may be asked to split or be closed.
 
-[**Label System:**](LABELS.md) Issue Types define the kind of work being done, while labels communicate scope, priority, ownership, and status throughout the lifecycle of the issue.
+[**Label System:**](.github/LABELS.md) Issue Types define the kind of work being done, while labels communicate scope, priority, ownership, and status throughout the lifecycle of the issue.
 
-[**GitHub Project Board:**](PROJECT_BOARD.md) Issues progress through the board from backlog to completion, with transitions driven by issue and pull request activity.
+[**GitHub Project Board:**](.github/PROJECT_BOARD.md) Issues progress through the board from backlog to completion, with transitions driven by issue and pull request activity.
 
 #### Where to start (new contributors)
 
