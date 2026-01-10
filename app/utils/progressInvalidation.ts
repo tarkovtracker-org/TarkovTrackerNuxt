@@ -18,6 +18,10 @@ const requiresCompletionOrActive = (statuses: string[] | undefined): boolean => 
   if (normalized.length === 0) return true;
   return hasAnyStatus(normalized, ['complete', 'completed', 'active', 'accept', 'accepted']);
 };
+const acceptsFailedStatus = (statuses: string[] | undefined): boolean => {
+  const normalized = normalizeStatuses(statuses);
+  return normalized.includes('failed');
+};
 const isFailedRequirementOnly = (statuses: string[] | undefined): boolean => {
   const normalized = normalizeStatuses(statuses);
   if (normalized.length === 0) return false;
@@ -68,7 +72,18 @@ export const computeInvalidProgress = ({
     if (!dependents) return;
     // Don't propagate invalidation through completed tasks
     if (isCompleted) return;
-    dependents.forEach((dependentId) => invalidateTaskRecursive(dependentId, false));
+    dependents.forEach((dependentId) => {
+      // Check if the dependent task accepts failed status for this requirement
+      // If so, don't invalidate it when the prereq is failed/invalid
+      const dependentTask = tasksById.get(dependentId);
+      const reqForThisTask = dependentTask?.taskRequirements?.find(
+        (req) => req?.task?.id === taskId
+      );
+      if (reqForThisTask && acceptsFailedStatus(reqForThisTask.status)) {
+        return; // Skip - this task accepts failed prereqs
+      }
+      invalidateTaskRecursive(dependentId, false);
+    });
   };
   // Invalidate faction-specific tasks (but DON'T cascade - there may be faction equivalents).
   // For example, USEC and BEAR have equivalent questlines, so invalidating a USEC task
@@ -97,10 +112,13 @@ export const computeInvalidProgress = ({
     }
   });
   // Invalidate tasks whose prerequisites have been failed (making them impossible to complete).
+  // Skip if the requirement explicitly accepts 'failed' status (e.g., status: ['complete', 'failed']).
   tasks.forEach((task) => {
     if (!task.taskRequirements?.length) return;
     const hasFailedPrerequisite = task.taskRequirements.some((req) => {
       if (!req.task?.id) return false;
+      // If this requirement accepts failed status, a failed prereq doesn't block the task
+      if (acceptsFailedStatus(req.status)) return false;
       // If this requirement needs completion/active status, check if prereq was failed
       if (!requiresCompletionOrActive(req.status)) return false;
       const completion = taskCompletions[req.task.id];
