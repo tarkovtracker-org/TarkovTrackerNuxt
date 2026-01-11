@@ -50,19 +50,26 @@ export function debounce<Args extends unknown[], R>(
       pendingResolve = resolve;
       pendingReject = reject;
       timeout = setTimeout(async () => {
+        // Capture handlers for this invocation before awaiting func.
+        // This prevents a race condition where a new call reassigns the shared
+        // pendingResolve/pendingReject while func is still running, which would
+        // cause this invocation to resolve/reject the wrong promise.
+        const localResolve = pendingResolve;
+        const localReject = pendingReject;
+        // Clear shared state immediately since we've captured what we need.
+        // This ensures new calls won't try to reject an already-executing invocation.
+        timeout = null;
+        pendingResolve = null;
+        pendingReject = null;
         try {
           const result = await func(...args);
-          if (pendingResolve) {
-            pendingResolve(result);
+          if (localResolve) {
+            localResolve(result);
           }
         } catch (error) {
-          if (pendingReject) {
-            pendingReject(error);
+          if (localReject) {
+            localReject(error);
           }
-        } finally {
-          timeout = null;
-          pendingResolve = null;
-          pendingReject = null;
         }
       }, wait);
     });
