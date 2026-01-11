@@ -15,6 +15,19 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
   return proto === Object.prototype || proto === null;
 }
 /**
+ * Type guard to check if a value is an array of objects with ID properties.
+ * Returns true for non-empty arrays where every element is a plain object containing an 'id'.
+ */
+export function isIdKeyedArray(
+  value: unknown
+): value is Array<Record<string, unknown> & { id: unknown }> {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => isPlainObject(item) && 'id' in item)
+  );
+}
+/**
  * Merge ID-keyed patches into an array of entities without mutating the original array.
  *
  * Iterates the target array and, for each element with an `id`, deep-merges a plain-object
@@ -31,10 +44,13 @@ export function mergeArrayByIdPatches(
 ): unknown[] {
   return targetArray.map((item) => {
     if (isPlainObject(item) && 'id' in item) {
-      const itemId = (item as { id: string }).id;
-      const patch = sourcePatches[itemId];
-      if (isPlainObject(patch)) {
-        return deepMerge(item as Record<string, unknown>, patch as Record<string, unknown>);
+      const itemId = item.id;
+      // Guard against undefined/null IDs and coerce to string for object key lookup
+      if (itemId != null) {
+        const patch = sourcePatches[String(itemId)];
+        if (isPlainObject(patch)) {
+          return deepMerge(item as Record<string, unknown>, patch as Record<string, unknown>);
+        }
       }
     }
     return item;
@@ -66,14 +82,8 @@ export function deepMerge<T extends Record<string, unknown>>(
         targetValue as Record<string, unknown>,
         sourceValue as Record<string, unknown>
       );
-    } else if (
+    } else if (isPlainObject(sourceValue) && isIdKeyedArray(targetValue)) {
       // Special case: merge ID-keyed object patches into array of objects
-      isPlainObject(sourceValue) &&
-      Array.isArray(targetValue) &&
-      targetValue.length > 0 &&
-      isPlainObject(targetValue[0]) &&
-      'id' in targetValue[0]
-    ) {
       result[key] = mergeArrayByIdPatches(sourceValue, targetValue);
     } else {
       // Replace primitive values, arrays, or when target doesn't have the key
